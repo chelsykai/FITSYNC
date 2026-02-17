@@ -1,0 +1,153 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* LEFT PANEL */
+.leftSection {
+  width: 50%;
+  background: radial-gradient(
+    circle at 40% 55%,
+    #6fb046 0%,
+    #5f9a47 30%,
+    #345228 60%,
+    #122713 100%
+  );
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 60px 60px 80px 60px;
+}
+
+.welcomeText {
+  color: white;
+  font-size: 90px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: left;
+  margin: 0;
+  margin-left: 50px;
+  margin-bottom: 8px;
+  transform: none;
+  max-width: 90%;
+}
+
+/* RIGHT PANEL */
+.rightSection {
+  width: 50%;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loginBox {
+  width: 320px;
+  text-align: center;
+}
+
+/* LOGO */
+.logoWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 35px;
+}
+
+.logoImage {
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+}
+
+/* TEXT */
+.subtitle {
+  color: #7eba56;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* INPUT */
+.inputField {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: 2px solid #d0d0d0;
+  font-size: 14px;
+  color: #C7CDC4;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.inputField:last-of-type {
+  margin-bottom: 6px;
+}
+
+.inputField::placeholder {
+  color: #c0c0c0;
+}
+
+.inputField:focus {
+  outline: none;
+  border-color: #7eba56;
+}
+
+/* FORGOT */
+.forgot {
+  text-align: right;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.forgot a {
+  font-size: 12px;
+  color: #7eba56;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.forgot a:hover {
+  text-decoration: underline;
+}
+
+/* BUTTON */
+.loginBtn {
+  width: 54%;
+  padding: 12px;
+  background-color: #7eba56;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 auto;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.loginBtn:hover {
+  background-color: #6ba347;
+}
+
+/* SIGNUP */
+.signup {
+  margin-top: 0;
+  font-size: 13px;
+  color: #7eba56;
+  text-align: center;
+  text-decoration: underline;
+}
+
+.signup a {
+  font-weight: 600;
+  text-decoration: underline;
+  color: #7eba56;
+}
+
+.signup a:hover {
+  color: #6ba347;
+}
