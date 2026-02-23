@@ -137,9 +137,9 @@
 .signup {
   margin-top: 0;
   font-size: 13px;
-  color: #7eba56;
+  color: #333333;
   text-align: center;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .signup a {
