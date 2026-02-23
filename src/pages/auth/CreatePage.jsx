@@ -50,7 +50,14 @@ export default function CreatePage({ onNavigate }) {
             className={styles.inputField} 
           />
         
-          <button className={styles.loginBtn}>Create Account</button>
+          <button
+            className={styles.loginBtn}
+            onClick={() => {
+              onNavigate && onNavigate("login");
+            }}
+          >
+            Create Account
+          </button>
 
           <p className={styles.signup}>
             Already have an account?{' '}
