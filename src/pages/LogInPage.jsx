@@ -1,4 +1,5 @@
 import styles from "../styles/LogInPage.module.css";
+import logo from "../assets/logo.png";
 
 export default function LogInPage({ onNavigate }) {
   return (
@@ -15,11 +16,7 @@ export default function LogInPage({ onNavigate }) {
         <div className={styles.loginBox}>
           {/* Logo */}
           <div className={styles.logoWrapper}>
-            <img
-              src="/src/assets/logo.png"
-              alt="FitSync Logo"
-              className={styles.logoImage}
-            />
+            <img src={logo} alt="FitSync Logo" className={styles.logoImage} />
           </div>
 
           <p className={styles.subtitle}>Please enter your details</p>

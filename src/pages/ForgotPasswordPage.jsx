@@ -1,4 +1,5 @@
 import styles from "../styles/ForgotPasswordPage.module.css";
+import logo from "../assets/logo.png";
 
 export default function ForgotPasswordPage({ onNavigate }) {
   return (
@@ -12,11 +13,7 @@ export default function ForgotPasswordPage({ onNavigate }) {
       <div className={styles.rightSection}>
         <div className={styles.forgetBox}>
           <div className={styles.logoWrapper}>
-            <img
-              src="/src/assets/logo.png"
-              alt="FitSync Logo"
-              className={styles.logoImage}
-            />
+            <img src={logo} alt="FitSync Logo" className={styles.logoImage} />
           </div>
 
           <p className={styles.subtitle}>Forgot your password?</p>
