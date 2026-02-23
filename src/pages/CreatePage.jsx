@@ -14,7 +14,11 @@ export default function CreatePage({ onNavigate }) {
         <div className={styles.loginBox}>
           {/* Logo */}
           <div className={styles.logoWrapper}>
-            <img src={logo} alt="FitSync Logo" className={styles.logoImage} />
+            <img 
+              src="/src/assets/logo.png" 
+              alt="FitSync Logo" 
+              className={styles.logoImage} 
+            />
           </div>
 
           <p className={styles.subtitle}>Please enter your details</p>
