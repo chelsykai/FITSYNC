@@ -1,9 +1,9 @@
 
 
 import { useState } from "react";
-import LogInPage from "./pages/LogInPage";
-import CreatePage from "./pages/CreatePage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import LogInPage from "./pages/auth/LogInPage";
+import CreatePage from "./pages/auth/CreatePage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 
 function App() {
   const [route, setRoute] = useState("login");

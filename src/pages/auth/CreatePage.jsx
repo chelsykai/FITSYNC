@@ -1,5 +1,5 @@
-import styles from "../styles/CreatePage.module.css";
-import logo from "../assets/logo.png";
+import styles from "./CreatePage.module.css";
+import logo from "../../assets/logo.png";
 
 export default function CreatePage({ onNavigate }) {
   return (

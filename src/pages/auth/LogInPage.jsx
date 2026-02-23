@@ -1,5 +1,5 @@
-import styles from "../styles/LogInPage.module.css";
-import logo from "../assets/logo.png";
+import styles from "./LogInPage.module.css";
+import logo from "../../assets/logo.png";
 
 export default function LogInPage({ onNavigate }) {
   return (
