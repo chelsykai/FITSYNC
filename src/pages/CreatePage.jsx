@@ -1,4 +1,4 @@
-import styles from "./CreatePage.module.css";
+import styles from "../styles/CreatePage.module.css";
 
 export default function CreatePage({ onNavigate }) {
   return (

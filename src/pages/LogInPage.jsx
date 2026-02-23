@@ -1,4 +1,4 @@
-import styles from "./LogInPage.module.css";
+import styles from "../styles/LogInPage.module.css";
 
 export default function LogInPage({ onNavigate }) {
   return (

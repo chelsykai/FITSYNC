@@ -1,4 +1,4 @@
-import styles from "./ForgotPasswordPage.module.css";
+import styles from "../styles/ForgotPasswordPage.module.css";
 
 export default function ForgotPasswordPage({ onNavigate }) {
   return (
