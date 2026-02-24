@@ -162,7 +162,7 @@
 
 .signup a {
   font-weight: 600;
-  text-decoration: none;
+  text-decoration: underline;
   color: #7eba56;
 }
 

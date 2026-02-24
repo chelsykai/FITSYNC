@@ -1,7 +1,7 @@
-import styles from "./DashboardPage.module.css";
+import styles from "./OverviewPage.module.css";
 import Sidebar from "../../components/Sidebar/Sidebar";
 
-export default function DashboardPage({ onNavigate, activePage = "overview" }) {
+export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   return (
     <div className={styles.layout}>
       {/* Reusable Sidebar */}
@@ -9,8 +9,8 @@ export default function DashboardPage({ onNavigate, activePage = "overview" }) {
 
       {/* Main Content */}
       <div className={styles.content}>
-        <h1 className={styles.welcome}>Welcome, Chelsy Kai!</h1>
-        {/* your dashboard content here */}
+        <h1 className={styles.welcome}>Welcome, </h1>
+        {/* your overview content here */}
       </div>
     </div>
   );

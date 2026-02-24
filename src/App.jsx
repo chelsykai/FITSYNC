@@ -4,7 +4,7 @@ import { useState } from "react";
 import LogInPage from "./pages/auth/LogInPage";
 import CreatePage from "./pages/auth/CreatePage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
-import DashboardPage from "./pages/dashboard/DashboardPage";
+import OverviewPage from "./pages/dashboard/OverviewPage";
 
 
 function App() {
@@ -17,9 +17,7 @@ function App() {
       {route === "login" && <LogInPage onNavigate={navigate} />}
       {route === "create" && <CreatePage onNavigate={navigate} />}
       {route === "forgot" && <ForgotPasswordPage onNavigate={navigate} />}
-      {route === "dashboard" && <DashboardPage onNavigate={navigate} />}
-      {route === "overview" && <DashboardPage activePage="overview" onNavigate={navigate} />}
-      
+      {route === "dashboard" && <OverviewPage onNavigate={navigate} />}     
     </>
   );
 }
