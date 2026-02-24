@@ -6,6 +6,7 @@ import CreatePage from "./pages/auth/CreatePage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 
+
 function App() {
   const [route, setRoute] = useState("login");
 
@@ -17,6 +18,7 @@ function App() {
       {route === "create" && <CreatePage onNavigate={navigate} />}
       {route === "forgot" && <ForgotPasswordPage onNavigate={navigate} />}
       {route === "dashboard" && <DashboardPage onNavigate={navigate} />}
+      {route === "overview" && <DashboardPage activePage="overview" onNavigate={navigate} />}
       
     </>
   );
