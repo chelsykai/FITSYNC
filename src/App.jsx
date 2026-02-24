@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 import LogInPage from "./pages/auth/LogInPage";
 import CreatePage from "./pages/auth/CreatePage";

@@ -4,7 +4,7 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   return (
     <div className={styles.layout}>
-      {/* Reusable Sidebar */}
+      {/* Sidebar */}
       <Sidebar activePage={activePage} onNavigate={onNavigate} />
 
       {/* Main Content */}
