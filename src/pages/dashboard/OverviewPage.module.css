@@ -3,6 +3,7 @@
   min-height: 100vh;
   font-family: "Montserrat", sans-serif;
   background-color: #f5f5f5;
+  margin-left: 180px; /* ← add this */
 }
 
 .content {
