@@ -1,23 +1,31 @@
+.mainContent {
+  margin-left: 160px;
+  padding: 20px;
+}
 
 .sidebarWrapper {
-  padding: 16px 0 16px 16px;
+  padding: 0px;
   background-color: #f0f0f0;
   flex-shrink: 0;
+  height: 100vh;
 }
 
 .sidebar {
-  width: 140px;
-  height: calc(90vh - 28px);
+  width: 180px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 96vh;
   background-color: #7eba56;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 0;
-  flex-shrink: 0;
-  border-radius: 20px;
-  overflow: hidden;
-  position: sticky;
-  top: 16px;
+  padding: 40px 0 0 0;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  box-shadow: 4px 0px 15px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 
 /* LOGO */
@@ -28,16 +36,16 @@
   margin-bottom: 36px;
   background-color: white;
   border-radius: 50%;
-  width: 72px;
-  height: 72px;
+  width: 90px;
+  height: 90px;
   box-sizing: border-box;
   padding: 10px;
   flex-shrink: 0;
 }
 
 .logo {
-  width: 52px;
-  height: 52px;
+  width: 65px;
+  height: 65px;
   object-fit: contain;
 }
 
@@ -46,8 +54,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 2px;
   flex: 1;
+  align-items: flex-end;
 }
 
 .navItem {
@@ -55,15 +63,17 @@
   border: none;
   color: white;
   font-family: "Montserrat", sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  text-align: left;
-  padding: 13px 18px;
+  text-transform: uppercase;
   cursor: pointer;
   width: 100%;
-  transition: background-color 0.2s ease;
-  border-radius: 0;
+  text-align: left;
+  padding: 12px 0 12px 35px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
 .navItem:hover {
@@ -72,29 +82,30 @@
 
 .navItem.active {
   background-color: white;
-  color: #5a9e3a;
-  font-weight: 800;
-  border-radius: 0;
+  color: #7eba56;
+  width: 90%;
+  border-radius: 25px 0 0 25px;
+  padding-left: 25px;
 }
 
 /* LOGOUT */
 .logout {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  width: 100%;
   background: none;
   border: none;
   color: white;
   font-family: "Montserrat", sans-serif;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  padding: 13px 18px;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
-  width: 100%;
-  text-align: left;
   transition: background-color 0.2s ease;
-  margin-top: auto;
+  margin-bottom: 40px;
+  padding: 15px 0;
 }
 
 .logout:hover {
