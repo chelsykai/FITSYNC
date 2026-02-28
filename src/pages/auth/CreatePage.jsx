@@ -1,6 +1,6 @@
 import styles from "./CreatePage.module.css";
 import logo from "../../assets/logo.png";
-
+//test chelsy kai
 export default function CreatePage({ onNavigate }) {
   return (
     <div className={styles.container}>
@@ -17,7 +17,7 @@ export default function CreatePage({ onNavigate }) {
             <img src={logo} alt="FitSync Logo" className={styles.logoImage} />
           </div>
 
-          <p className={styles.subtitle}>Please enter your details</p>
+          <p className={styles.subtitleyp}>Please enter your details</p>
 
           {/* Name Row - First and Last Name */}
           <div className={styles.nameRow}>
