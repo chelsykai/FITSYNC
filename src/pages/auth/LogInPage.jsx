@@ -48,7 +48,7 @@ export default function LogInPage({ onNavigate }) {
           <button
             className={styles.loginBtn}
             onClick={() => {
-              onNavigate && onNavigate("dashboard");
+              onNavigate && onNavigate("overview");
             }}
           >
             Login

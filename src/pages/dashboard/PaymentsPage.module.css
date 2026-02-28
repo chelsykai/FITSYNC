@@ -3,16 +3,16 @@
   min-height: 100vh;
   font-family: "Montserrat", sans-serif;
   background-color: #f5f5f5;
+  margin-left: 180px;
 }
 
 .content {
   flex: 1;
   padding: 40px;
   overflow-y: auto;
-  margin-left: 180px;
 }
 
-.welcome {
+.title {
   color: #7eba56;
   font-size: 32px;
   font-weight: 700;
