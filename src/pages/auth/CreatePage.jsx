@@ -1,7 +1,33 @@
+import { useState } from "react";
 import styles from "./CreatePage.module.css";
 import logo from "../../assets/logo.png";
-//test chelsy kai
+import { supabase } from "../../lib/supabaseClient";
+
 export default function CreatePage({ onNavigate }) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleCreateAccount = async () => {
+    setError("");
+    const { error } = await supabase.from("system_user").insert([
+      {
+        FirstName: firstName,
+        LastName: lastName,
+        username: username,
+        password: password,
+      },
+    ]);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      onNavigate && onNavigate("login");
+    }
+  };
+
   return (
     <div className={styles.container}>
       {/* Left Section */}
@@ -24,12 +50,16 @@ export default function CreatePage({ onNavigate }) {
             <input 
               type="text" 
               placeholder="First Name" 
-              className={styles.nameInput} 
+              className={styles.nameInput}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
             />
             <input 
               type="text" 
               placeholder="Last Name" 
-              className={styles.nameInput} 
+              className={styles.nameInput}
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
             />
           </div>
 
@@ -42,19 +72,22 @@ export default function CreatePage({ onNavigate }) {
           <input 
             type="text" 
             placeholder="Username" 
-            className={styles.inputField} 
+            className={styles.inputField}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
           <input 
             type="password" 
             placeholder="Password" 
-            className={styles.inputField} 
+            className={styles.inputField}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
+          {error && <p className={styles.errorText}>{error}</p>}
         
           <button
             className={styles.loginBtn}
-            onClick={() => {
-              onNavigate && onNavigate("login");
-            }}
+            onClick={handleCreateAccount}
           >
             Create Account
           </button>
