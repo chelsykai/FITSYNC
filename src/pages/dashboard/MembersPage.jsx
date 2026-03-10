@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./MembersPage.module.css";
-import Sidebar from "../../components/Sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/sidebar";
 
 const stats = {
   totalMembers: 1411,

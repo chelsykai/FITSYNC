@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./AccountsPage.module.css";
-import Sidebar from "../../components/Sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/sidebar";
 
 const initialAccounts = [
   { id: "1001", name: "Chelsy Kai Paralejas", role: "Admin", email: "chelsykaip@fitnesszone@gmail.com" },

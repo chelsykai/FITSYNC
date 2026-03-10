@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./NotificationsPage.module.css";
-import Sidebar from "../../components/Sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/sidebar";
 
 const notifications = [
   { id: "2024-****-GYM-0", type: "OVERDUE BALANCE",     name: "Firstname Mi. Lastname", detail: "AMOUNT: PHP ----",                color: "orange", action: "NOTIFY"   },

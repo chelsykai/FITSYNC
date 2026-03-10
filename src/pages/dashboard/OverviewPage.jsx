@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./OverviewPage.module.css";
-import Sidebar from "../../components/Sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/sidebar";
 
 // ── Placeholder data (replace with real DB calls later) ──────────────────────
 const stats = {
