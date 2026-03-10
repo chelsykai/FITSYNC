@@ -1,5 +1,5 @@
-import styles from "../styles/LogInPage.module.css";
-import logo from "../assets/logo.png";
+import styles from "./LogInPage.module.css";
+import logo from "../../assets/logo.png";
 
 export default function LogInPage({ onNavigate }) {
   return (
@@ -45,7 +45,14 @@ export default function LogInPage({ onNavigate }) {
             </a>
           </div>
 
-          <button className={styles.loginBtn}>Login</button>
+          <button
+            className={styles.loginBtn}
+            onClick={() => {
+              onNavigate && onNavigate("overview");
+            }}
+          >
+            Login
+          </button>
 
           <p className={styles.signup}>
             No account?{" "}

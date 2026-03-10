@@ -1,5 +1,5 @@
-import styles from "../styles/ForgotPasswordPage.module.css";
-import logo from "../assets/logo.png";
+import styles from "./ForgotPasswordPage.module.css";
+import logo from "../../assets/logo.png";
 
 export default function ForgotPasswordPage({ onNavigate }) {
   return (
