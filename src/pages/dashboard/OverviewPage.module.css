@@ -253,3 +253,130 @@
 .modalTable tr:last-child td {
   border-bottom: none;
 }
+/* PRINT CARD */
+.printCard {
+  cursor: pointer;
+  background-color: white;
+  border-radius: 12px;
+  border: 4px solid #E5F0DE;
+  transition: background 0.2s;
+  
+}
+.printCard:hover {
+  background: #d4e8c8;
+}
+
+/* EXPORT MODAL */
+.exportModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.exportSectionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  margin: 16px 0 8px 0;
+}
+
+.exportRadioRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.exportSearch {
+  display: flex;
+  align-items: center;
+  background:  #c9c9c9;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  gap: 10px;
+  width: 354px;
+}
+
+.exportSearchInput {
+  border: none;
+  outline: none;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  flex: 1;
+  background: transparent;
+}
+
+.exportSearchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 13px;
+  padding: 0;
+}
+
+.exportCheckList {
+  max-height: 160px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background-color: white;
+}
+
+.exportCheckRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.exportSubmitBtn {
+  width: 100%;
+  padding: 10px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.exportSubmitBtn:hover {
+  background: #6aa947;
+}
+
+.exportCloseBtn {
+  width: 100%;
+  padding: 10px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exportCloseBtn:hover {
+  background: #555;
+}

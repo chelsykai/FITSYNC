@@ -17,11 +17,13 @@ const expiringMembers = [
 const gymActivity = [10, 6, 12, 4, 3, 5, 2, 4, 6, 3, 5, 4];
 
 const population = [
-  { label: "Regular", value: 50,  color: "#4a9e4a" },
-  { label: "Student", value: 30,  color: "#7fd4c1" },
-  { label: "PWD",     value: 9.2, color: "#a8c8e8" },
-  { label: "Senior",  value: 10.3,color: "#c8c8c8" },
+  { label: "Regular", value: 50,   color: "#4a9e4a" },
+  { label: "Student", value: 30,   color: "#7fd4c1" },
+  { label: "PWD",     value: 9.2,  color: "#a8c8e8" },
+  { label: "Senior",  value: 10.3, color: "#c8c8c8" },
 ];
+
+const exportOptions = ["Select All", "Today's Checkin", "Today's Walkins", "Active Memberships"];
 
 function DonutChart({ data }) {
   const size = 160, cx = 80, cy = 80, r = 55, innerR = 30;
@@ -82,6 +84,24 @@ function BarChart({ data }) {
 export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   const [year, setYear] = useState(2025);
   const [showAll, setShowAll] = useState(false);
+  const [showExport, setShowExport] = useState(false);
+  const [exportFormat, setExportFormat] = useState("CSV");
+  const [exportTypes, setExportTypes] = useState([]);
+  const [exportSearch, setExportSearch] = useState("");
+
+  const toggleExportType = (opt) => {
+    if (opt === "Select All") {
+      setExportTypes(exportTypes.length === exportOptions.length ? [] : [...exportOptions]);
+    } else {
+      setExportTypes((prev) =>
+        prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
+      );
+    }
+  };
+
+  const filteredExportOptions = exportOptions.filter((o) =>
+    o.toLowerCase().includes(exportSearch.toLowerCase())
+  );
 
   return (
     <>
@@ -113,7 +133,11 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
                 <p className={styles.statValue}>{stats.walkIns}</p>
               </div>
             </div>
-            <div className={`${styles.statCard} ${styles.printCard}`}>
+            {/* Print / Export Button */}
+            <div
+              className={`${styles.statCard} ${styles.printCard}`}
+              onClick={() => setShowExport(true)}
+            >
               <span className={styles.statIcon}>🖨️</span>
             </div>
           </div>
@@ -146,10 +170,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
               </tbody>
             </table>
             <div className={styles.viewAllWrapper}>
-              <button
-                className={styles.viewAllBtn}
-                onClick={() => setShowAll(true)}
-              >
+              <button className={styles.viewAllBtn} onClick={() => setShowAll(true)}>
                 View All
               </button>
             </div>
@@ -185,7 +206,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
         </div>
       </div>
 
-      {/* Modal View ALL*/}
+      {/* View All Modal */}
       {showAll && (
         <div className={styles.overlay} onClick={() => setShowAll(false)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -219,6 +240,64 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {showExport && (
+        <div className={styles.overlay} onClick={() => setShowExport(false)}>
+          <div className={styles.exportModal} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitle}>Export Data</h2>
+
+            <p className={styles.exportSectionLabel}>File Format</p>
+            {["CSV", "Excel", "PDF"].map((fmt) => (
+              <label key={fmt} className={styles.exportRadioRow}>
+                <input
+                  type="radio"
+                  name="format"
+                  value={fmt}
+                  checked={exportFormat === fmt}
+                  onChange={() => setExportFormat(fmt)}
+                  style={{ accentColor: "#7eba56" }}
+                />
+                {fmt}
+              </label>
+            ))}
+
+            <p className={styles.exportSectionLabel}>Select Type of Data to Export</p>
+            <div className={styles.exportSearch}>
+              <span>🔍</span>
+              <input
+                type="text"
+                placeholder="Search"
+                value={exportSearch}
+                onChange={(e) => setExportSearch(e.target.value)}
+                className={styles.exportSearchInput}
+              />
+              {exportSearch && (
+                <button className={styles.exportSearchClear} onClick={() => setExportSearch("")}>✕</button>
+              )}
+            </div>
+
+            <div className={styles.exportCheckList}>
+              {filteredExportOptions.map((opt) => (
+                <label key={opt} className={styles.exportCheckRow}>
+                  <input
+                    type="checkbox"
+                    checked={opt === "Select All"
+                      ? exportTypes.length === exportOptions.length
+                      : exportTypes.includes(opt)}
+                    onChange={() => toggleExportType(opt)}
+                    style={{ accentColor: "#7eba56" }}
+                  />
+                  {opt}
+                </label>
+              ))}
+            </div>
+
+            <button className={styles.exportSubmitBtn}>Export</button>
+            <button className={styles.exportCloseBtn} onClick={() => setShowExport(false)}>Close</button>
           </div>
         </div>
       )}
