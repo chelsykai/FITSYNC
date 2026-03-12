@@ -1,6 +1,10 @@
 import { useState } from "react";
 import styles from "./MembersPage.module.css";
 import Sidebar from "../../components/Sidebar/Sidebar";
+import MembersExportModal from "../../components/modals/members/MembersExportModal";
+import AddMemberModal from "../../components/modals/members/AddMemberModal";
+import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
+import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
 
 const stats = {
   totalMembers: 1411,
@@ -19,40 +23,17 @@ const members = [
   { id: "00132", name: "Khali Cruz",           joinDate: "MM/DD/YYYY", type: "Regular",  monthly: "5 months",  validity: "1 Year", lastVisit: "MM/DD/YYYY 18:22:37", birthday: "May 18, 2006", address: "Cainta, Rizal", phone: "09563711561", email: "khalicruz@gmail.com",          expiry: "March 10, 2026", lastActivity: "January 5, 2026" },
 ];
 
-const exportMemberOptions = ["Select All", ...members.map((m) => m.name)];
-
 export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [search, setSearch] = useState("");
   const [showExport, setShowExport] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showProfile, setShowProfile] = useState(null);
-  const [exportFormat, setExportFormat] = useState("CSV");
-  const [exportSearch, setExportSearch] = useState("");
-  const [exportSelected, setExportSelected] = useState([]);
-  const [newMember, setNewMember] = useState({
-    firstName: "", lastName: "", id: "", type: "Student",
-    birthday: "", address: "", phone: "", email: "",
-  });
 
   const filtered = members.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase()) ||
     m.id.includes(search) ||
     m.type.toLowerCase().includes(search.toLowerCase())
   );
-
-  const filteredExport = exportMemberOptions.filter((o) =>
-    o.toLowerCase().includes(exportSearch.toLowerCase())
-  );
-
-  const toggleExport = (name) => {
-    if (name === "Select All") {
-      setExportSelected(exportSelected.length === members.length ? [] : members.map((m) => m.name));
-    } else {
-      setExportSelected((prev) =>
-        prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name]
-      );
-    }
-  };
 
   return (
     <>
@@ -96,9 +77,16 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
           {/* Search */}
           <div className={styles.searchWrapper}>
             <span className={styles.searchIcon}>🔍</span>
-            <input type="text" placeholder="Search" className={styles.searchInput}
-              value={search} onChange={(e) => setSearch(e.target.value)} />
-            {search && <button className={styles.clearBtn} onClick={() => setSearch("")}>✕</button>}
+            <input
+              type="text"
+              placeholder="Search"
+              className={styles.searchInput}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button className={styles.clearBtn} onClick={() => setSearch("")}>✕</button>
+            )}
           </div>
 
           {/* Table Card */}
@@ -144,161 +132,15 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         </div>
       </div>
 
-      {/* EXPORT MODAL */}
+      {/* Modals */}
       {showExport && (
-        <div className={styles.overlay} onClick={() => setShowExport(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h2 className={styles.modalTitle}>Export Members Data</h2>
-
-            <p className={styles.sectionLabel}>File Format</p>
-            {["CSV", "Excel", "PDF"].map((fmt) => (
-              <label key={fmt} className={styles.radioRow}>
-                <input type="radio" name="fmt" value={fmt}
-                  checked={exportFormat === fmt}
-                  onChange={() => setExportFormat(fmt)}
-                  style={{ accentColor: "#7eba56" }} />
-                {fmt}
-              </label>
-            ))}
-
-            <p className={styles.sectionLabel}>Select Members to Export</p>
-            <div className={styles.modalSearch}>
-              <span>🔍</span>
-              <input type="text" placeholder="Search" className={styles.modalSearchInput}
-                value={exportSearch} onChange={(e) => setExportSearch(e.target.value)} />
-              {exportSearch && <button className={styles.clearBtn} onClick={() => setExportSearch("")}>✕</button>}
-            </div>
-            <div className={styles.checkList}>
-              {filteredExport.map((name) => (
-                <label key={name} className={styles.checkRow}>
-                  <input type="checkbox"
-                    checked={name === "Select All"
-                      ? exportSelected.length === members.length
-                      : exportSelected.includes(name)}
-                    onChange={() => toggleExport(name)}
-                    style={{ accentColor: "#7eba56" }} />
-                  {name !== "Select All" && <span className={styles.memberIcon}>👤</span>}
-                  {name}
-                </label>
-              ))}
-            </div>
-
-            <button className={styles.submitBtn}>Export</button>
-            <button className={styles.closeBtn} onClick={() => setShowExport(false)}>Close</button>
-          </div>
-        </div>
+        <MembersExportModal members={members} onClose={() => setShowExport(false)} />
       )}
-
-      {/* ADD MEMBER MODAL */}
       {showAddMember && (
-        <div className={styles.overlay} onClick={() => setShowAddMember(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h2 className={styles.modalTitle}>Add New Member</h2>
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>First Name</label>
-                <input className={styles.formInput} placeholder="First Name"
-                  value={newMember.firstName}
-                  onChange={(e) => setNewMember({ ...newMember, firstName: e.target.value })} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Last Name</label>
-                <input className={styles.formInput} placeholder="Last Name"
-                  value={newMember.lastName}
-                  onChange={(e) => setNewMember({ ...newMember, lastName: e.target.value })} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Member ID</label>
-                <input className={styles.formInput} placeholder="Member ID"
-                  value={newMember.id}
-                  onChange={(e) => setNewMember({ ...newMember, id: e.target.value })} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Membership Type</label>
-                <select className={styles.formInput}
-                  value={newMember.type}
-                  onChange={(e) => setNewMember({ ...newMember, type: e.target.value })}>
-                  {["Student", "Regular", "Senior", "PWD"].map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Birthday</label>
-                <input className={styles.formInput} type="date"
-                  value={newMember.birthday}
-                  onChange={(e) => setNewMember({ ...newMember, birthday: e.target.value })} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Phone Number</label>
-                <input className={styles.formInput} placeholder="09XXXXXXXXX"
-                  value={newMember.phone}
-                  onChange={(e) => setNewMember({ ...newMember, phone: e.target.value })} />
-              </div>
-              <div className={styles.formGroupFull}>
-                <label className={styles.formLabel}>Address</label>
-                <input className={styles.formInput} placeholder="Address"
-                  value={newMember.address}
-                  onChange={(e) => setNewMember({ ...newMember, address: e.target.value })} />
-              </div>
-              <div className={styles.formGroupFull}>
-                <label className={styles.formLabel}>Email</label>
-                <input className={styles.formInput} placeholder="email@example.com" type="email"
-                  value={newMember.email}
-                  onChange={(e) => setNewMember({ ...newMember, email: e.target.value })} />
-              </div>
-            </div>
-            <button className={styles.submitBtn}>Add Member</button>
-            <button className={styles.closeBtn} onClick={() => setShowAddMember(false)}>Close</button>
-          </div>
-        </div>
+        <AddMemberModal onClose={() => setShowAddMember(false)} />
       )}
-
-      {/* PROFILE MODAL */}
       {showProfile && (
-        <div className={styles.overlay} onClick={() => setShowProfile(null)}>
-          <div className={styles.profileModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.profileAvatar}>👤</div>
-            <h2 className={styles.profileName}>{showProfile.name}</h2>
-            <span className={styles.profileBadge}>{showProfile.type}</span>
-            <div className={styles.profileGrid}>
-              <div>
-                <p className={styles.profileLabel}>Member ID:</p>
-                <p className={styles.profileValue}>{showProfile.id}</p>
-              </div>
-              <div>
-                <p className={styles.profileLabel}>Join Date:</p>
-                <p className={styles.profileValue}>{showProfile.joinDate}</p>
-              </div>
-              <div>
-                <p className={styles.profileLabel}>Birthday:</p>
-                <p className={styles.profileValue}>{showProfile.birthday}</p>
-              </div>
-              <div>
-                <p className={styles.profileLabel}>Expiry:</p>
-                <p className={styles.profileValue}>{showProfile.expiry}</p>
-              </div>
-              <div>
-                <p className={styles.profileLabel}>Address:</p>
-                <p className={styles.profileValue}>{showProfile.address}</p>
-              </div>
-              <div>
-                <p className={styles.profileLabel}>Last Activity:</p>
-                <p className={styles.profileValue}>{showProfile.lastActivity}</p>
-              </div>
-              <div>
-                <p className={styles.profileLabel}>Phone Number:</p>
-                <p className={styles.profileValue}>{showProfile.phone}</p>
-              </div>
-              <div>
-                <p className={styles.profileLabel}>Email:</p>
-                <p className={styles.profileValue}>{showProfile.email}</p>
-              </div>
-            </div>
-            <button className={styles.submitBtn}>Email</button>
-            <button className={styles.closeBtn} onClick={() => setShowProfile(null)}>Close</button>
-          </div>
-        </div>
+        <MemberProfileModal member={showProfile} onClose={() => setShowProfile(null)} />
       )}
     </>
   );

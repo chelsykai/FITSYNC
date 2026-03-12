@@ -1,6 +1,8 @@
 import { useState } from "react";
 import styles from "./OverviewPage.module.css";
 import Sidebar from "../../components/Sidebar/Sidebar";
+import ViewAllModal from "../../components/modals/overview/ViewAllModal";
+import ExportModal from "../../components/modals/overview/ExportModal";
 
 const stats = { checkins: 44, activeMembers: 890, walkIns: 13 };
 
@@ -22,8 +24,6 @@ const population = [
   { label: "PWD",     value: 9.2,  color: "#a8c8e8" },
   { label: "Senior",  value: 10.3, color: "#c8c8c8" },
 ];
-
-const exportOptions = ["Select All", "Today's Checkin", "Today's Walkins", "Active Memberships"];
 
 function DonutChart({ data }) {
   const size = 160, cx = 80, cy = 80, r = 55, innerR = 30;
@@ -85,23 +85,6 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   const [year, setYear] = useState(2025);
   const [showAll, setShowAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
-  const [exportFormat, setExportFormat] = useState("CSV");
-  const [exportTypes, setExportTypes] = useState([]);
-  const [exportSearch, setExportSearch] = useState("");
-
-  const toggleExportType = (opt) => {
-    if (opt === "Select All") {
-      setExportTypes(exportTypes.length === exportOptions.length ? [] : [...exportOptions]);
-    } else {
-      setExportTypes((prev) =>
-        prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
-      );
-    }
-  };
-
-  const filteredExportOptions = exportOptions.filter((o) =>
-    o.toLowerCase().includes(exportSearch.toLowerCase())
-  );
 
   return (
     <>
@@ -133,7 +116,6 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
                 <p className={styles.statValue}>{stats.walkIns}</p>
               </div>
             </div>
-            {/* Print / Export Button */}
             <div
               className={`${styles.statCard} ${styles.printCard}`}
               onClick={() => setShowExport(true)}
@@ -183,7 +165,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
                 <h2 className={styles.chartTitle}>Gym Activity</h2>
                 <select className={styles.yearSelect} value={year}
                   onChange={(e) => setYear(Number(e.target.value))}>
-                  {[2023, 2024, 2025].map((y) => <option key={y} value={y}>{y}</option>)}
+                  {[2023, 2024, 2025 ,2026].map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
               <BarChart data={gymActivity} />
@@ -206,100 +188,12 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
         </div>
       </div>
 
-      {/* View All Modal */}
+      {/* Modals */}
       {showAll && (
-        <div className={styles.overlay} onClick={() => setShowAll(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h2 className={styles.modalTitle}>Memberships Expiring Soon</h2>
-            <table className={styles.modalTable}>
-              <thead>
-                <tr>
-                  <th>Member ID</th>
-                  <th>Name</th>
-                  <th>Date</th>
-                  <th>Membership Type</th>
-                  <th>Monthly Validity</th>
-                  <th>Membership Validity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expiringMembers.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.id}</td>
-                    <td>{m.name}</td>
-                    <td>{m.date}</td>
-                    <td>{m.type}</td>
-                    <td>{m.monthly}</td>
-                    <td>{m.validity}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className={styles.viewAllWrapper}>
-              <button className={styles.viewAllBtn} onClick={() => setShowAll(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <ViewAllModal members={expiringMembers} onClose={() => setShowAll(false)} />
       )}
-
-      {/* Export Modal */}
       {showExport && (
-        <div className={styles.overlay} onClick={() => setShowExport(false)}>
-          <div className={styles.exportModal} onClick={(e) => e.stopPropagation()}>
-            <h2 className={styles.modalTitle}>Export Data</h2>
-
-            <p className={styles.exportSectionLabel}>File Format</p>
-            {["CSV", "Excel", "PDF"].map((fmt) => (
-              <label key={fmt} className={styles.exportRadioRow}>
-                <input
-                  type="radio"
-                  name="format"
-                  value={fmt}
-                  checked={exportFormat === fmt}
-                  onChange={() => setExportFormat(fmt)}
-                  style={{ accentColor: "#7eba56" }}
-                />
-                {fmt}
-              </label>
-            ))}
-
-            <p className={styles.exportSectionLabel}>Select Type of Data to Export</p>
-            <div className={styles.exportSearch}>
-              <span>🔍</span>
-              <input
-                type="text"
-                placeholder="Search"
-                value={exportSearch}
-                onChange={(e) => setExportSearch(e.target.value)}
-                className={styles.exportSearchInput}
-              />
-              {exportSearch && (
-                <button className={styles.exportSearchClear} onClick={() => setExportSearch("")}>✕</button>
-              )}
-            </div>
-
-            <div className={styles.exportCheckList}>
-              {filteredExportOptions.map((opt) => (
-                <label key={opt} className={styles.exportCheckRow}>
-                  <input
-                    type="checkbox"
-                    checked={opt === "Select All"
-                      ? exportTypes.length === exportOptions.length
-                      : exportTypes.includes(opt)}
-                    onChange={() => toggleExportType(opt)}
-                    style={{ accentColor: "#7eba56" }}
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
-
-            <button className={styles.exportSubmitBtn}>Export</button>
-            <button className={styles.exportCloseBtn} onClick={() => setShowExport(false)}>Close</button>
-          </div>
-        </div>
+        <ExportModal onClose={() => setShowExport(false)} />
       )}
     </>
   );

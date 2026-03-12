@@ -1,0 +1,416 @@
+/* ── Shared overlay ── */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* ── Modal shell (ViewAll, MembersExport, AddMember) ── */
+.modal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.wideModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 720px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.modalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* ── View-All table ── */
+.modalTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+}
+
+.modalTable th {
+  text-align: left;
+  color: #555;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.modalTable td {
+  padding: 8px 10px;
+  color: #444;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modalTable tr:last-child td {
+  border-bottom: none;
+}
+
+.viewAllWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.viewAllBtn {
+  background-color: #333;
+  color: #E5F0DE;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 32px;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.viewAllBtn:hover {
+  background-color: #555;
+}
+
+/* ── Export modal (OverviewPage) ── */
+.exportModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.exportSectionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  margin: 16px 0 8px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.exportRadioRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.exportSearch {
+  display: flex;
+  align-items: center;
+  background: #c9c9c9;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  gap: 10px;
+  width: 354px;
+}
+
+.exportSearchInput {
+  border: none;
+  outline: none;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  flex: 1;
+  background: transparent;
+}
+
+.exportSearchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 13px;
+  padding: 0;
+}
+
+.exportCheckList {
+  max-height: 160px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background-color: white;
+}
+
+.exportCheckRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.exportSubmitBtn {
+  width: 100%;
+  padding: 10px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.exportSubmitBtn:hover {
+  background: #6aa947;
+}
+
+.exportCloseBtn {
+  width: 100%;
+  padding: 10px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exportCloseBtn:hover {
+  background: #555;
+}
+
+/* ── Members modals (export + add member) ── */
+.sectionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  margin: 14px 0 8px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.radioRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.modalSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #c9c9c9;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 8px;
+}
+
+.modalSearchInput {
+  border: none;
+  outline: none;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  flex: 1;
+  background: transparent;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 14px;
+  padding: 0;
+}
+
+.checkList {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  background-color: white;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.memberIcon { font-size: 14px; }
+
+/* ── Add member form ── */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.formGroup { display: flex; flex-direction: column; gap: 4px; }
+.formGroupFull { display: flex; flex-direction: column; gap: 4px; grid-column: 1 / -1; }
+
+.formLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  font-family: "Montserrat", sans-serif;
+}
+
+.formInput {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  color: #333;
+  outline: none;
+  background: white;
+}
+
+.formInput:focus { border-color: #7eba56; }
+
+/* ── Shared action buttons ── */
+.submitBtn {
+  width: 100%;
+  padding: 10px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.submitBtn:hover { background: #6aa947; }
+
+.closeBtn {
+  width: 100%;
+  padding: 10px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover { background: #555; }
+
+/* ── Profile modal ── */
+.profileModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 400px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.profileAvatar {
+  font-size: 56px;
+  background: #D9D9D9;
+  border-radius: 80%;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px auto;
+}
+
+.profileName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 6px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.profileBadge {
+  background: #E5F0DE;
+  color: #7eba56;
+  border: 2px solid #7eba56;
+  border-radius: 20px;
+  padding: 2px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 16px;
+  font-family: "Montserrat", sans-serif;
+}
+
+.profileGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.profileLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+  margin: 0 0 2px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.profileValue {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
