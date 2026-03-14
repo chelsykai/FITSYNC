@@ -28,6 +28,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [showExport, setShowExport] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showProfile, setShowProfile] = useState(null);
+  const [showViewAll, setShowViewAll] = useState(false);
 
   const filtered = members.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -126,7 +127,9 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
               </tbody>
             </table>
             <div className={styles.viewAllWrapper}>
-              <button className={styles.viewAllBtn}>View All</button>
+              <button className={styles.viewAllBtn} onClick={() => setShowViewAll(true)}>
+                View All
+              </button>
             </div>
           </div>
         </div>
@@ -141,6 +144,14 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
       )}
       {showProfile && (
         <MemberProfileModal member={showProfile} onClose={() => setShowProfile(null)} />
+      )}
+      {showViewAll && (
+        <ViewAllMembersModal
+          members={members}
+          onClose={() => setShowViewAll(false)}
+          onEdit={(m) => console.log("edit", m)}
+          onDelete={(m) => console.log("delete", m)}
+        />
       )}
     </>
   );

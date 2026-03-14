@@ -12,7 +12,8 @@
   z-index: 9999;
 }
 
-/* ── Modal shell (ViewAll, MembersExport, AddMember) ── */
+/* ── Modal shell (used by ViewAll, MembersExport, AddMember) ── */
+/* Width is set per-modal via the wider .wideModal variant */
 .modal {
   background: #E5F0DE;
   border-radius: 16px;
@@ -23,6 +24,7 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
+/* Wide variant for ViewAllModal table */
 .wideModal {
   background: #E5F0DE;
   border-radius: 16px;
@@ -348,7 +350,7 @@
 
 /* ── Profile modal ── */
 .profileModal {
-  background: #E5F0DE;
+  background: white;
   border-radius: 16px;
   padding: 28px 32px;
   width: 400px;
@@ -360,10 +362,10 @@
 
 .profileAvatar {
   font-size: 56px;
-  background: #D9D9D9;
-  border-radius: 80%;
-  width: 90px;
-  height: 90px;
+  background: #E5F0DE;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,9 +381,8 @@
 }
 
 .profileBadge {
-  background: #E5F0DE;
-  color: #7eba56;
-  border: 2px solid #7eba56;
+  background: #7eba56;
+  color: white;
   border-radius: 20px;
   padding: 2px 14px;
   font-size: 11px;
@@ -414,3 +415,39 @@
   margin: 0;
   font-family: "Montserrat", sans-serif;
 }
+
+/* ── Table action buttons ── */
+.actionBtns {
+  display: flex;
+  gap: 6px;
+}
+
+.editBtn {
+  background-color: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.editBtn:hover { background-color: #6aa947; }
+
+.deleteBtn {
+  background-color: #e05555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.deleteBtn:hover { background-color: #c43e3e; }

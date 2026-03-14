@@ -1,0 +1,57 @@
+import styles from "../Modal.module.css";
+
+export default function ViewAllMembersModal({ members, onClose, onEdit, onDelete }) {
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.wideModal} onClick={(e) => e.stopPropagation()}>
+        <h2 className={styles.modalTitle}>Membership List</h2>
+        <table className={styles.modalTable}>
+          <thead>
+            <tr>
+              <th>Member ID</th>
+              <th>Name</th>
+              <th>Join Date</th>
+              <th>Membership Type</th>
+              <th>Monthly Validity</th>
+              <th>Membership Validity</th>
+              <th>Last Visit</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {members.map((m) => (
+              <tr key={m.id}>
+                <td>{m.id}</td>
+                <td>{m.name}</td>
+                <td>{m.joinDate}</td>
+                <td>{m.type}</td>
+                <td>{m.monthly}</td>
+                <td>{m.validity}</td>
+                <td>{m.lastVisit}</td>
+                <td>
+                  <div className={styles.actionBtns}>
+                    <button
+                      className={styles.editBtn}
+                      onClick={(e) => { e.stopPropagation(); onEdit?.(m); }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={(e) => { e.stopPropagation(); onDelete?.(m); }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className={styles.viewAllWrapper}>
+          <button className={styles.viewAllBtn} onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
