@@ -5,6 +5,7 @@ import MembersExportModal from "../../components/modals/members/MembersExportMod
 import AddMemberModal from "../../components/modals/members/AddMemberModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
 import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
+import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
 
 const stats = {
   totalMembers: 1411,
@@ -29,12 +30,18 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [showAddMember, setShowAddMember] = useState(false);
   const [showProfile, setShowProfile] = useState(null);
   const [showViewAll, setShowViewAll] = useState(false);
+  const [registeredMember, setRegisteredMember] = useState(null);
 
   const filtered = members.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase()) ||
     m.id.includes(search) ||
     m.type.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleMemberAdded = (newMember) => {
+    setShowAddMember(false);
+    setRegisteredMember(newMember);
+  };
 
   return (
     <>
@@ -140,7 +147,17 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         <MembersExportModal members={members} onClose={() => setShowExport(false)} />
       )}
       {showAddMember && (
-        <AddMemberModal onClose={() => setShowAddMember(false)} />
+        <AddMemberModal
+          onClose={() => setShowAddMember(false)}
+          onSuccess={handleMemberAdded}
+        />
+      )}
+      {registeredMember && (
+        <MemberRegisteredModal
+          member={registeredMember}
+          onClose={() => setRegisteredMember(null)}
+          onPrint={(m) => console.log("print", m)}
+        />
       )}
       {showProfile && (
         <MemberProfileModal member={showProfile} onClose={() => setShowProfile(null)} />
@@ -149,8 +166,6 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         <ViewAllMembersModal
           members={members}
           onClose={() => setShowViewAll(false)}
-          onEdit={(m) => console.log("edit", m)}
-          onDelete={(m) => console.log("delete", m)}
         />
       )}
     </>
