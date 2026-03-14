@@ -13,7 +13,6 @@
 }
 
 /* ── Modal shell (used by ViewAll, MembersExport, AddMember) ── */
-/* Width is set per-modal via the wider .wideModal variant */
 .modal {
   background: #E5F0DE;
   border-radius: 16px;
@@ -28,9 +27,10 @@
 .wideModal {
   background: #E5F0DE;
   border-radius: 16px;
-  padding: 28px 32px;
-  width: 720px;
-  max-height: 80vh;
+  padding: 32px 40px;
+  width: 90vw;
+  max-width: 1100px;
+  max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
@@ -451,3 +451,48 @@
 }
 
 .deleteBtn:hover { background-color: #c43e3e; }
+
+/* ── Delete confirmation modal ── */
+.deleteModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 36px 32px;
+  width: 380px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.deleteIcon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.deleteMessage {
+  font-size: 13px;
+  color: #555;
+  font-family: "Montserrat", sans-serif;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+.deleteMessage strong {
+  color: #222;
+  font-weight: 700;
+}
+
+.deletConfirmBtn {
+  width: 100%;
+  padding: 10px;
+  background: #e05555;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.deletConfirmBtn:hover { background: #c43e3e; }
