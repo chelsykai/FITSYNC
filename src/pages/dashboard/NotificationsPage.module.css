@@ -23,28 +23,28 @@
 .searchWrapper {
   display: flex;
   align-items: center;
-  background: white;
+  background: #c9c9c9;
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 10px 16px;
   margin-bottom: 16px;
   gap: 10px;
   width: 340px;
 }
 
-.searchIcon { font-size: 14px; color: #aaa; }
+.searchIcon { font-size: 14px; color: #242424; }
 
 .searchInput {
   border: none;
   outline: none;
   font-family: "Montserrat", sans-serif;
   font-size: 13px;
-  color: #333;
+  color: #242424;
   flex: 1;
   background: transparent;
 }
 
-.searchInput::placeholder { color: #bbb; }
+.searchInput::placeholder { color: #242424; }
 
 .clearBtn {
   background: none;
@@ -87,7 +87,7 @@
   transition: all 0.2s;
 }
 
-.filterBtn:hover { background: #f0f0f0; }
+.filterBtn:hover { background: #6aa947; }
 
 .filterActive {
   background-color: #7eba56;
@@ -258,3 +258,49 @@
   font-weight: 700;
   cursor: pointer;
 }
+/* ── Dropdown wrapper ── */
+.dropdownWrapper {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  z-index: 100;
+  min-width: 130px;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 16px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  color: #444;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dropdownItem:hover { background: #f5f5f5; }
+
+.dropdownItemActive {
+  background: #f0f8e8;
+  color: #7eba56;
+}
+
+/* ── VIEW LOG button ── */
+.viewLogBtn {
+  background-color: #7eba56;
+}
+
+.viewLogBtn:hover { background-color: #6aa947; }
