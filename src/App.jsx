@@ -7,7 +7,7 @@ import MembersPage from "./pages/dashboard/MembersPage";
 import PaymentsPage from "./pages/dashboard/PaymentsPage";
 import NotificationsPage from "./pages/dashboard/NotificationsPage";
 import AccountsPage from "./pages/dashboard/AccountsPage";
-
+import RecordPaymentPage from "./pages/dashboard/RecordPaymentPage";
 
 function App() {
   const [route, setRoute] = useState("login");
@@ -16,14 +16,15 @@ function App() {
 
   return (
     <>
-      {route === "login" && <LogInPage onNavigate={navigate} />}
-      {route === "create" && <CreatePage onNavigate={navigate} />}
-      {route === "forgot" && <ForgotPasswordPage onNavigate={navigate} />}
-      {route === "overview" && <OverviewPage activePage="overview" onNavigate={navigate} />}
-      {route === "members" && <MembersPage activePage="members" onNavigate={navigate} />}
-      {route === "payments" && <PaymentsPage activePage="payments" onNavigate={navigate} />}
+      {route === "login"         && <LogInPage onNavigate={navigate} />}
+      {route === "create"        && <CreatePage onNavigate={navigate} />}
+      {route === "forgot"        && <ForgotPasswordPage onNavigate={navigate} />}
+      {route === "overview"      && <OverviewPage activePage="overview" onNavigate={navigate} />}
+      {route === "members"       && <MembersPage activePage="members" onNavigate={navigate} />}
+      {route === "payments"      && <PaymentsPage activePage="payments" onNavigate={navigate} />}
       {route === "notifications" && <NotificationsPage activePage="notifications" onNavigate={navigate} />}
-      {route === "accounts" && <AccountsPage activePage="accounts" onNavigate={navigate} />}   
+      {route === "accounts"      && <AccountsPage activePage="accounts" onNavigate={navigate} />}
+      {route === "recordPayment" && <RecordPaymentPage activePage="payments" onNavigate={navigate} />}
     </>
   );
 }

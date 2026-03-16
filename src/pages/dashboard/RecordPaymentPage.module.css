@@ -1,0 +1,167 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  font-family: "Montserrat", sans-serif;
+  background-color: #f5f5f5;
+}
+ 
+.content {
+  flex: 1;
+  padding: 40px 48px;
+  overflow-y: auto;
+  margin-left: 180px;
+}
+ 
+/* Title */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+ 
+.titleIcon {
+  font-size: 32px;
+}
+ 
+.title {
+  color: #7eba56;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+ 
+/* Form Card */
+.formCard {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+ 
+.formRow {
+  display: flex;
+  gap: 24px;
+}
+ 
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+ 
+.formLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+}
+ 
+.formInput {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  color: #333;
+  outline: none;
+  background: white;
+}
+ 
+.formInput:focus {
+  border-color: #7eba56;
+}
+ 
+/* Status + action row */
+.formRowStatus {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+ 
+.statusGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+ 
+.radioRow {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+ 
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #444;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+ 
+.actionBtns {
+  display: flex;
+  gap: 12px;
+}
+ 
+.addRecordBtn {
+  padding: 10px 28px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+ 
+.addRecordBtn:hover { background: #6aa947; }
+ 
+.cancelBtn {
+  padding: 10px 28px;
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+ 
+.cancelBtn:hover { background: #f0f0f0; }
+ 
+/* Close row */
+.closeRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+ 
+.closePageBtn {
+  padding: 10px 32px;
+  background: #222;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+ 
+.closePageBtn:hover { background: #444; }
