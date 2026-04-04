@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import styles from "./NotificationsPage.module.css";
-import Sidebar from "../../components/Sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/sidebar";
 import ViewLogModal from "../../components/modals/notifications/ViewLogModal";
 
 const notifications = [

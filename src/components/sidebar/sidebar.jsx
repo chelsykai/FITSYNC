@@ -1,5 +1,5 @@
 import { useState } from "react";
-import styles from "./Sidebar.module.css";
+import styles from "./sidebar.module.css";
 import logo from "../../assets/logo_2.png";
 
 const navItems = [

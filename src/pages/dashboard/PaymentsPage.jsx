@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./PaymentsPage.module.css";
-import Sidebar from "../../components/Sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/sidebar";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 

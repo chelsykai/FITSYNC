@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./AccountsPage.module.css";
-import Sidebar from "../../components/Sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/sidebar";
 import CreateAccountModal from "../../components/modals/accounts/CreateAccountModal";
 import EditAccountModal from "../../components/modals/accounts/EditAccountModal";
 import DeleteAccountModal from "../../components/modals/accounts/DeleteAccountModal";

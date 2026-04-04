@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./MembersPage.module.css";
-import Sidebar from "../../components/Sidebar/Sidebar";
+import Sidebar from "../../components/sidebar/sidebar";
 import MembersExportModal from "../../components/modals/members/MembersExportModal";
 import AddMemberModal from "../../components/modals/members/AddMemberModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
