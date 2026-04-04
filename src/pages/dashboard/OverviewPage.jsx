@@ -1,20 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./OverviewPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllModal from "../../components/modals/overview/ViewAllModal";
 import ExportModal from "../../components/modals/overview/ExportModal";
+import { fetchMembers } from "../../services/memberService";
 
 const stats = { checkins: 44, activeMembers: 890, walkIns: 13 };
-
-const expiringMembers = [
-  { id: "00001", name: "Ayvan Lopez",         date: "MM/DD/YYYY", type: "Student",  monthly: "2 months",  validity: "1 Year" },
-  { id: "00014", name: "Janine Mae Vios",      date: "MM/DD/YYYY", type: "Student",  monthly: "5 months",  validity: "1 Year" },
-  { id: "00281", name: "Allyza Mae Magsipoc",  date: "MM/DD/YYYY", type: "Student",  monthly: "1 month",   validity: "1 Year" },
-  { id: "00026", name: "James Allen Victoria", date: "MM/DD/YYYY", type: "Student",  monthly: "2 months",  validity: "1 Year" },
-  { id: "00002", name: "Name",                 date: "MM/DD/YYYY", type: "Regular",  monthly: "18 months", validity: "1 Year" },
-  { id: "00039", name: "Name",                 date: "MM/DD/YYYY", type: "PWD",      monthly: "2 months",  validity: "1 Year" },
-  { id: "00132", name: "Name",                 date: "MM/DD/YYYY", type: "Regular",  monthly: "5 months",  validity: "1 Year" },
-];
 
 const gymActivity = [10, 6, 12, 4, 3, 5, 2, 4, 6, 3, 5, 4];
 
@@ -85,6 +76,30 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   const [year, setYear] = useState(2025);
   const [showAll, setShowAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch members on component mount
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchMembers();
+        // Display members sorted by join date (most recent first)
+        setMembers(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching members:", err);
+        setError("Failed to load members");
+        setMembers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMembers();
+  }, []);
 
   return (
     <>
@@ -127,30 +142,51 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
           {/* Expiring Members Table */}
           <div className={styles.tableCard}>
             <h2 className={styles.tableTitle}>Memberships Expiring Soon</h2>
+            {error && (
+              <div style={{
+                color: "#d32f2f",
+                padding: "12px",
+                backgroundColor: "#ffebee",
+                borderRadius: "4px",
+                marginBottom: "16px",
+              }}>
+                {error}
+              </div>
+            )}
+            {loading && (
+              <div style={{ textAlign: "center", padding: "20px", color: "#666" }}>
+                Loading members...
+              </div>
+            )}
+            {!loading && (
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th>Member ID</th>
                   <th>Name</th>
-                  <th>Date</th>
+                  <th>Join Date</th>
                   <th>Membership Type</th>
                   <th>Monthly Validity</th>
                   <th>Membership Validity</th>
                 </tr>
               </thead>
               <tbody>
-                {expiringMembers.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.id}</td>
-                    <td>{m.name}</td>
-                    <td>{m.date}</td>
-                    <td>{m.type}</td>
-                    <td>{m.monthly}</td>
-                    <td>{m.validity}</td>
+                {members.slice(0, 7).map((m) => (
+                  <tr key={m.member_id}>
+                    <td>{m.member_id}</td>
+                    <td>{m.full_name}</td>
+                    <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
+                    <td>{m.membership_type}</td>
+                    <td>{m.monthly_validity}</td>
+                    <td>{m.membership_validity}</td>
                   </tr>
                 ))}
+                {!loading && members.length === 0 && (
+                  <tr><td colSpan={6} className={styles.noResults}>No members found.</td></tr>
+                )}
               </tbody>
             </table>
+            )}
             <div className={styles.viewAllWrapper}>
               <button className={styles.viewAllBtn} onClick={() => setShowAll(true)}>
                 View All
@@ -190,7 +226,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
 
       {/* Modals */}
       {showAll && (
-        <ViewAllModal members={expiringMembers} onClose={() => setShowAll(false)} />
+        <ViewAllModal members={members} onClose={() => setShowAll(false)} />
       )}
       {showExport && (
         <ExportModal onClose={() => setShowExport(false)} />
