@@ -4,47 +4,128 @@ import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllModal from "../../components/modals/overview/ViewAllModal";
 import ExportModal from "../../components/modals/overview/ExportModal";
 import { fetchMembers } from "../../services/memberService";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const stats = { checkins: 44, activeMembers: 890, walkIns: 13 };
 
 const gymActivity = [10, 6, 12, 4, 3, 5, 2, 4, 6, 3, 5, 4];
 
-const population = [
-  { label: "Regular", value: 50,   color: "#4a9e4a" },
-  { label: "Student", value: 30,   color: "#7fd4c1" },
-  { label: "PWD",     value: 9.2,  color: "#a8c8e8" },
-  { label: "Senior",  value: 10.3, color: "#c8c8c8" },
-];
+const membershipTypeColors = {
+  "Regular": "#4a9e4a",
+  "Student": "#7fd4c1",
+  "PWD": "#a8c8e8",
+  "Senior": "#c8c8c8",
+};
+
+// Function to calculate population distribution from members
+function calculatePopulation(members) {
+  if (members.length === 0) {
+    return [
+      { label: "Regular", value: 0 },
+      { label: "Student", value: 0 },
+      { label: "PWD", value: 0 },
+      { label: "Senior", value: 0 },
+    ];
+  }
+
+  const typeCounts = {
+    "Regular": 0,
+    "Student": 0,
+    "PWD": 0,
+    "Senior": 0,
+  };
+
+  members.forEach((m) => {
+    const type = m.membership_type || "Regular";
+    if (typeCounts.hasOwnProperty(type)) {
+      typeCounts[type]++;
+    }
+  });
+
+  return Object.entries(typeCounts).map(([type, count]) => ({
+    label: type,
+    value: parseFloat(((count / members.length) * 100).toFixed(1)),
+  }));
+}
 
 function DonutChart({ data }) {
-  const size = 160, cx = 80, cy = 80, r = 55, innerR = 30;
-  let cumulative = 0;
-  const slices = data.map((d) => {
-    const start = cumulative;
-    cumulative += d.value;
-    const startAngle = (start / 100) * 2 * Math.PI - Math.PI / 2;
-    const endAngle = ((start + d.value) / 100) * 2 * Math.PI - Math.PI / 2;
-    const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
-    const x2 = cx + r * Math.cos(endAngle),   y2 = cy + r * Math.sin(endAngle);
-    const ix1 = cx + innerR * Math.cos(startAngle), iy1 = cy + innerR * Math.sin(startAngle);
-    const ix2 = cx + innerR * Math.cos(endAngle),   iy2 = cy + innerR * Math.sin(endAngle);
-    const largeArc = d.value > 50 ? 1 : 0;
-    const path = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${ix2} ${iy2} A ${innerR} ${innerR} 0 ${largeArc} 0 ${ix1} ${iy1} Z`;
-    const midAngle = ((start + d.value / 2) / 100) * 2 * Math.PI - Math.PI / 2;
-    const lx = cx + (r + innerR) / 2 * Math.cos(midAngle);
-    const ly = cy + (r + innerR) / 2 * Math.sin(midAngle);
-    return { ...d, path, lx, ly };
-  });
+  // Filter out zero values
+  const filteredData = data.filter((d) => d.value > 0);
+
+  const chartData = filteredData.map((d) => ({
+    ...d,
+    fill: membershipTypeColors[d.label],
+  }));
+
   return (
-    <svg width={size} height={size}>
-      {slices.map((s, i) => <path key={i} d={s.path} fill={s.color} />)}
-      {slices.map((s, i) => (
-        <text key={i} x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="middle"
-          fontSize="9" fill="white" fontWeight="700" fontFamily="Montserrat, sans-serif">
-          {s.value}%
-        </text>
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <Pie
+          data={chartData}
+          cx="50%"
+          cy="50%"
+          innerRadius={60}
+          outerRadius={100}
+          paddingAngle={2}
+          dataKey="value"
+          label={({ label, value }) => `${label}: ${value}%`}
+          labelStyle={{
+            fontSize: "12px",
+            fontWeight: "600",
+            fill: "#333",
+            fontFamily: "Montserrat, sans-serif",
+          }}
+        >
+          {chartData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.fill} />
+          ))}
+        </Pie>
+        <Tooltip
+          formatter={(value) => `${value}%`}
+          contentStyle={{
+            backgroundColor: "#fff",
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "8px",
+          }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+function PopulationLegend({ data }) {
+  return (
+    <div style={{
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "16px",
+      justifyContent: "center",
+      marginTop: "16px",
+    }}>
+      {data.map((item) => (
+        <div key={item.label} style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+        }}>
+          <div style={{
+            width: "16px",
+            height: "16px",
+            borderRadius: "3px",
+            backgroundColor: membershipTypeColors[item.label],
+          }} />
+          <span style={{
+            fontSize: "14px",
+            fontWeight: "500",
+            color: "#333",
+            fontFamily: "Montserrat, sans-serif",
+          }}>
+            {item.label} ({item.value}%)
+          </span>
+        </div>
       ))}
-    </svg>
+    </div>
   );
 }
 
@@ -79,6 +160,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [populationData, setPopulationData] = useState([]);
 
   // Fetch members on component mount
   useEffect(() => {
@@ -86,8 +168,8 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
       try {
         setLoading(true);
         const data = await fetchMembers();
-        // Display members sorted by join date (most recent first)
         setMembers(data);
+        setPopulationData(calculatePopulation(data));
         setError(null);
       } catch (err) {
         console.error("Error fetching members:", err);
@@ -121,7 +203,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
               <span className={styles.statIcon}>👥</span>
               <div>
                 <p className={styles.statLabel}>Active Membership</p>
-                <p className={styles.statValue}>{stats.activeMembers}</p>
+                <p className={styles.statValue}>{loading ? "..." : members.length}</p>
               </div>
             </div>
             <div className={styles.statCard}>
@@ -206,19 +288,13 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
               </div>
               <BarChart data={gymActivity} />
             </div>
+            
             <div className={styles.chartCard}>
               <h2 className={styles.chartTitle}>Population</h2>
-              <div className={styles.donutRow}>
-                <DonutChart data={population} />
-                <div className={styles.legend}>
-                  {population.map((p) => (
-                    <div key={p.label} className={styles.legendItem}>
-                      <span className={styles.legendDot} style={{ backgroundColor: p.color }} />
-                      <span className={styles.legendLabel}>{p.label}</span>
-                    </div>
-                  ))}
-                </div>
+              <div style={{ width: "100%", height: "350px" }}>
+                <DonutChart data={populationData} />
               </div>
+              <PopulationLegend data={populationData} />
             </div>
           </div>
         </div>
