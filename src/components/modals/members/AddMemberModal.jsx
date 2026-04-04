@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import styles from "../Modal.module.css";
+import { addMember } from "../../../services/memberService";
 
 const defaultForm = {
   fullName: "",
@@ -17,6 +18,8 @@ const defaultForm = {
 export default function AddMemberModal({ onClose, onSuccess }) {
   const [form, setForm] = useState(defaultForm);
   const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const fileRef = useRef();
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
@@ -28,10 +31,26 @@ export default function AddMemberModal({ onClose, onSuccess }) {
     setPreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = () => {
-    if (!form.fullName.trim()) return;
-    const memberId = "FS-" + new Date().getFullYear() + "-" + String(Math.floor(Math.random() * 9000) + 1000).padStart(4, "0");
-    onSuccess?.({ ...form, memberId });
+  const handleSubmit = async () => {
+    if (!form.fullName.trim()) {
+      setError("Full name is required");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const newMember = await addMember(form);
+      onSuccess?.(newMember);
+      setForm(defaultForm);
+      setPreview(null);
+    } catch (err) {
+      setError(err.message || "Failed to add member. Please try again.");
+      console.error("Error adding member:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -99,13 +118,34 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                 Female
               </label>
             </div>
+
+            {/* Error message */}
+            {error && (
+              <div style={{
+                color: "#d32f2f",
+                fontSize: "0.9rem",
+                marginTop: "10px",
+                padding: "8px",
+                backgroundColor: "#ffebee",
+                borderRadius: "4px",
+              }}>
+                {error}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Buttons */}
         <div className={styles.addMemberBtns}>
-          <button className={styles.addMemberCancelBtn} onClick={onClose}>Cancel</button>
-          <button className={styles.addMemberSubmitBtn} onClick={handleSubmit}>Add Member</button>
+          <button className={styles.addMemberCancelBtn} onClick={onClose} disabled={loading}>Cancel</button>
+          <button 
+            className={styles.addMemberSubmitBtn} 
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{ opacity: loading ? 0.6 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+          >
+            {loading ? "Adding Member..." : "Add Member"}
+          </button>
         </div>
       </div>
     </div>

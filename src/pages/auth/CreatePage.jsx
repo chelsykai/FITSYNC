@@ -66,11 +66,6 @@ export default function CreatePage({ onNavigate }) {
           {/* Other Inputs */}
           <input 
             type="text" 
-            placeholder="Employee ID" 
-            className={styles.inputField} 
-          />
-          <input 
-            type="text" 
             placeholder="User ID" 
             className={styles.inputField}
             value={userId}
