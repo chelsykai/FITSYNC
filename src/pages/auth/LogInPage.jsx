@@ -35,8 +35,8 @@ export default function LogInPage({ onNavigate }) {
         return;
       }
 
-      // Store user info in sessionStorage for persistence across pages
-      sessionStorage.setItem("currentUser", JSON.stringify(data[0]));
+      // Store user info in localStorage for persistence across refreshes and sessions
+      localStorage.setItem("currentUser", JSON.stringify(data[0]));
 
       // Login successful - navigate to overview
       setLoading(false);
