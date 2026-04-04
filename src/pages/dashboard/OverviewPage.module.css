@@ -44,6 +44,14 @@
   justify-content: center;
   max-width: 80px;
   flex: 0 0 80px;
+  cursor: pointer;
+  background-color: white;
+  border: 4px solid #E5F0DE;
+  transition: background 0.2s;
+}
+
+.printCard:hover {
+  background: #d4e8c8;
 }
 
 .statIcon {

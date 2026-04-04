@@ -39,9 +39,7 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-.statIcon {
-  font-size: 26px;
-}
+.statIcon { font-size: 26px; }
 
 .statLabel {
   font-size: 10px;
@@ -62,7 +60,7 @@
 .searchWrapper {
   display: flex;
   align-items: center;
-  background:  #c9c9c9;
+  background: #c9c9c9;
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 10px 16px;
@@ -71,10 +69,7 @@
   width: 340px;
 }
 
-.searchIcon {
-  font-size: 14px;
-  color: #242424;
-}
+.searchIcon { font-size: 14px; color: #242424; }
 
 .searchInput {
   border: none;
@@ -86,15 +81,13 @@
   background: transparent;
 }
 
-.searchInput::placeholder {
-  color: #242424;
-}
+.searchInput::placeholder { color: #242424; }
 
 .clearBtn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #242424;
+  color: #555;
   font-size: 14px;
   padding: 0;
 }
@@ -126,9 +119,7 @@
   transition: background 0.2s;
 }
 
-.exportBtn:hover {
-  background-color: #6aa947;
-}
+.exportBtn:hover { background-color: #6aa947; }
 
 .addBtn {
   background-color: #7eba56;
@@ -143,9 +134,7 @@
   transition: background 0.2s;
 }
 
-.addBtn:hover {
-  background-color: #6aa947;
-}
+.addBtn:hover { background-color: #6aa947; }
 
 .table {
   width: 100%;
@@ -158,22 +147,21 @@
   color: #888;
   font-weight: 600;
   padding: 8px 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #c8e0b0;
+  background: transparent;
 }
 
 .table td {
   padding: 10px 12px;
   color: #444;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid #d8edca;
+  background: transparent;
 }
 
-.table tr:last-child td {
-  border-bottom: none;
-}
+.table tr:last-child td { border-bottom: none; }
 
-.table tbody tr:hover {
-  background-color: #f9fdf6;
-}
+.clickableRow { cursor: pointer; }
+.clickableRow:hover td { background-color: rgba(255,255,255,0.5); }
 
 .noResults {
   text-align: center;
@@ -200,6 +188,4 @@
   transition: background 0.2s;
 }
 
-.viewAllBtn:hover {
-  background-color: #555;
-}
+.viewAllBtn:hover { background-color: #555; }

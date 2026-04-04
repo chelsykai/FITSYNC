@@ -6,7 +6,7 @@ import { supabase } from "../../lib/supabaseClient";
 export default function CreatePage({ onNavigate }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
+  const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -14,9 +14,9 @@ export default function CreatePage({ onNavigate }) {
     setError("");
     const { error } = await supabase.from("system_user").insert([
       {
-        FirstName: firstName,
-        LastName: lastName,
-        username: username,
+        first_name: firstName,
+        last_name: lastName,
+        user_id: userId,
         password: password,
       },
     ]);
@@ -71,10 +71,10 @@ export default function CreatePage({ onNavigate }) {
           />
           <input 
             type="text" 
-            placeholder="Username" 
+            placeholder="User ID" 
             className={styles.inputField}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
           />
           <input 
             type="password" 

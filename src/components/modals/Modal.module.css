@@ -1,0 +1,1293 @@
+/* ── Shared overlay ── */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* ── Modal shell (used by ViewAll, MembersExport, AddMember) ── */
+.modal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Wide variant for ViewAllModal table */
+.wideModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 32px 40px;
+  width: 90vw;
+  max-width: 1100px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.modalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* ── View-All table ── */
+.modalTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+}
+
+.modalTable th {
+  text-align: left;
+  color: #555;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.modalTable td {
+  padding: 8px 10px;
+  color: #444;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modalTable tr:last-child td {
+  border-bottom: none;
+}
+
+.viewAllWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.viewAllBtn {
+  background-color: #333;
+  color: #E5F0DE;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 32px;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.viewAllBtn:hover {
+  background-color: #555;
+}
+
+/* ── Export modal (OverviewPage) ── */
+.exportModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.exportSectionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  margin: 16px 0 8px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.exportRadioRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.exportSearch {
+  display: flex;
+  align-items: center;
+  background: #c9c9c9;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  gap: 10px;
+  width: 354px;
+}
+
+.exportSearchInput {
+  border: none;
+  outline: none;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  flex: 1;
+  background: transparent;
+}
+
+.exportSearchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 13px;
+  padding: 0;
+}
+
+.exportCheckList {
+  max-height: 160px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background-color: white;
+}
+
+.exportCheckRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.exportSubmitBtn {
+  width: 100%;
+  padding: 10px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.exportSubmitBtn:hover {
+  background: #6aa947;
+}
+
+.exportCloseBtn {
+  width: 100%;
+  padding: 10px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exportCloseBtn:hover {
+  background: #555;
+}
+
+/* ── Members modals (export + add member) ── */
+.sectionLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  margin: 14px 0 8px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.radioRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 6px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.modalSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #c9c9c9;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 8px;
+}
+
+.modalSearchInput {
+  border: none;
+  outline: none;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  flex: 1;
+  background: transparent;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 14px;
+  padding: 0;
+}
+
+.checkList {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  background-color: white;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.memberIcon { font-size: 14px; }
+
+/* ── Add member form ── */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.formGroup { display: flex; flex-direction: column; gap: 4px; }
+.formGroupFull { display: flex; flex-direction: column; gap: 4px; grid-column: 1 / -1; }
+
+.formLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  font-family: "Montserrat", sans-serif;
+}
+
+.formInput {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  color: #333;
+  outline: none;
+  background: white;
+}
+
+.formInput:focus { border-color: #7eba56; }
+
+/* ── Shared action buttons ── */
+.submitBtn {
+  width: 100%;
+  padding: 10px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.submitBtn:hover { background: #6aa947; }
+
+.closeBtn {
+  width: 100%;
+  padding: 10px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover { background: #555; }
+
+/* ── Profile modal ── */
+.profileModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 400px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.profileAvatar {
+  font-size: 56px;
+  background: grey;
+  border-radius: 100%;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px auto;
+}
+
+.profileName {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 6px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.profileBadge {
+  background: #E5F0DE;
+  color: #7eba56;
+  border: 1px solid #7eba56;
+  border-radius: 20px;
+  padding: 2px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 16px;
+  font-family: "Montserrat", sans-serif;
+}
+
+.profileGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.profileLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+  margin: 0 0 2px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.profileValue {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* ── Table action buttons ── */
+.actionBtns {
+  display: flex;
+  gap: 6px;
+}
+
+.editBtn {
+  background-color: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.editBtn:hover { background-color: #6aa947; }
+
+.deleteBtn {
+  background-color: #e05555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.deleteBtn:hover { background-color: #c43e3e; }
+
+/* ── Delete confirmation modal ── */
+.deleteModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 36px 32px;
+  width: 380px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.deleteIcon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.deleteMessage {
+  font-size: 13px;
+  color: #555;
+  font-family: "Montserrat", sans-serif;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+.deleteMessage strong {
+  color: #222;
+  font-weight: 700;
+}
+
+.deletConfirmBtn {
+  width: 100%;
+  padding: 10px;
+  background: #e05555;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+
+.deletConfirmBtn:hover { background: #c43e3e; }
+
+/* ── Add Member Modal ── */
+.addMemberModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 32px 36px;
+  width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.addMemberTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 24px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.addMemberBody {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+/* Photo upload */
+.photoSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.photoBox {
+  width: 110px;
+  height: 110px;
+  border-radius: 12px;
+  background: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  border: 2px dashed #ccc;
+  transition: border-color 0.2s;
+}
+
+.photoBox:hover { border-color: #7eba56; }
+
+.photoPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.photoIcon { font-size: 32px; }
+
+.photoPreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploadLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  font-family: "Montserrat", sans-serif;
+  margin: 0;
+}
+
+/* Fields */
+.addMemberFields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 12px;
+}
+
+.fieldRow .formInput {
+  flex: 1;
+}
+
+/* Gender */
+.genderRow {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.genderOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #444;
+  font-family: "Montserrat", sans-serif;
+  cursor: pointer;
+}
+
+/* Add member action buttons */
+.addMemberBtns {
+  display: flex;
+  gap: 12px;
+  justify-content: stretch;
+}
+
+.addMemberCancelBtn {
+  flex: 1;
+  padding: 11px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.addMemberCancelBtn:hover { background: #555; }
+
+.addMemberSubmitBtn {
+  flex: 1;
+  padding: 11px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.addMemberSubmitBtn:hover { background: #6aa947; }
+
+/* ── Member Registered Modal ── */
+.registeredModal {
+  background: white;
+  border-radius: 16px;
+  padding: 0 0 28px 0;
+  width: 380px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  text-align: center;
+}
+
+.registeredHeader {
+  background: #BEE3A7;
+  padding: 20px 24px 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.registeredCheck {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #7eba56;
+  color: #7eba56;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.registeredTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.registeredInfo {
+  background: #f0f8e8;
+  margin: 20px 24px 0 24px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.registeredInfoRow {
+  font-size: 13px;
+  color: #000;
+  font-family: "Montserrat", sans-serif;
+  margin: 0 0 6px 0;
+}
+
+.registeredInfoRow:last-child { margin: 0; }
+
+.registeredInfoRow strong {
+  font-weight: 700;
+  color: #222;
+}
+
+.qrWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0 8px 0;
+}
+
+.qrCanvas {
+  width: 160px;
+  height: 160px;
+}
+
+.qrLabel {
+  font-size: 11px;
+  color: #7eba56;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  margin: 8px 0 0 0;
+}
+
+.registeredBtns {
+  display: flex;
+  gap: 12px;
+  padding: 0 24px;
+  margin-top: 16px;
+}
+
+/* ── View All Payments Modal ── */
+.viewAllPaymentsModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 92vw;
+  max-width: 1000px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Receipt Modal ── */
+.receiptModal {
+  background: #E5F0DE;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 88vw;
+  max-width: 900px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Shared payment modal header ── */
+.paymentModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paymentModalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.modalCloseX {
+  background: #222;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.modalCloseX:hover { background: #555; }
+
+/* ── Payment modal search bar ── */
+.paymentModalSearch {
+  display: flex;
+  align-items: center;
+  background: #c9c9c9;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  gap: 10px;
+  width: 520px;
+}
+
+/* ── Payment name clickable link ── */
+.paymentNameLink {
+  color: #5a9ed6;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 12px;
+}
+
+/* ── Receipt action links ── */
+.receiptActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.receiptLinkBtn {
+  background: none;
+  border: none;
+  color: #5a9ed6;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.receiptDivider {
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* ── Badge variants ── */
+.badge {
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  font-family: "Montserrat", sans-serif;
+}
+
+.badgePaid    { background-color: #7eba56; }
+.badgePending { background-color: #f0a500; }
+.badgeUnpaid  { background-color: #e05555; }
+
+/* ── Payment modal footer ── */
+.paymentModalFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.paymentModalFooterLeft {
+  display: flex;
+  gap: 8px;
+}
+
+.exportSheetsBtn {
+  padding: 8px 16px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exportSheetsBtn:hover { background: #6aa947; }
+
+.printBtn {
+  padding: 8px 20px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.printBtn:hover { background: #6aa947; }
+
+.addRecordBtn {
+  padding: 8px 20px;
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.addRecordBtn:hover { background: #f0f0f0; }
+
+/* ── Receipt member info card ── */
+.receiptMemberCard {
+  background: #d4e8b8;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.receiptAvatar {
+  font-size: 52px;
+  background: #b8d498;
+  border-radius: 50%;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.receiptMemberInfo {
+  display: flex;
+  gap: 32px;
+  flex: 1;
+}
+
+.receiptInfoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.receiptInfoLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #5a7a3a;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.receiptInfoValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 8px 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.noResults {
+  text-align: center;
+  color: #aaa;
+  padding: 24px;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* ── View Log Modal (notifications) ── */
+.viewLogModal {
+  background: #E5F0DE;
+  border-radius: 20px;
+  padding: 32px 36px 32px 36px;
+  width: 380px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.viewLogModal .modalCloseX {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: #333;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+}
+
+.logAvatar {
+  width: 160px;
+  height: 160px;
+  border-radius: 14px;
+  background: #b8d4a0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.logStatusBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #444;
+  font-family: "Montserrat", sans-serif;
+  margin-top: 4px;
+}
+
+.logDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #7eba56;
+  flex-shrink: 0;
+}
+
+.logDetails {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logDetailLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  margin: 10px 0 0 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.logDetailValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.printLogBtn {
+  width: 100%;
+  padding: 11px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  transition: background 0.2s;
+}
+
+.printLogBtn:hover { background: #6aa947; }
+
+.markLogoutBtn {
+  width: 100%;
+  padding: 11px;
+  background: #2d4a1e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.2s;
+}
+
+.markLogoutBtn:hover { background: #1e3214; }
+
+/* ── Create / Edit Account Modal ── */
+.createAccountModal {
+  background: #f0f8e8;
+  border-radius: 16px;
+  padding: 32px 36px;
+  width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.createAccountTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.accountFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.accountLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Staff ID row */
+.staffIdRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.staffIdBadge {
+  background: #e0e0e0;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  font-family: "Montserrat", sans-serif;
+  flex-shrink: 0;
+  border-right: 1px solid #ddd;
+}
+
+.staffIdInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 10px 14px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  color: #999;
+  background: white;
+}
+
+/* Name row */
+.nameRow {
+  display: flex;
+  gap: 12px;
+}
+
+.nameRow .accountInput {
+  flex: 1;
+}
+
+.initialInput {
+  max-width: 100px !important;
+  flex: 0 0 100px !important;
+}
+
+/* Two column layout */
+.accountTwoCol {
+  display: flex;
+  gap: 20px;
+}
+
+.accountTwoCol .accountFieldGroup {
+  flex: 1;
+}
+
+/* Input + select */
+.accountInput {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  color: #333;
+  outline: none;
+  background: white;
+  box-sizing: border-box;
+}
+
+.accountInput:focus { border-color: #7eba56; }
+
+.selectWrapper {
+  position: relative;
+}
+
+.accountSelect {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  color: #333;
+  outline: none;
+  background: white;
+  appearance: none;
+  cursor: pointer;
+}
+
+.selectWrapper::after {
+  content: "▾";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #555;
+  font-size: 13px;
+}
+
+/* Password row */
+.passwordRow {
+  display: flex;
+  gap: 12px;
+}
+
+.passwordWrapper {
+  flex: 1;
+  position: relative;
+}
+
+.passwordWrapper .accountInput {
+  padding-right: 40px;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  color: #888;
+}
+
+/* Footer */
+.createAccountFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.accountCancelBtn {
+  padding: 10px 28px;
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.accountCancelBtn:hover { background: #f0f0f0; }
+
+.accountCreateBtn {
+  padding: 10px 28px;
+  background: #7eba56;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.accountCreateBtn:hover { background: #6aa947; }
