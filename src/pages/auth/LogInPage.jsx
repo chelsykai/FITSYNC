@@ -4,7 +4,7 @@ import logo from "../../assets/logo.png";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function LogInPage({ onNavigate }) {
-  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export default function LogInPage({ onNavigate }) {
       const { data, error: queryError } = await supabase
         .from("system_user")
         .select("*")
-        .eq("user_id", userId.trim())
+        .eq("user_id", username.trim())
         .eq("password", password.trim());
 
       if (queryError) {
@@ -77,8 +77,8 @@ export default function LogInPage({ onNavigate }) {
             type="text"
             placeholder="User ID"
             className={styles.inputField}
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={loading}
           />
