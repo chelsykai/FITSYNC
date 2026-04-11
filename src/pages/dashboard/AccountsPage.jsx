@@ -1,59 +1,107 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./AccountsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import CreateAccountModal from "../../components/modals/accounts/CreateAccountModal";
 import EditAccountModal from "../../components/modals/accounts/EditAccountModal";
 import DeleteAccountModal from "../../components/modals/accounts/DeleteAccountModal";
-
-const initialAccounts = [
-  { id: "1001", name: "Chelsy Kai Paralejas", role: "Admin", email: "chelsykaip@fitnesszone@gmail.com" },
-  { id: "1002", name: "Coco Paralejas",        role: "Staff", email: "cocop@fitnesszone@gmail.com" },
-  { id: "1003", name: "Zap Lopez",             role: "Staff", email: "zapl@fitnesszone@gmail.com" },
-  { id: "1004", name: "Zoe Tugay",             role: "Staff", email: "zoet@fitnesszone@gmail.com" },
-  { id: "1005", name: "Chambi Celebre",        role: "Staff", email: "chambic@fitnesszone@gmail.com" },
-  { id: "1006", name: "Name",                  role: "Staff", email: "name@fitnesszone@gmail.com" },
-  { id: "1007", name: "Name",                  role: "Staff", email: "name@fitnesszone@gmail.com" },
-  { id: "1008", name: "Name",                  role: "Staff", email: "name@fitnesszone@gmail.com" },
-];
-
-const auditLogs = [
-  { time: "12/12/2025, 16:01:21", user: "chelsykaip", action: "add_record_payment",      changes: { transaction: "Tw9f32gL0p", name: "**********", status: "record added" },          statusType: "success" },
-  { time: "12/12/2025, 13:23:54", user: "chelsykaip", action: "add_record_payment",      changes: { transaction: "Q8mZ4L2xTa", name: "**********", status: "failed to add record" },  statusType: "error" },
-  { time: "12/12/2025, 09:36:03", user: "chelsykaip", action: "add_record_payment",      changes: { transaction: "kP7F3wN0E9", name: "**********", status: "record added" },          statusType: "success" },
-  { time: "12/11/2025, 22:14:34", user: "chelsykaip", action: "add_member",              changes: { member_id: "M9X2L4A7",   name: "**********", status: "member added" },            statusType: "success" },
-  { time: "12/11/2025, 21:34:41", user: "chambic",    action: "add_record_payment",      changes: { transaction: "R2xM9aW5Lc", name: "**********", status: "record added" },          statusType: "success" },
-  { time: "12/11/2025, 16:23:12", user: "chambic",    action: "notified_member_overdue", changes: { member_id: "M9X2L4A7",   name: "**********", status: "notification sent" },       statusType: "info" },
-];
+import { fetchAccounts, addAccount, updateAccount, deleteAccount } from "../../services/accountService";
+import { fetchAuditLogs, getAuditUsers } from "../../services/auditService";
 
 const ITEMS_PER_PAGE = 5;
 
 export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
-  const [accounts, setAccounts]     = useState(initialAccounts);
-  const [showAudit, setShowAudit]   = useState(false);
+  const [accounts, setAccounts]       = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState(null);
+  const [auditLogs, setAuditLogs]     = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError]   = useState(null);
+  const [admins, setAdmins]           = useState(["all admins"]);
+  const [showAudit, setShowAudit]     = useState(false);
   const [filterAdmin, setFilterAdmin] = useState("all admins");
-  const [page, setPage]             = useState(1);
-  const [showCreate, setShowCreate] = useState(false);
-  const [editTarget, setEditTarget] = useState(null);
+  const [page, setPage]               = useState(1);
+  const [showCreate, setShowCreate]   = useState(false);
+  const [editTarget, setEditTarget]   = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Fetch accounts from Supabase on component mount
+  useEffect(() => {
+    const loadAccounts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchAccounts();
+        setAccounts(data);
+      } catch (err) {
+        setError(err.message || "Failed to load accounts");
+        console.error("Error loading accounts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAccounts();
+  }, []);
+
+  // Fetch audit logs from Supabase when audit tab is opened
+  useEffect(() => {
+    if (!showAudit) return; // Only fetch when audit tab is shown
+
+    const loadAuditData = async () => {
+      try {
+        setAuditLoading(true);
+        setAuditError(null);
+        const [logs, users] = await Promise.all([
+          fetchAuditLogs(),
+          getAuditUsers()
+        ]);
+        setAuditLogs(logs);
+        setAdmins(users);
+        // Reset filter to "all admins" when loading new data
+        setFilterAdmin("all admins");
+      } catch (err) {
+        setAuditError(err.message || "Failed to load audit logs");
+        console.error("Error loading audit data:", err);
+      } finally {
+        setAuditLoading(false);
+      }
+    };
+
+    loadAuditData();
+  }, [showAudit]);
 
   const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
   const paginated  = accounts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const admins = ["all admins", ...new Set(auditLogs.map((l) => l.user))];
   const filteredLogs = filterAdmin === "all admins"
     ? auditLogs
     : auditLogs.filter((l) => l.user === filterAdmin);
 
-  const handleCreate = (newAccount) => {
-    setAccounts((prev) => [...prev, newAccount]);
+  const handleCreate = async (newAccount) => {
+    try {
+      const createdAccount = await addAccount(newAccount);
+      setAccounts((prev) => [createdAccount, ...prev]);
+    } catch (err) {
+      setError("Failed to create account: " + err.message);
+    }
   };
 
-  const handleSave = (updated) => {
-    setAccounts((prev) => prev.map((a) => a.id === updated.id ? updated : a));
+  const handleSave = async (updated) => {
+    try {
+      const updatedAccount = await updateAccount(updated.id, updated);
+      setAccounts((prev) => prev.map((a) => a.id === updated.id ? updatedAccount : a));
+    } catch (err) {
+      setError("Failed to update account: " + err.message);
+    }
   };
 
-  const handleDelete = (target) => {
-    setAccounts((prev) => prev.filter((a) => a.id !== target.id));
+  const handleDelete = async (target) => {
+    try {
+      await deleteAccount(target.id);
+      setAccounts((prev) => prev.filter((a) => a.id !== target.id));
+    } catch (err) {
+      setError("Failed to delete account: " + err.message);
+    }
   };
 
   return (
@@ -73,55 +121,84 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
               </div>
 
               <div className={styles.tableCard}>
+                {error && (
+                  <div style={{
+                    padding: "15px",
+                    marginBottom: "15px",
+                    backgroundColor: "#fee",
+                    border: "1px solid #fcc",
+                    borderRadius: "4px",
+                    color: "#c33",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}>
+                    {error}
+                    <button onClick={() => setError(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>✕</button>
+                  </div>
+                )}
+
                 <div className={styles.actionRow}>
                   <button className={styles.addBtn} onClick={() => setShowCreate(true)}>
                     ＋ Add Account
                   </button>
                 </div>
 
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Staff ID</th>
-                      <th>Name</th>
-                      <th>Role</th>
-                      <th>Email</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginated.map((a) => (
-                      <tr key={a.id}>
-                        <td>{a.id}</td>
-                        <td>{a.name}</td>
-                        <td>{a.role}</td>
-                        <td>{a.email}</td>
-                        <td>
-                          <button className={styles.editBtn} onClick={() => setEditTarget(a)}>Edit</button>
-                          <button className={styles.deleteBtn} onClick={() => setDeleteTarget(a)}>Delete</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {loading ? (
+                  <div style={{ padding: "40px", textAlign: "center", color: "#666" }}>
+                    Loading accounts...
+                  </div>
+                ) : accounts.length === 0 ? (
+                  <div style={{ padding: "40px", textAlign: "center", color: "#999" }}>
+                    No accounts found. Click "Add Account" to create one.
+                  </div>
+                ) : (
+                  <>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr>
+                          <th>Staff ID</th>
+                          <th>Name</th>
+                          <th>Role</th>
+                          <th>Username</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginated.map((a) => (
+                          <tr key={a.id}>
+                            <td>{a.id}</td>
+                            <td>{a.name}</td>
+                            <td>{a.role}</td>
+                            <td>{a.email}</td>
+                            <td>
+                              <button className={styles.editBtn} onClick={() => setEditTarget(a)}>Edit</button>
+                              <button className={styles.deleteBtn} onClick={() => setDeleteTarget(a)}>Delete</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
 
-                {/* Pagination */}
-                <div className={styles.pagination}>
-                  <button className={styles.pageBtn}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}>‹</button>
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <button key={i + 1}
-                      className={`${styles.pageBtn} ${page === i + 1 ? styles.activePage : ""}`}
-                      onClick={() => setPage(i + 1)}>{i + 1}</button>
-                  ))}
-                  <button className={styles.pageBtn}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}>›</button>
-                  <span className={styles.pageInfo}>
-                    {(page - 1) * ITEMS_PER_PAGE + 1} out of {accounts.length} entries
-                  </span>
-                </div>
+                    {/* Pagination */}
+                    <div className={styles.pagination}>
+                      <button className={styles.pageBtn}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}>‹</button>
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <button key={i + 1}
+                          className={`${styles.pageBtn} ${page === i + 1 ? styles.activePage : ""}`}
+                          onClick={() => setPage(i + 1)}>{i + 1}</button>
+                      ))}
+                      <button className={styles.pageBtn}
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}>›</button>
+                      <span className={styles.pageInfo}>
+                        {(page - 1) * ITEMS_PER_PAGE + 1} out of {accounts.length} entries
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -131,9 +208,27 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
             <>
               <h1 className={styles.title}>Audit Trail</h1>
               <div className={styles.tableCard}>
+                {auditError && (
+                  <div style={{
+                    padding: "15px",
+                    marginBottom: "15px",
+                    backgroundColor: "#fee",
+                    border: "1px solid #fcc",
+                    borderRadius: "4px",
+                    color: "#c33",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}>
+                    {auditError}
+                    <button onClick={() => setAuditError(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>✕</button>
+                  </div>
+                )}
+
                 <p className={styles.auditDesc}>
                   Track staff/admin actions with timestamps. Use the <em>filter</em> to view by user.
                 </p>
+
                 <div className={styles.filterRow}>
                   <span className={styles.filterLabel}>Filter by admin</span>
                   <select className={styles.filterSelect} value={filterAdmin}
@@ -141,7 +236,18 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                     {admins.map((a) => <option key={a} value={a}>{a}</option>)}
                   </select>
                 </div>
-                <table className={styles.table}>
+
+                {auditLoading ? (
+                  <div style={{ padding: "40px", textAlign: "center", color: "#666" }}>
+                    Loading audit logs...
+                  </div>
+                ) : auditLogs.length === 0 ? (
+                  <div style={{ padding: "40px", textAlign: "center", color: "#999" }}>
+                    No audit logs found.
+                  </div>
+                ) : (
+                  <>
+                    <table className={styles.table}>
                   <thead>
                     <tr>
                       <th>Time</th>
@@ -176,6 +282,9 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                     ))}
                   </tbody>
                 </table>
+                  </>
+                )}
+
                 <div className={styles.closeRow}>
                   <button className={styles.closeBtn} onClick={() => setShowAudit(false)}>Close</button>
                 </div>
