@@ -1,8 +1,28 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
-import * as XLSX from "xlsx";
 
 const exportMemberOptions = (members) => ["Select All", ...members.map((m) => m.full_name)];
+
+const triggerDownload = (blob, fileName) => {
+  const downloadUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = downloadUrl;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(downloadUrl);
+};
+
+const toCsv = (rows) => {
+  if (rows.length === 0) return "";
+
+  const headers = Object.keys(rows[0]);
+  const escapeCsv = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const lines = rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(","));
+
+  return [headers.join(","), ...lines].join("\n");
+};
 
 export default function MembersExportModal({ members, onClose }) {
   const [exportFormat, setExportFormat] = useState("Excel");
@@ -54,33 +74,44 @@ export default function MembersExportModal({ members, onClose }) {
         "Last Visit": m.last_visit || "",
       }));
 
-      // Create workbook
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
-
-      // Set column widths
-      worksheet["!cols"] = [
-        { wch: 12 }, // Member ID
-        { wch: 20 }, // Name
-        { wch: 25 }, // Email
-        { wch: 12 }, // Phone
-        { wch: 30 }, // Address
-        { wch: 12 }, // Birthday
-        { wch: 15 }, // Membership Type
-        { wch: 12 }, // Join Date
-        { wch: 15 }, // Monthly Validity
-        { wch: 18 }, // Membership Validity
-        { wch: 12 }, // Last Visit
-      ];
-
       // Export file
       const fileName = `members_export_${new Date().getTime()}.${exportFormat === "CSV" ? "csv" : "xlsx"}`;
-      
+
       if (exportFormat === "CSV") {
-        XLSX.writeFile(workbook, fileName, { bookType: "csv" });
+        const csv = toCsv(exportData);
+        triggerDownload(new Blob([csv], { type: "text/csv;charset=utf-8;" }), fileName);
       } else {
-        XLSX.writeFile(workbook, fileName, { bookType: "xlsx" });
+        const excelLib = await import("exceljs");
+        const Workbook = excelLib.Workbook || excelLib.default?.Workbook;
+        if (!Workbook) {
+          throw new Error("Excel export library failed to load.");
+        }
+
+        const workbook = new Workbook();
+        const worksheet = workbook.addWorksheet("Members");
+
+        worksheet.columns = [
+          { header: "Member ID", key: "Member ID", width: 12 },
+          { header: "Name", key: "Name", width: 20 },
+          { header: "Email", key: "Email", width: 25 },
+          { header: "Phone", key: "Phone", width: 12 },
+          { header: "Address", key: "Address", width: 30 },
+          { header: "Birthday", key: "Birthday", width: 12 },
+          { header: "Membership Type", key: "Membership Type", width: 15 },
+          { header: "Join Date", key: "Join Date", width: 12 },
+          { header: "Monthly Validity", key: "Monthly Validity", width: 15 },
+          { header: "Membership Validity", key: "Membership Validity", width: 18 },
+          { header: "Last Visit", key: "Last Visit", width: 12 },
+        ];
+
+        worksheet.addRows(exportData);
+        const buffer = await workbook.xlsx.writeBuffer();
+        triggerDownload(
+          new Blob([buffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          }),
+          fileName
+        );
       }
 
       alert(`Successfully exported ${selectedMembers.length} member(s)!`);
