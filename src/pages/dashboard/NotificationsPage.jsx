@@ -2,30 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import styles from "./NotificationsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ViewLogModal from "../../components/modals/notifications/ViewLogModal";
+import { fetchMembers } from "../../services/memberService";
+import { sendMemberNotificationEmail } from "../../services/notificationEmailService";
 
-const notifications = [
-  { id: "2024-****-GYM-0", type: "OVERDUE BALANCE",       name: "Firstname Mi. Lastname", detail: "AMOUNT: PHP ----",              color: "orange", action: "NOTIFY"    },
-  { id: "2023-****-GYM-0", type: "MEMBERSHIP EXPIRING",   name: "Firstname Mi. Lastname", detail: "EXPIRY: -- DAYS REMAINING",     color: "yellow", action: "NOTIFY"    },
-  { id: "2023-****-GYM-0", type: "MEMBERSHIP EXPIRING",   name: "Firstname Mi. Lastname", detail: "EXPIRY: -- DAYS REMAINING",     color: "yellow", action: "NOTIFY"    },
-  { id: "2024-****-GYM-0", type: "ATTENDANCE / CHECK-IN", name: "Firstname Mi. Lastname", detail: "TIME IN: ** AM | LOCKER: #--",  color: "green",  action: "VIEW LOG"  },
-  { id: "2024-****-GYM-0", type: "ATTENDANCE / CHECK-IN", name: "Firstname Mi. Lastname", detail: "TIME IN: ** AM | LOCKER: #--",  color: "green",  action: "VIEW LOG"  },
-  { id: "2024-****-GYM-0", type: "ATTENDANCE / CHECK-IN", name: "Firstname Mi. Lastname", detail: "TIME IN: ** AM | LOCKER: #--",  color: "green",  action: "VIEW LOG"  },
-  { id: "2024-****-GYM-0", type: "ATTENDANCE / CHECK-IN", name: "Firstname Mi. Lastname", detail: "TIME IN: ** AM | LOCKER: #--",  color: "green",  action: "VIEW LOG"  },
-  { id: "2024-****-GYM-0", type: "ATTENDANCE / CHECK-IN", name: "Firstname Mi. Lastname", detail: "TIME IN: ** AM | LOCKER: #--",  color: "green",  action: "VIEW LOG"  },
-  { id: "2024-****-GYM-0", type: "ATTENDANCE / CHECK-IN", name: "Firstname Mi. Lastname", detail: "TIME IN: ** AM | LOCKER: #--",  color: "green",  action: "VIEW LOG"  },
-  { id: "2024-****-GYM-0", type: "OVERDUE BALANCE",       name: "Firstname Mi. Lastname", detail: "AMOUNT: PHP ----",              color: "orange", action: "NOTIFY"    },
-  { id: "2024-****-GYM-0", type: "UPCOMING CLASS",        name: "Firstname Mi. Lastname", detail: "CLASS:\nTIME:",                 color: "blue",   action: "REMIND"    },
-  { id: "2024-****-GYM-0", type: "UPCOMING PT SESSION",   name: "Firstname Mi. Lastname", detail: "COACH:\nTIME:",                 color: "blue",   action: "REMIND"    },
-  { id: "2024-****-GYM-0", type: "UPCOMING EVALUATION",   name: "Firstname Mi. Lastname", detail: "ACTIVITY:\nTIME:",              color: "blue",   action: "REMIND"    },
-  { id: "2024-****-GYM-0", type: "UPCOMING CLASS",        name: "Firstname Mi. Lastname", detail: "CLASS:\nTIME:",                 color: "blue",   action: "REMIND"    },
-  { id: "2024-****-GYM-0", type: "UPCOMING PT SESSION",   name: "Firstname Mi. Lastname", detail: "COACH:\nTIME:",                 color: "blue",   action: "REMIND"    },
-  { id: "2024-****-GYM-0", type: "UPCOMING EVALUATION",   name: "Firstname Mi. Lastname", detail: "ACTIVITY:\nTIME:",              color: "blue",   action: "REMIND"    },
-  { id: "2024-****-GYM-0", type: "OVERDUE BALANCE",       name: "Firstname Mi. Lastname", detail: "AMOUNT: PHP ----",              color: "orange", action: "NOTIFY"    },
-  { id: "2023-****-GYM-0", type: "MEMBERSHIP EXPIRING",   name: "Firstname Mi. Lastname", detail: "EXPIRY: -- DAYS REMAINING",     color: "yellow", action: "NOTIFY"    },
-  { id: "2023-****-GYM-0", type: "MEMBERSHIP EXPIRED",    name: "Firstname Mi. Lastname", detail: "EXPIRED",                       color: "red",    action: "NOTIFY"    },
-];
-
-const FILTERS = ["ALL", "EXPIRING", "EXPIRED", "OVERDUE", "UPCOMING", "ATTENDANCE"];
 const FILTER_STATUS = ["Pending", "Sent", "Failed"];
 
 const filterMap = {
@@ -33,8 +12,6 @@ const filterMap = {
   EXPIRING:   (n) => n.type === "MEMBERSHIP EXPIRING",
   EXPIRED:    (n) => n.type === "MEMBERSHIP EXPIRED",
   OVERDUE:    (n) => n.type === "OVERDUE BALANCE",
-  UPCOMING:   (n) => ["UPCOMING CLASS", "UPCOMING PT SESSION", "UPCOMING EVALUATION"].includes(n.type),
-  ATTENDANCE: (n) => n.type === "ATTENDANCE / CHECK-IN",
 };
 
 const dotColor = {
@@ -45,6 +22,126 @@ const dotColor = {
   red:    "#e05555",
 };
 
+const phpFormatter = new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP",
+  minimumFractionDigits: 2,
+});
+
+function parseMembershipValidity(validity) {
+  if (!validity) return null;
+
+  const validityMatch = validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+  if (!validityMatch) return null;
+
+  return {
+    amount: Number(validityMatch[1]),
+    unit: validityMatch[2].toLowerCase(),
+  };
+}
+
+function calculateExpiryDate(joinDate, validity) {
+  const parsed = parseMembershipValidity(validity);
+  if (!joinDate || !parsed) return null;
+
+  const expiryDate = new Date(joinDate);
+  if (Number.isNaN(expiryDate.getTime())) return null;
+
+  if (parsed.unit === "year") {
+    expiryDate.setFullYear(expiryDate.getFullYear() + parsed.amount);
+  } else if (parsed.unit === "month") {
+    expiryDate.setMonth(expiryDate.getMonth() + parsed.amount);
+  } else if (parsed.unit === "week") {
+    expiryDate.setDate(expiryDate.getDate() + parsed.amount * 7);
+  } else {
+    expiryDate.setDate(expiryDate.getDate() + parsed.amount);
+  }
+
+  return expiryDate;
+}
+
+function getOverdueAmount(member) {
+  const candidates = [
+    member?.overdue_balance,
+    member?.unpaid_balance,
+    member?.balance_due,
+    member?.amount_due,
+    member?.pending_balance,
+  ];
+
+  for (const value of candidates) {
+    const amount = Number(value);
+    if (Number.isFinite(amount) && amount > 0) {
+      return amount;
+    }
+  }
+
+  return 0;
+}
+
+function buildNotificationsFromMembers(members) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return members
+    .flatMap((member) => {
+      const results = [];
+      const expiryDate = calculateExpiryDate(member.join_date, member.membership_validity);
+
+      if (expiryDate) {
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayDiff = Math.ceil((expiryDate.getTime() - today.getTime()) / oneDay);
+        const expiryText = expiryDate.toLocaleDateString();
+
+        if (dayDiff < 0) {
+          results.push({
+            key: `${member.member_id}-expired`,
+            member,
+            id: member.member_id,
+            type: "MEMBERSHIP EXPIRED",
+            name: member.full_name,
+            detail: `EXPIRED: ${expiryText}`,
+            color: "red",
+            action: "NOTIFY",
+            daysRemaining: dayDiff,
+            expiryText,
+          });
+        } else if (dayDiff <= 30) {
+          results.push({
+            key: `${member.member_id}-expiring`,
+            member,
+            id: member.member_id,
+            type: "MEMBERSHIP EXPIRING",
+            name: member.full_name,
+            detail: `EXPIRY: ${dayDiff} DAYS REMAINING`,
+            color: "yellow",
+            action: "NOTIFY",
+            daysRemaining: dayDiff,
+            expiryText,
+          });
+        }
+      }
+
+      const overdueAmount = getOverdueAmount(member);
+      if (overdueAmount > 0) {
+        results.push({
+          key: `${member.member_id}-overdue`,
+          member,
+          id: member.member_id,
+          type: "OVERDUE BALANCE",
+          name: member.full_name,
+          detail: `AMOUNT: ${phpFormatter.format(overdueAmount)}`,
+          color: "orange",
+          action: "NOTIFY",
+          overdueAmountText: phpFormatter.format(overdueAmount),
+        });
+      }
+
+      return results;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export default function NotificationsPage({ onNavigate, activePage = "notifications" }) {
   const [search, setSearch]             = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
@@ -52,22 +149,61 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   const [selectMode, setSelectMode]     = useState(false);
   const [showFiltersDD, setShowFiltersDD] = useState(false);
   const [filterStatus, setFilterStatus] = useState(null);
-  const [showAttendanceDD, setShowAttendanceDD] = useState(false);
   const [viewLogTarget, setViewLogTarget] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [statusMap, setStatusMap] = useState({});
+  const [sendingMap, setSendingMap] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const filtersDDRef   = useRef();
-  const attendanceDDRef = useRef();
+
+  useEffect(() => {
+    const loadNotifications = async () => {
+      try {
+        setLoading(true);
+        const members = await fetchMembers();
+        setNotifications(buildNotificationsFromMembers(members));
+        setError(null);
+      } catch (err) {
+        console.error("Error loading notifications:", err);
+        setError("Failed to load notifications.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNotifications();
+  }, []);
 
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e) => {
       if (filtersDDRef.current && !filtersDDRef.current.contains(e.target))
         setShowFiltersDD(false);
-      if (attendanceDDRef.current && !attendanceDDRef.current.contains(e.target))
-        setShowAttendanceDD(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const handleNotify = async (notification) => {
+    if (!notification?.member?.email) {
+      setStatusMap((prev) => ({ ...prev, [notification.key]: "Failed" }));
+      window.alert(`No email found for ${notification.name}.`);
+      return;
+    }
+
+    try {
+      setSendingMap((prev) => ({ ...prev, [notification.key]: true }));
+      await sendMemberNotificationEmail(notification.member, notification);
+      setStatusMap((prev) => ({ ...prev, [notification.key]: "Sent" }));
+    } catch (err) {
+      console.error("Error sending notification:", err);
+      setStatusMap((prev) => ({ ...prev, [notification.key]: "Failed" }));
+      window.alert(err?.message || "Failed to send notification.");
+    } finally {
+      setSendingMap((prev) => ({ ...prev, [notification.key]: false }));
+    }
+  };
 
   const filtered = notifications.filter((n) => {
     const matchSearch =
@@ -75,13 +211,29 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
       n.id.toLowerCase().includes(search.toLowerCase()) ||
       n.name.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filterMap[activeFilter](n);
-    return matchSearch && matchFilter;
+    const computedStatus = statusMap[n.key] || "Pending";
+    const matchStatus = !filterStatus || computedStatus === filterStatus;
+    return matchSearch && matchFilter && matchStatus;
   });
 
-  const toggleSelect = (i) => {
+  const toggleSelect = (notificationKey) => {
     setSelected((prev) =>
-      prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]
+      prev.includes(notificationKey)
+        ? prev.filter((x) => x !== notificationKey)
+        : [...prev, notificationKey]
     );
+  };
+
+  const handleBulkNotify = async () => {
+    const targets = filtered.filter((notification) =>
+      selected.includes(notification.key)
+    );
+
+    for (const notification of targets) {
+      // Keep sequence simple to avoid EmailJS rate limits.
+      // eslint-disable-next-line no-await-in-loop
+      await handleNotify(notification);
+    }
   };
 
   const getActionClass = (action) => {
@@ -111,6 +263,14 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
               <button className={styles.clearBtn} onClick={() => setSearch("")}>✕</button>
             )}
           </div>
+
+          {error && (
+            <div style={{ color: "#d32f2f", marginBottom: 12 }}>{error}</div>
+          )}
+
+          {loading && (
+            <div style={{ color: "#666", marginBottom: 12 }}>Loading notifications...</div>
+          )}
 
           {/* Filter Bar */}
           <div className={styles.filterBar}>
@@ -149,34 +309,6 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
               </button>
             ))}
 
-            {/* UPCOMING button */}
-            <button
-              className={`${styles.filterBtn} ${activeFilter === "UPCOMING" ? styles.filterActive : ""}`}
-              onClick={() => setActiveFilter("UPCOMING")}
-            >
-              UPCOMING
-            </button>
-
-            {/* ATTENDANCE dropdown */}
-            <div className={styles.dropdownWrapper} ref={attendanceDDRef}>
-              <button
-                className={`${styles.filterBtn} ${activeFilter === "ATTENDANCE" ? styles.filterActive : ""}`}
-                onClick={() => { setActiveFilter("ATTENDANCE"); setShowAttendanceDD(!showAttendanceDD); }}
-              >
-                ATTENDANCE ▾
-              </button>
-              {showAttendanceDD && activeFilter === "ATTENDANCE" && (
-                <div className={styles.dropdownMenu}>
-                  {["Check-In", "Check-Out", "All"].map((opt) => (
-                    <button key={opt} className={styles.dropdownItem}
-                      onClick={() => setShowAttendanceDD(false)}>
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
             <button
               className={`${styles.selectMultipleBtn} ${selectMode ? styles.selectModeActive : ""}`}
               onClick={() => { setSelectMode(!selectMode); setSelected([]); }}
@@ -187,18 +319,18 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
 
           {/* Notification Grid */}
           <div className={styles.grid}>
-            {filtered.map((n, i) => (
+            {filtered.map((n) => (
               <div
-                key={i}
-                className={`${styles.card} ${selectMode && selected.includes(i) ? styles.cardSelected : ""}`}
-                onClick={() => selectMode && toggleSelect(i)}
+                key={n.key}
+                className={`${styles.card} ${selectMode && selected.includes(n.key) ? styles.cardSelected : ""}`}
+                onClick={() => selectMode && toggleSelect(n.key)}
               >
                 {selectMode && (
                   <input
                     type="checkbox"
                     className={styles.checkbox}
-                    checked={selected.includes(i)}
-                    onChange={() => toggleSelect(i)}
+                    checked={selected.includes(n.key)}
+                    onChange={() => toggleSelect(n.key)}
                   />
                 )}
                 <div className={styles.cardTop}>
@@ -208,10 +340,15 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
                     className={`${styles.actionBtn} ${getActionClass(n.action)}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (n.action === "VIEW LOG") setViewLogTarget(n);
+                      if (n.action === "VIEW LOG") {
+                        setViewLogTarget(n);
+                        return;
+                      }
+                      handleNotify(n);
                     }}
+                    disabled={Boolean(sendingMap[n.key])}
                   >
-                    {n.action}
+                    {sendingMap[n.key] ? "SENDING..." : n.action}
                   </button>
                 </div>
                 <p className={styles.cardId}>{n.id}</p>
@@ -227,15 +364,24 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
                     ))}
                   </div>
                 </div>
+                <p className={styles.cardValue} style={{ marginTop: 10 }}>
+                  Status: {statusMap[n.key] || "Pending"}
+                </p>
               </div>
             ))}
+
+            {!loading && filtered.length === 0 && (
+              <div className={styles.card}>
+                <p className={styles.cardValue}>No notifications found.</p>
+              </div>
+            )}
           </div>
 
           {/* Bulk action bar */}
           {selectMode && selected.length > 0 && (
             <div className={styles.bulkBar}>
               <span>{selected.length} selected</span>
-              <button className={styles.bulkNotify}>Notify All</button>
+              <button className={styles.bulkNotify} onClick={handleBulkNotify}>Notify All</button>
               <button className={styles.bulkCancel} onClick={() => { setSelected([]); setSelectMode(false); }}>Cancel</button>
             </div>
           )}
