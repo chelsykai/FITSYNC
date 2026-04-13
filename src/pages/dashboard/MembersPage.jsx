@@ -39,11 +39,98 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   }, []);
 
   // Calculate stats from members data
+  const calculateActiveToday = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+
+    return members.filter((m) => {
+      // Check if member visited today
+      if (m.last_visit) {
+        const lastVisit = new Date(m.last_visit);
+        lastVisit.setHours(0, 0, 0, 0);
+        if (lastVisit.getTime() === today.getTime()) {
+          return true;
+        }
+      }
+
+      // Check if member's membership is still active (hasn't expired)
+      if (m.join_date && m.membership_validity) {
+        const joinDate = new Date(m.join_date);
+        let expiryDate = new Date(joinDate);
+
+        // Parse membership_validity (e.g., "1 Year", "2 Months", "3 Days")
+        const validityMatch = m.membership_validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+        if (validityMatch) {
+          const amount = parseInt(validityMatch[1]);
+          const unit = validityMatch[2].toLowerCase();
+
+          if (unit === 'year') {
+            expiryDate.setFullYear(expiryDate.getFullYear() + amount);
+          } else if (unit === 'month') {
+            expiryDate.setMonth(expiryDate.getMonth() + amount);
+          } else if (unit === 'week') {
+            expiryDate.setDate(expiryDate.getDate() + amount * 7);
+          } else if (unit === 'day') {
+            expiryDate.setDate(expiryDate.getDate() + amount);
+          }
+
+          // Member is active if expiry date is in the future
+          if (expiryDate > today) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }).length;
+  };
+
+  const calculateExpiringMembers = () => {
+    const today = new Date();
+    const thirtyDaysAhead = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    return members.filter((m) => {
+      if (!m.join_date || !m.membership_validity) return false;
+
+      const joinDate = new Date(m.join_date);
+      let expiryDate = new Date(joinDate);
+
+      // Parse membership_validity (e.g., "1 Year", "2 Months", "3 Days")
+      const validityMatch = m.membership_validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+      if (validityMatch) {
+        const amount = parseInt(validityMatch[1]);
+        const unit = validityMatch[2].toLowerCase();
+
+        if (unit === 'year') {
+          expiryDate.setFullYear(expiryDate.getFullYear() + amount);
+        } else if (unit === 'month') {
+          expiryDate.setMonth(expiryDate.getMonth() + amount);
+        } else if (unit === 'week') {
+          expiryDate.setDate(expiryDate.getDate() + amount * 7);
+        } else if (unit === 'day') {
+          expiryDate.setDate(expiryDate.getDate() + amount);
+        }
+      }
+
+      return expiryDate >= today && expiryDate <= thirtyDaysAhead;
+    }).length;
+  };
+
+  const calculateNewThisMonth = () => {
+    const today = new Date();
+    return members.filter((m) => {
+      if (!m.join_date) return false;
+      const joinDate = new Date(m.join_date);
+      return joinDate.getMonth() === today.getMonth() &&
+             joinDate.getFullYear() === today.getFullYear();
+    }).length;
+  };
+
   const stats = {
     totalMembers: members.length,
-    activeToday: Math.floor(members.length * 0.08), // Approximate
-    expiringSoon: Math.floor(members.length * 0.016), // Approximate
-    newThisMonth: Math.floor(members.length * 0.027), // Approximate
+    activeToday: calculateActiveToday(),
+    expiringSoon: calculateExpiringMembers(),
+    newThisMonth: calculateNewThisMonth(),
   };
 
   const filtered = members.filter((m) =>
@@ -57,6 +144,11 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     setMembers([newMember, ...members]);
     setShowAddMember(false);
     setRegisteredMember(newMember);
+  };
+
+  const handleMemberDeleted = (deletedMember) => {
+    // Remove deleted member from the list
+    setMembers(prevMembers => prevMembers.filter(m => m.member_id !== deletedMember.member_id));
   };
 
   return (
@@ -208,6 +300,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         <ViewAllMembersModal
           members={members}
           onClose={() => setShowViewAll(false)}
+          onMemberDeleted={handleMemberDeleted}
         />
       )}
     </>
