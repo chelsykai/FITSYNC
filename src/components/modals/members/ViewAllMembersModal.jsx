@@ -3,9 +3,18 @@ import styles from "../Modal.module.css";
 import EditMemberModal from "./EditMemberModal";
 import DeleteMemberModal from "./DeleteMemberModal";
 
-export default function ViewAllMembersModal({ members, onClose }) {
+export default function ViewAllMembersModal({ members, onClose, onMemberDeleted }) {
+  const [displayMembers, setDisplayMembers] = useState(members);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const handleMemberDeleted = (deletedMember) => {
+    // Remove the deleted member from the display list
+    setDisplayMembers(prev => prev.filter(m => m.member_id !== deletedMember.member_id));
+    setDeleteTarget(null);
+    // Call parent callback if provided
+    onMemberDeleted?.(deletedMember);
+  };
 
   return (
     <>
@@ -26,15 +35,15 @@ export default function ViewAllMembersModal({ members, onClose }) {
               </tr>
             </thead>
             <tbody>
-              {members.map((m) => (
-                <tr key={m.id}>
-                  <td>{m.id}</td>
-                  <td>{m.name}</td>
-                  <td>{m.joinDate}</td>
-                  <td>{m.type}</td>
-                  <td>{m.monthly}</td>
-                  <td>{m.validity}</td>
-                  <td>{m.lastVisit}</td>
+              {displayMembers.map((m) => (
+                <tr key={m.member_id}>
+                  <td>{m.member_id}</td>
+                  <td>{m.full_name}</td>
+                  <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
+                  <td>{m.membership_type}</td>
+                  <td>{m.monthly_validity}</td>
+                  <td>{m.membership_validity}</td>
+                  <td>{m.last_visit || "N/A"}</td>
                   <td>
                     <div className={styles.actionBtns}>
                       <button
@@ -53,6 +62,9 @@ export default function ViewAllMembersModal({ members, onClose }) {
                   </td>
                 </tr>
               ))}
+              {displayMembers.length === 0 && (
+                <tr><td colSpan={8} style={{ textAlign: "center", padding: "20px", color: "#999" }}>No members found.</td></tr>
+              )}
             </tbody>
           </table>
           <div className={styles.viewAllWrapper}>
@@ -76,10 +88,7 @@ export default function ViewAllMembersModal({ members, onClose }) {
         <DeleteMemberModal
           member={deleteTarget}
           onClose={() => setDeleteTarget(null)}
-          onConfirm={(m) => {
-            console.log("deleted", m);
-            setDeleteTarget(null);
-          }}
+          onConfirm={handleMemberDeleted}
         />
       )}
     </>

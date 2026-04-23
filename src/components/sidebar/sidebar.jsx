@@ -65,7 +65,7 @@ export default function Sidebar({ activePage, onNavigate }) {
                 className={styles.yesBtn}
                 onClick={() => {
                   setShowConfirm(false);
-                  onNavigate("login");
+                  onNavigate("logout");
                 }}
               >
                 Yes

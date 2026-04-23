@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./MembersPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import MembersExportModal from "../../components/modals/members/MembersExportModal";
@@ -6,25 +6,12 @@ import AddMemberModal from "../../components/modals/members/AddMemberModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
 import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
-
-const stats = {
-  totalMembers: 1411,
-  activeToday: 112,
-  expiringSoon: 23,
-  newThisMonth: 38,
-};
-
-const members = [
-  { id: "00832", name: "Ayvan Lopez",         joinDate: "MM/DD/YYYY", type: "Student",  monthly: "2 months",  validity: "1 Year", lastVisit: "MM/DD/YYYY 16:01:21", birthday: "May 18, 2006", address: "Cainta, Rizal", phone: "09563711561", email: "ayvanlopez@gmail.com",        expiry: "March 10, 2026", lastActivity: "January 5, 2026" },
-  { id: "00014", name: "Janine Mae Vios",      joinDate: "MM/DD/YYYY", type: "Student",  monthly: "5 months",  validity: "1 Year", lastVisit: "MM/DD/YYYY 16:32:15", birthday: "May 18, 2006", address: "Cainta, Rizal", phone: "09563711561", email: "janinevios@gmail.com",        expiry: "March 10, 2026", lastActivity: "January 5, 2026" },
-  { id: "00281", name: "Allyza Mae Magsipoc",  joinDate: "MM/DD/YYYY", type: "Student",  monthly: "1 month",   validity: "1 Year", lastVisit: "MM/DD/YYYY 17:18:33", birthday: "May 18, 2006", address: "Cainta, Rizal", phone: "09563711561", email: "allyzamagsipoc@gmail.com",    expiry: "March 10, 2026", lastActivity: "January 5, 2026" },
-  { id: "00026", name: "James Allen Victoria", joinDate: "MM/DD/YYYY", type: "Senior",   monthly: "2 months",  validity: "1 Year", lastVisit: "MM/DD/YYYY 17:21:15", birthday: "May 18, 2006", address: "Cainta, Rizal", phone: "09563711561", email: "jamesvictoria@gmail.com",      expiry: "March 10, 2026", lastActivity: "January 5, 2026" },
-  { id: "00002", name: "Carlos Corpuz",        joinDate: "MM/DD/YYYY", type: "Regular",  monthly: "18 months", validity: "1 Year", lastVisit: "MM/DD/YYYY 17:44:52", birthday: "May 18, 2006", address: "Cainta, Rizal", phone: "09563711561", email: "carloscorpuz@gmail.com",       expiry: "March 10, 2026", lastActivity: "January 5, 2026" },
-  { id: "00039", name: "Alvin Perenta",        joinDate: "MM/DD/YYYY", type: "PWD",      monthly: "2 months",  validity: "1 Year", lastVisit: "MM/DD/YYYY 18:12:15", birthday: "May 18, 2006", address: "Cainta, Rizal", phone: "09563711561", email: "alvinperenta@gmail.com",       expiry: "March 10, 2026", lastActivity: "January 5, 2026" },
-  { id: "00132", name: "Khali Cruz",           joinDate: "MM/DD/YYYY", type: "Regular",  monthly: "5 months",  validity: "1 Year", lastVisit: "MM/DD/YYYY 18:22:37", birthday: "May 18, 2006", address: "Cainta, Rizal", phone: "09563711561", email: "khalicruz@gmail.com",          expiry: "March 10, 2026", lastActivity: "January 5, 2026" },
-];
+import { fetchMembers } from "../../services/memberService";
 
 export default function MembersPage({ onNavigate, activePage = "members" }) {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [showExport, setShowExport] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -32,15 +19,136 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [showViewAll, setShowViewAll] = useState(false);
   const [registeredMember, setRegisteredMember] = useState(null);
 
+  // Fetch members on component mount
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchMembers();
+        setMembers(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching members:", err);
+        setError("Failed to load members");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMembers();
+  }, []);
+
+  // Calculate stats from members data
+  const calculateActiveToday = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+
+    return members.filter((m) => {
+      // Check if member visited today
+      if (m.last_visit) {
+        const lastVisit = new Date(m.last_visit);
+        lastVisit.setHours(0, 0, 0, 0);
+        if (lastVisit.getTime() === today.getTime()) {
+          return true;
+        }
+      }
+
+      // Check if member's membership is still active (hasn't expired)
+      if (m.join_date && m.membership_validity) {
+        const joinDate = new Date(m.join_date);
+        let expiryDate = new Date(joinDate);
+
+        // Parse membership_validity (e.g., "1 Year", "2 Months", "3 Days")
+        const validityMatch = m.membership_validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+        if (validityMatch) {
+          const amount = parseInt(validityMatch[1]);
+          const unit = validityMatch[2].toLowerCase();
+
+          if (unit === 'year') {
+            expiryDate.setFullYear(expiryDate.getFullYear() + amount);
+          } else if (unit === 'month') {
+            expiryDate.setMonth(expiryDate.getMonth() + amount);
+          } else if (unit === 'week') {
+            expiryDate.setDate(expiryDate.getDate() + amount * 7);
+          } else if (unit === 'day') {
+            expiryDate.setDate(expiryDate.getDate() + amount);
+          }
+
+          // Member is active if expiry date is in the future
+          if (expiryDate > today) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }).length;
+  };
+
+  const calculateExpiringMembers = () => {
+    const today = new Date();
+    const thirtyDaysAhead = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    return members.filter((m) => {
+      if (!m.join_date || !m.membership_validity) return false;
+
+      const joinDate = new Date(m.join_date);
+      let expiryDate = new Date(joinDate);
+
+      // Parse membership_validity (e.g., "1 Year", "2 Months", "3 Days")
+      const validityMatch = m.membership_validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+      if (validityMatch) {
+        const amount = parseInt(validityMatch[1]);
+        const unit = validityMatch[2].toLowerCase();
+
+        if (unit === 'year') {
+          expiryDate.setFullYear(expiryDate.getFullYear() + amount);
+        } else if (unit === 'month') {
+          expiryDate.setMonth(expiryDate.getMonth() + amount);
+        } else if (unit === 'week') {
+          expiryDate.setDate(expiryDate.getDate() + amount * 7);
+        } else if (unit === 'day') {
+          expiryDate.setDate(expiryDate.getDate() + amount);
+        }
+      }
+
+      return expiryDate >= today && expiryDate <= thirtyDaysAhead;
+    }).length;
+  };
+
+  const calculateNewThisMonth = () => {
+    const today = new Date();
+    return members.filter((m) => {
+      if (!m.join_date) return false;
+      const joinDate = new Date(m.join_date);
+      return joinDate.getMonth() === today.getMonth() &&
+             joinDate.getFullYear() === today.getFullYear();
+    }).length;
+  };
+
+  const stats = {
+    totalMembers: members.length,
+    activeToday: calculateActiveToday(),
+    expiringSoon: calculateExpiringMembers(),
+    newThisMonth: calculateNewThisMonth(),
+  };
+
   const filtered = members.filter((m) =>
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.id.includes(search) ||
-    m.type.toLowerCase().includes(search.toLowerCase())
+    m.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    m.member_id?.includes(search) ||
+    m.membership_type?.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleMemberAdded = (newMember) => {
+    // Add new member to the list
+    setMembers([newMember, ...members]);
     setShowAddMember(false);
     setRegisteredMember(newMember);
+  };
+
+  const handleMemberDeleted = (deletedMember) => {
+    // Remove deleted member from the list
+    setMembers(prevMembers => prevMembers.filter(m => m.member_id !== deletedMember.member_id));
   };
 
   return (
@@ -97,7 +205,32 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
             )}
           </div>
 
+          {/* Error message */}
+          {error && (
+            <div style={{
+              color: "#d32f2f",
+              padding: "12px",
+              backgroundColor: "#ffebee",
+              borderRadius: "4px",
+              marginBottom: "16px",
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Loading state */}
+          {loading && (
+            <div style={{
+              textAlign: "center",
+              padding: "40px",
+              color: "#666",
+            }}>
+              Loading members...
+            </div>
+          )}
+
           {/* Table Card */}
+          {!loading && (
           <div className={styles.tableCard}>
             <div className={styles.actionRow}>
               <button className={styles.exportBtn} onClick={() => setShowExport(true)}>📤 Export</button>
@@ -117,15 +250,15 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
               </thead>
               <tbody>
                 {filtered.map((m) => (
-                  <tr key={m.id} className={styles.clickableRow}
+                  <tr key={m.member_id} className={styles.clickableRow}
                     onClick={() => setShowProfile(m)}>
-                    <td>{m.id}</td>
-                    <td>{m.name}</td>
-                    <td>{m.joinDate}</td>
-                    <td>{m.type}</td>
-                    <td>{m.monthly}</td>
-                    <td>{m.validity}</td>
-                    <td>{m.lastVisit}</td>
+                    <td>{m.member_id}</td>
+                    <td>{m.full_name}</td>
+                    <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
+                    <td>{m.membership_type}</td>
+                    <td>{m.monthly_validity}</td>
+                    <td>{m.membership_validity}</td>
+                    <td>{m.last_visit || "N/A"}</td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
@@ -139,6 +272,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
               </button>
             </div>
           </div>
+          )}
         </div>
       </div>
 
@@ -166,6 +300,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         <ViewAllMembersModal
           members={members}
           onClose={() => setShowViewAll(false)}
+          onMemberDeleted={handleMemberDeleted}
         />
       )}
     </>

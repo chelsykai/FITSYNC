@@ -67,8 +67,8 @@ export default function EditAccountModal({ account, onClose, onSave }) {
             </div>
           </div>
           <div className={styles.accountFieldGroup}>
-            <label className={styles.accountLabel}>Email</label>
-            <input className={styles.accountInput} placeholder="Enter Email Address" type="email"
+            <label className={styles.accountLabel}>Username</label>
+            <input className={styles.accountInput} placeholder="Enter Username" type="username"
               value={form.email} onChange={set("email")} />
           </div>
         </div>

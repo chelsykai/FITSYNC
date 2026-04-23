@@ -10,7 +10,7 @@ export default function ViewAllModal({ members, onClose }) {
             <tr>
               <th>Member ID</th>
               <th>Name</th>
-              <th>Date</th>
+              <th>Join Date</th>
               <th>Membership Type</th>
               <th>Monthly Validity</th>
               <th>Membership Validity</th>
@@ -18,13 +18,13 @@ export default function ViewAllModal({ members, onClose }) {
           </thead>
           <tbody>
             {members.map((m) => (
-              <tr key={m.id}>
-                <td>{m.id}</td>
-                <td>{m.name}</td>
-                <td>{m.date}</td>
-                <td>{m.type}</td>
-                <td>{m.monthly}</td>
-                <td>{m.validity}</td>
+              <tr key={m.member_id}>
+                <td>{m.member_id}</td>
+                <td>{m.full_name}</td>
+                <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
+                <td>{m.membership_type}</td>
+                <td>{m.monthly_validity}</td>
+                <td>{m.membership_validity}</td>
               </tr>
             ))}
           </tbody>
