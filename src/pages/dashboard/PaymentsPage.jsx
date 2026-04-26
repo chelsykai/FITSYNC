@@ -3,30 +3,90 @@ import styles from "./PaymentsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
-import { fetchMembers } from "../../services/memberService";
+import { supabase } from "../../lib/supabaseClient";
 
-// Stats - activeMemberships will be calculated from members data
-const stats = {
-  totalTransactions: 156,
+/**
+ * Fetch all payment records from the database with member info
+ */
+const fetchPayments = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("record_payment")
+      .select(`
+        transaction_id,
+        date,
+        amount_paid,
+        status,
+        member_id,
+        members(full_name, membership_type)
+      `)
+      .order("date", { ascending: false });
+
+    if (error) throw error;
+
+    return data.map((record) => ({
+      id: record.member_id,
+      name: record.members?.full_name || "Unknown",
+      date: new Date(record.date).toLocaleDateString("en-US"),
+      type: record.members?.membership_type || "Unknown",
+      total: record.amount_paid,
+      status: record.status,
+    })) || [];
+  } catch (err) {
+    console.error("Error fetching payments:", err);
+    return [];
+  }
 };
 
-const payments = [
-  { id: "00001", name: "Ayvan Lopez",         date: "11/21/2025", type: "Student",  total: 22000, mod: "CASH",  promoCode: "0987", status: "Paid" },
-  { id: "00022", name: "Janine Mae Vios",      date: "11/21/2025", type: "Senior",   total: 3500,  mod: "CASH",  promoCode: "8777", status: "Paid" },
-  { id: "00014", name: "James Allen Victoria", date: "11/23/2025", type: "PWD",      total: 11000, mod: "GCASH", promoCode: "8777", status: "Pending" },
-  { id: "00281", name: "Allyza Mae Magsipoc",  date: "11/23/2025", type: "Regular",  total: 1500,  mod: "BANK",  promoCode: "",     status: "Paid" },
-  { id: "00026", name: "Jethro Ramos",         date: "11/26/2025", type: "PWD",      total: 4500,  mod: "CASH",  promoCode: "1237", status: "Paid" },
-  { id: "00012", name: "Name",                 date: "11/26/2025", type: "Regular",  total: 1500,  mod: "CASH",  promoCode: "",     status: "Paid" },
-  { id: "00342", name: "Name",                 date: "11/26/2025", type: "Regular",  total: 1500,  mod: "GCASH", promoCode: "",     status: "Pending" },
-];
+/**
+ * Calculate revenue stats
+ */
+const calculateStats = (payments) => {
+  const today = new Date().toDateString();
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-const revenue = {
-  today: 8230,
-  thisMonth: 113130,
-  pending: 5600,
+  let todayRevenue = 0;
+  let monthRevenue = 0;
+  let pendingRevenue = 0;
+
+  payments.forEach((p) => {
+    const paymentDate = new Date(p.date).toDateString();
+    const paymentAmount = p.total;
+
+    if (paymentDate === today && p.status === "Paid") {
+      todayRevenue += paymentAmount;
+    }
+
+    if (new Date(p.date) >= monthStart && p.status === "Paid") {
+      monthRevenue += paymentAmount;
+    }
+
+    if (p.status === "Pending") {
+      pendingRevenue += paymentAmount;
+    }
+  });
+
+  return {
+    totalTransactions: payments.length,
+    activeMemberships: 890,
+    today: todayRevenue,
+    thisMonth: monthRevenue,
+    pending: pendingRevenue,
+  };
 };
 
 export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
+  const [payments, setPayments] = useState([]);
+  const [stats, setStats] = useState({
+    totalTransactions: 0,
+    activeMemberships: 890,
+  });
+  const [revenue, setRevenue] = useState({
+    today: 0,
+    thisMonth: 0,
+    pending: 0,
+  });
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showExport, setShowExport] = useState(false);
   const [showViewAll, setShowViewAll] = useState(false);
@@ -51,12 +111,65 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     loadMembers();
   }, []);
 
+  useEffect(() => {
+    const loadPayments = async () => {
+      setLoading(true);
+      const data = await fetchPayments();
+      setPayments(data);
+
+      const calculatedStats = calculateStats(data);
+      setStats({
+        totalTransactions: calculatedStats.totalTransactions,
+        activeMemberships: 890,
+      });
+      setRevenue({
+        today: calculatedStats.today,
+        thisMonth: calculatedStats.thisMonth,
+        pending: calculatedStats.pending,
+      });
+
+      setLoading(false);
+    };
+
+    loadPayments();
+
+    // Set up real-time subscription
+    const subscription = supabase
+      .channel("record_payment_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "record_payment" },
+        (payload) => {
+          loadPayments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const filtered = payments.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.id.includes(search) ||
     p.type.toLowerCase().includes(search.toLowerCase()) ||
     p.status.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className={styles.layout}>
+        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <div className={styles.content}>
+          <h1 className={styles.title}>Payments</h1>
+          <div style={{ textAlign: "center", padding: "40px", fontSize: "16px", color: "#666" }}>
+            Loading payment records...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
