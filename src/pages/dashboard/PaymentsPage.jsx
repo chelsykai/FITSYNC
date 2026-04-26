@@ -6,6 +6,28 @@ import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymen
 import { supabase } from "../../lib/supabaseClient";
 
 /**
+ * Fetch total count of members from the database
+ */
+const fetchMemberCount = async () => {
+  try {
+    const { count, error } = await supabase
+      .from("member")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.error("Error fetching member count:", error);
+      return 0;
+    }
+
+    console.log("Total members:", count); // Debug
+    return count || 0;
+  } catch (err) {
+    console.error("Error in fetchMemberCount:", err);
+    return 0;
+  }
+};
+
+/**
  * Fetch all payment records from the database with member info
  */
 const fetchPayments = async () => {
@@ -72,7 +94,7 @@ const fetchPayments = async () => {
 /**
  * Calculate revenue stats
  */
-const calculateStats = (payments) => {
+const calculateStats = (payments, activeMemberships = 0) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Set to start of today
   
@@ -103,7 +125,7 @@ const calculateStats = (payments) => {
 
   return {
     totalTransactions: payments.length,
-    activeMemberships: 890,
+    activeMemberships: activeMemberships,
     today: todayRevenue,
     thisMonth: monthRevenue,
     pending: pendingRevenue,
@@ -114,7 +136,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
   const [payments, setPayments] = useState([]);
   const [stats, setStats] = useState({
     totalTransactions: 0,
-    activeMemberships: 890,
+    activeMemberships: 0,
   });
   const [revenue, setRevenue] = useState({
     today: 0,
@@ -131,13 +153,19 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     const loadPayments = async () => {
       setLoading(true);
       setError("");
-      const data = await fetchPayments();
-      setPayments(data);
+      
+      // Fetch both payments and member count in parallel
+      const [paymentData, memberCount] = await Promise.all([
+        fetchPayments(),
+        fetchMemberCount(),
+      ]);
 
-      const calculatedStats = calculateStats(data);
+      setPayments(paymentData);
+
+      const calculatedStats = calculateStats(paymentData, memberCount);
       setStats({
         totalTransactions: calculatedStats.totalTransactions,
-        activeMemberships: 890,
+        activeMemberships: calculatedStats.activeMemberships,
       });
       setRevenue({
         today: calculatedStats.today,
