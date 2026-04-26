@@ -7,32 +7,85 @@ import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 
 /**
+ * Fetch total count of members from the database
+ */
+const fetchMemberCount = async () => {
+  try {
+    const { count, error } = await supabase
+      .from("member")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.error("Error fetching member count:", error);
+      return 0;
+    }
+
+    console.log("Total members:", count); // Debug
+    return count || 0;
+  } catch (err) {
+    console.error("Error in fetchMemberCount:", err);
+    return 0;
+  }
+};
+
+/**
  * Fetch all payment records from the database with member info
  */
 const fetchPayments = async () => {
   try {
-    const { data, error } = await supabase
+    // First, fetch all payment records
+    const { data: paymentData, error: paymentError } = await supabase
       .from("record_payment")
-      .select(`
-        transaction_id,
-        date,
-        amount_paid,
-        status,
-        member_id,
-        members(full_name, membership_type)
-      `)
+      .select("*")
       .order("date", { ascending: false });
 
-    if (error) throw error;
+    if (paymentError) {
+      console.error("Error fetching payment records:", paymentError);
+      throw paymentError;
+    }
 
-    return data.map((record) => ({
-      id: record.member_id,
-      name: record.members?.full_name || "Unknown",
-      date: new Date(record.date).toLocaleDateString("en-US"),
-      type: record.members?.membership_type || "Unknown",
-      total: record.amount_paid,
-      status: record.status,
-    })) || [];
+    console.log("Fetched payment records:", paymentData); // Debug
+
+    if (!paymentData || paymentData.length === 0) {
+      console.log("No payment records found");
+      return [];
+    }
+
+    // Get unique member IDs
+    const memberIds = [...new Set(paymentData.map((p) => p.member_id))];
+
+    // Fetch member details for those IDs
+    const { data: memberData, error: memberError } = await supabase
+      .from("member")
+      .select("member_id, full_name, membership_type")
+      .in("member_id", memberIds);
+
+    if (memberError) {
+      console.error("Error fetching member data:", memberError);
+      // Continue anyway, we'll use fallback values
+    }
+
+    console.log("Fetched member data:", memberData); // Debug
+
+    // Create a map of member data for quick lookup
+    const memberMap = {};
+    (memberData || []).forEach((member) => {
+      memberMap[member.member_id] = member;
+    });
+
+    // Combine payment and member data
+    return paymentData.map((record) => {
+      const memberInfo = memberMap[record.member_id] || {};
+      return {
+        id: record.member_id,
+        name: memberInfo.full_name || "Unknown",
+        date: new Date(record.date).toLocaleDateString("en-US"),
+        rawDate: new Date(record.date),
+        type: memberInfo.membership_type || "Unknown",
+        total: record.amount_paid || 0,
+        status: record.status,
+      };
+    });
   } catch (err) {
     console.error("Error fetching payments:", err);
     return [];
@@ -42,23 +95,27 @@ const fetchPayments = async () => {
 /**
  * Calculate revenue stats
  */
-const calculateStats = (payments) => {
-  const today = new Date().toDateString();
-  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+const calculateStats = (payments, activeMemberships = 0) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of today
+  
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  monthStart.setHours(0, 0, 0, 0);
 
   let todayRevenue = 0;
   let monthRevenue = 0;
   let pendingRevenue = 0;
 
   payments.forEach((p) => {
-    const paymentDate = new Date(p.date).toDateString();
-    const paymentAmount = p.total;
+    const paymentDate = new Date(p.rawDate);
+    paymentDate.setHours(0, 0, 0, 0); // Set to start of payment date
+    const paymentAmount = p.total || 0;
 
-    if (paymentDate === today && p.status === "Paid") {
+    if (paymentDate.getTime() === today.getTime() && p.status === "Paid") {
       todayRevenue += paymentAmount;
     }
 
-    if (new Date(p.date) >= monthStart && p.status === "Paid") {
+    if (paymentDate >= monthStart && p.status === "Paid") {
       monthRevenue += paymentAmount;
     }
 
@@ -69,7 +126,7 @@ const calculateStats = (payments) => {
 
   return {
     totalTransactions: payments.length,
-    activeMemberships: 890,
+    activeMemberships: activeMemberships,
     today: todayRevenue,
     thisMonth: monthRevenue,
     pending: pendingRevenue,
@@ -80,7 +137,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
   const [payments, setPayments] = useState([]);
   const [stats, setStats] = useState({
     totalTransactions: 0,
-    activeMemberships: 890,
+    activeMemberships: 0,
   });
   const [revenue, setRevenue] = useState({
     today: 0,
@@ -118,10 +175,10 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
       const data = await fetchPayments();
       setPayments(data);
 
-      const calculatedStats = calculateStats(data);
+      const calculatedStats = calculateStats(paymentData, memberCount);
       setStats({
         totalTransactions: calculatedStats.totalTransactions,
-        activeMemberships: 890,
+        activeMemberships: calculatedStats.activeMemberships,
       });
       setRevenue({
         today: calculatedStats.today,
@@ -141,6 +198,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
         "postgres_changes",
         { event: "*", schema: "public", table: "record_payment" },
         (payload) => {
+          console.log("Real-time update received:", payload);
           loadPayments();
         }
       )
@@ -222,6 +280,21 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
             )}
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              padding: "12px 16px",
+              marginBottom: "16px",
+              backgroundColor: "#fee",
+              border: "1px solid #fcc",
+              borderRadius: "6px",
+              color: "#c00",
+              fontSize: "14px",
+            }}>
+              {error}
+            </div>
+          )}
+
           {/* Table Card */}
           <div className={styles.tableCard}>
             <div className={styles.tableHeader}>
@@ -243,22 +316,29 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.id}</td>
-                    <td>{p.name}</td>
-                    <td>{p.date}</td>
-                    <td>{p.type}</td>
-                    <td>{p.total.toLocaleString()}</td>
-                    <td>
-                      <span className={`${styles.badge} ${p.status === "Paid" ? styles.paid : styles.pending}`}>
-                        {p.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr><td colSpan={6} className={styles.noResults}>No records found.</td></tr>
+                {payments.length === 0 ? (
+                  <tr><td colSpan={6} className={styles.noResults}>
+                    No payment records yet. Click "Add / Record Payment" to create one.
+                  </td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={6} className={styles.noResults}>
+                    No records match your search.
+                  </td></tr>
+                ) : (
+                  filtered.map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.id}</td>
+                      <td>{p.name}</td>
+                      <td>{p.date}</td>
+                      <td>{p.type}</td>
+                      <td>{p.total.toLocaleString()}</td>
+                      <td>
+                        <span className={`${styles.badge} ${p.status === "Paid" ? styles.paid : styles.pending}`}>
+                          {p.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
