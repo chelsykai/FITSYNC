@@ -84,7 +84,7 @@ export const addMember = async (memberData) => {
 
   // Generate member ID
   const memberId =
-    "FS-" +
+    "MEM-" +
     new Date().getFullYear() +
     "-" +
     String(Math.floor(Math.random() * 9000) + 1000).padStart(4, "0");
@@ -147,7 +147,7 @@ export const addMember = async (memberData) => {
 export const fetchMembers = async () => {
   const { data, error } = await supabase
     .from("member")
-    .select("*")
+    .select("member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, created_at")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
