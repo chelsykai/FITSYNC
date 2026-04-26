@@ -24,8 +24,67 @@ const toCsv = (rows) => {
   return [headers.join(","), ...lines].join("\n");
 };
 
+const toPdf = async (rows, title) => {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF();
+  
+  if (rows.length === 0) {
+    doc.text("No data to export", 10, 10);
+    return doc;
+  }
+
+  const headers = Object.keys(rows[0]);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 10;
+  const tableStartY = 20;
+  
+  // Add title
+  doc.setFontSize(14);
+  doc.text(title, margin, 10);
+  
+  // Calculate column widths
+  const tableWidth = pageWidth - 2 * margin;
+  const columnWidth = tableWidth / headers.length;
+  
+  // Add headers
+  doc.setFontSize(10);
+  doc.setFont(undefined, "bold");
+  let currentY = tableStartY;
+  
+  headers.forEach((header, idx) => {
+    doc.text(header, margin + idx * columnWidth + 2, currentY);
+  });
+  
+  // Add separator line
+  currentY += 7;
+  doc.setDrawColor(0);
+  doc.line(margin, currentY - 2, pageWidth - margin, currentY - 2);
+  
+  // Add data rows
+  doc.setFont(undefined, "normal");
+  doc.setFontSize(9);
+  
+  rows.forEach((row, rowIdx) => {
+    if (currentY > pageHeight - 15) {
+      doc.addPage();
+      currentY = margin;
+    }
+    
+    headers.forEach((header, colIdx) => {
+      const value = String(row[header] ?? "");
+      const wrappedText = doc.splitTextToSize(value, columnWidth - 4);
+      doc.text(wrappedText, margin + colIdx * columnWidth + 2, currentY);
+    });
+    
+    currentY += 7;
+  });
+  
+  return doc;
+};
+
 export default function MembersExportModal({ members, onClose }) {
-  const [exportFormat, setExportFormat] = useState("Excel");
+  const [exportFormat, setExportFormat] = useState("CSV");
   const [exportSearch, setExportSearch] = useState("");
   const [exportSelected, setExportSelected] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -75,12 +134,12 @@ export default function MembersExportModal({ members, onClose }) {
       }));
 
       // Export file
-      const fileName = `members_export_${new Date().getTime()}.${exportFormat === "CSV" ? "csv" : "xlsx"}`;
+      const fileName = `members_export_${new Date().getTime()}`;
 
       if (exportFormat === "CSV") {
         const csv = toCsv(exportData);
-        triggerDownload(new Blob([csv], { type: "text/csv;charset=utf-8;" }), fileName);
-      } else {
+        triggerDownload(new Blob([csv], { type: "text/csv;charset=utf-8;" }), fileName + ".csv");
+      } else if (exportFormat === "Excel") {
         const excelLib = await import("exceljs");
         const Workbook = excelLib.Workbook || excelLib.default?.Workbook;
         if (!Workbook) {
@@ -110,8 +169,11 @@ export default function MembersExportModal({ members, onClose }) {
           new Blob([buffer], {
             type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           }),
-          fileName
+          fileName + ".xlsx"
         );
+      } else if (exportFormat === "PDF") {
+        const doc = await toPdf(exportData, "Members Export");
+        doc.save(fileName + ".pdf");
       }
 
       alert(`Successfully exported ${selectedMembers.length} member(s)!`);
@@ -130,7 +192,7 @@ export default function MembersExportModal({ members, onClose }) {
         <h2 className={styles.modalTitle}>Export Members Data</h2>
 
         <p className={styles.sectionLabel}>File Format</p>
-        {["CSV", "Excel"].map((fmt) => (
+        {["CSV", "Excel", "PDF"].map((fmt) => (
           <label key={fmt} className={styles.radioRow}>
             <input
               type="radio"
