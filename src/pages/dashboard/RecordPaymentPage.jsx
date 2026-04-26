@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styles from "./RecordPaymentPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
+import { supabase } from "../../lib/supabaseClient";
 
 const defaultForm = {
   memberName: "",
@@ -10,17 +11,77 @@ const defaultForm = {
   modeOfPayment: "Cash",
   referenceNumber: "",
   status: "Paid",
+  total: "",
+};
+
+/**
+ * Add a payment record to the record_payment table
+ * Maps form fields to database columns
+ */
+const add_record = async (formData) => {
+  try {
+    const { error } = await supabase.from("record_payment").insert([
+      {
+        member_id: formData.memberName,
+        date: formData.date,
+        promo_id: formData.promoCode || null,
+        mop: formData.modeOfPayment,
+        ref_number: formData.referenceNumber,
+        status: formData.status,
+        amount_paid: parseInt(formData.total) || 0,
+      },
+    ]);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 };
 
 export default function RecordPaymentPage({ onNavigate, activePage = "payments" }) {
   const [form, setForm] = useState(defaultForm);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
-  const handleSubmit = () => {
-    console.log("Record payment:", form);
-    // TODO: wire up to real data
-    onNavigate("payments");
+  const handleSubmit = async () => {
+    setError("");
+    setSuccessMessage("");
+
+    // Validation
+    if (!form.memberName.trim()) {
+      setError("Member Info is required");
+      return;
+    }
+    if (!form.date) {
+      setError("Date is required");
+      return;
+    }
+    if (!form.total) {
+      setError("Total is required");
+      return;
+    }
+
+    setLoading(true);
+    const result = await add_record(form);
+
+    if (result.success) {
+      setSuccessMessage("Payment record added successfully!");
+      setForm(defaultForm);
+      setTimeout(() => {
+        onNavigate("payments");
+      }, 1500);
+    } else {
+      setError(result.error || "Failed to add payment record");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -36,6 +97,34 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
 
         {/* Form Card */}
         <div className={styles.formCard}>
+
+          {/* Error & Success Messages */}
+          {error && (
+            <div style={{
+              padding: "12px 16px",
+              marginBottom: "16px",
+              backgroundColor: "#fee",
+              border: "1px solid #fcc",
+              borderRadius: "6px",
+              color: "#c00",
+              fontSize: "14px",
+            }}>
+              {error}
+            </div>
+          )}
+          {successMessage && (
+            <div style={{
+              padding: "12px 16px",
+              marginBottom: "16px",
+              backgroundColor: "#efe",
+              border: "1px solid #cfc",
+              borderRadius: "6px",
+              color: "#060",
+              fontSize: "14px",
+            }}>
+              {successMessage}
+            </div>
+          )}
 
           {/* Row 1 */}
           <div className={styles.formRow}>
@@ -82,6 +171,15 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
             </div>
           </div>
 
+          {/* Row 3.5 — Total */}
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Total</label>
+              <input className={styles.formInput} type="number" placeholder="Enter Total Amount"
+                value={form.total} onChange={set("total")} />
+            </div>
+          </div>
+
           {/* Row 4 — Status + Buttons */}
           <div className={styles.formRowStatus}>
             <div className={styles.statusGroup}>
@@ -102,8 +200,12 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
               </div>
             </div>
             <div className={styles.actionBtns}>
-              <button className={styles.addRecordBtn} onClick={handleSubmit}>Add Record</button>
-              <button className={styles.cancelBtn} onClick={() => onNavigate("payments")}>Cancel</button>
+              <button className={styles.addRecordBtn} onClick={handleSubmit} disabled={loading}>
+                {loading ? "Adding..." : "Add Record"}
+              </button>
+              <button className={styles.cancelBtn} onClick={() => onNavigate("payments")} disabled={loading}>
+                Cancel
+              </button>
             </div>
           </div>
 

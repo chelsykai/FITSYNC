@@ -9,8 +9,8 @@ const nextId = (accounts) => {
 export default function CreateAccountModal({ accounts, onClose, onCreate }) {
   const generatedId = nextId(accounts);
   const [form, setForm] = useState({
-    firstName: "", lastName: "", initial: "",
-    role: "", email: "", password: "", confirmPassword: "",
+    firstName: "", lastName: "", MI: "",
+    role: "", username: "", password: "", confirmPassword: "",
   });
   const [showPass, setShowPass]       = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -18,12 +18,12 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   const handleCreate = () => {
-    if (!form.firstName || !form.role || !form.email || !form.password) return;
+    if (!form.firstName || !form.role || !form.username || !form.password) return;
     onCreate?.({
       id: generatedId,
       name: `${form.firstName} ${form.initial ? form.initial + ". " : ""}${form.lastName}`.trim(),
       role: form.role,
-      email: form.email,
+      username: form.username,
     });
     onClose();
   };
@@ -69,9 +69,9 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
             </div>
           </div>
           <div className={styles.accountFieldGroup}>
-            <label className={styles.accountLabel}>Email</label>
-            <input className={styles.accountInput} placeholder="Enter Email Address" type="email"
-              value={form.email} onChange={set("email")} />
+            <label className={styles.accountLabel}>Username</label>
+            <input className={styles.accountInput} placeholder="Enter Username" type="username"
+              value={form.username} onChange={set("username")} />
           </div>
         </div>
 
