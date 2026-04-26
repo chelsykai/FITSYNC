@@ -88,9 +88,27 @@ export default function ExportModal({ members = [], onClose }) {
   const [exportTypes, setExportTypes] = useState([]);
   const [exportSearch, setExportSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  // Calculate stats from members data
-  const activeMembershipsCount = members.length;
+
+  // Helper function to check if a date is today
+  const isToday = (date) => {
+    if (!date) return false;
+    const checkDate = new Date(date);
+    const today = new Date();
+    return (
+      checkDate.getDate() === today.getDate() &&
+      checkDate.getMonth() === today.getMonth() &&
+      checkDate.getFullYear() === today.getFullYear()
+    );
+  };
+
+  // Filter members for today's checkins
+  const todaysCheckins = members.filter((m) => isToday(m.last_visit));
+
+  // Filter members for today's walkins
+  const todaysWalkins = members.filter((m) => isToday(m.last_visit));
+
+  // Get all active memberships
+  const activeMemberships = members;
 
   const toggleExportType = (opt) => {
     if (opt === "Select All") {
@@ -118,18 +136,63 @@ export default function ExportModal({ members = [], onClose }) {
 
       // Prepare export data based on selection
       const exportData = [];
+      const exportTitle = [];
 
       if (exportTypes.includes("Today's Checkin")) {
-        exportData.push({ "Type": "Today's Checkin", "Count": 44 });
-      }
-      if (exportTypes.includes("Today's Walkins")) {
-        exportData.push({ "Type": "Today's Walkins", "Count": 13 });
-      }
-      if (exportTypes.includes("Active Memberships")) {
-        exportData.push({ "Type": "Active Memberships", "Count": activeMembershipsCount });
+        const checkinData = todaysCheckins.map((m) => ({
+          "Member ID": m.member_id || "",
+          "Name": m.full_name || "",
+          "Email": m.email || "",
+          "Phone": m.phone || "",
+          "Address": m.address || "",
+          "Membership Type": m.membership_type || "",
+          "Join Date": m.join_date || "",
+          "Monthly Validity": m.monthly_validity || "",
+          "Membership Validity": m.membership_validity || "",
+        }));
+        exportData.push(...checkinData);
+        exportTitle.push("Today's Checkin");
       }
 
-      const fileName = `overview_export_${new Date().getTime()}`;
+      if (exportTypes.includes("Today's Walkins")) {
+        const walkinData = todaysWalkins.map((m) => ({
+          "Member ID": m.member_id || "",
+          "Name": m.full_name || "",
+          "Email": m.email || "",
+          "Phone": m.phone || "",
+          "Address": m.address || "",
+          "Membership Type": m.membership_type || "",
+          "Join Date": m.join_date || "",
+          "Monthly Validity": m.monthly_validity || "",
+          "Membership Validity": m.membership_validity || "",
+        }));
+        exportData.push(...walkinData);
+        exportTitle.push("Today's Walkins");
+      }
+
+      if (exportTypes.includes("Active Memberships")) {
+        const membershipData = activeMemberships.map((m) => ({
+          "Member ID": m.member_id || "",
+          "Name": m.full_name || "",
+          "Email": m.email || "",
+          "Phone": m.phone || "",
+          "Address": m.address || "",
+          "Membership Type": m.membership_type || "",
+          "Join Date": m.join_date || "",
+          "Monthly Validity": m.monthly_validity || "",
+          "Membership Validity": m.membership_validity || "",
+        }));
+        exportData.push(...membershipData);
+        exportTitle.push("Active Memberships");
+      }
+
+      if (exportData.length === 0) {
+        alert("No data available for the selected export types.");
+        setLoading(false);
+        return;
+      }
+
+      const fileName = `overview_export_${exportTitle.join("_")}_${new Date().getTime()}`;
 
       if (exportFormat === "CSV") {
         const csv = toCsv(exportData);
@@ -145,8 +208,15 @@ export default function ExportModal({ members = [], onClose }) {
         const worksheet = workbook.addWorksheet("Overview");
 
         worksheet.columns = [
-          { header: "Type", key: "Type", width: 25 },
-          { header: "Count", key: "Count", width: 12 },
+          { header: "Member ID", key: "Member ID", width: 15 },
+          { header: "Name", key: "Name", width: 25 },
+          { header: "Email", key: "Email", width: 25 },
+          { header: "Phone", key: "Phone", width: 15 },
+          { header: "Address", key: "Address", width: 30 },
+          { header: "Membership Type", key: "Membership Type", width: 18 },
+          { header: "Join Date", key: "Join Date", width: 15 },
+          { header: "Monthly Validity", key: "Monthly Validity", width: 18 },
+          { header: "Membership Validity", key: "Membership Validity", width: 20 },
         ];
 
         worksheet.addRows(exportData);
@@ -158,11 +228,11 @@ export default function ExportModal({ members = [], onClose }) {
           fileName + ".xlsx"
         );
       } else if (exportFormat === "PDF") {
-        const doc = await toPdf(exportData, "Overview Export");
+        const doc = await toPdf(exportData, `Overview Export - ${exportTitle.join(", ")}`);
         doc.save(fileName + ".pdf");
       }
 
-      alert(`Successfully exported overview data!`);
+      alert(`Successfully exported ${exportData.length} record(s)!`);
       onClose();
     } catch (err) {
       console.error("Error exporting overview:", err);
