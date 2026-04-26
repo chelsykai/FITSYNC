@@ -2,7 +2,10 @@ import { useState } from "react";
 import styles from "../Modal.module.css";
 
 const nextId = (accounts) => {
-  const max = Math.max(...accounts.map((a) => parseInt(a.id)));
+  const numericIds = (accounts || [])
+    .map((a) => parseInt(a.id, 10))
+    .filter((value) => !Number.isNaN(value));
+  const max = numericIds.length > 0 ? Math.max(...numericIds) : 0;
   return String(max + 1);
 };
 
@@ -14,9 +17,12 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
   });
   const [showPass, setShowPass]       = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
+<<<<<<< HEAD
   const handleCreate = () => {
     if (!form.firstName || !form.role || !form.username || !form.password) return;
     onCreate?.({
@@ -26,6 +32,33 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
       username: form.username,
     });
     onClose();
+=======
+  const handleCreate = async () => {
+    const firstName = form.firstName.trim();
+    const lastName = form.lastName.trim();
+    const username = form.email.trim();
+    const password = form.password;
+    const confirmPassword = form.confirmPassword;
+
+    setSubmitError("");
+
+    if (!firstName || !lastName || !form.role || !username || !password) {
+      setSubmitError("Please complete all required fields.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setSubmitError("Passwords do not match.");
+        password,
+        status: "active",
+      });
+      const username = form.username.trim();
+    } catch (err) {
+      setSubmitError(err?.message || "Failed to create account.");
+    } finally {
+      setSubmitting(false);
+    }
+>>>>>>> 4a4f810 (Feat: create account modal functional)
   };
 
   return (
@@ -52,12 +85,6 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
             <input className={styles.accountInput} placeholder="Last Name"
               value={form.lastName} onChange={set("lastName")} />
             <input className={`${styles.accountInput} ${styles.initialInput}`} placeholder="Initial"
-              value={form.initial} onChange={set("initial")} />
-          </div>
-        </div>
-
-        {/* Role + Email */}
-        <div className={styles.accountTwoCol}>
           <div className={styles.accountFieldGroup}>
             <label className={styles.accountLabel}>Role</label>
             <div className={styles.selectWrapper}>
@@ -70,8 +97,13 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
           </div>
           <div className={styles.accountFieldGroup}>
             <label className={styles.accountLabel}>Username</label>
+<<<<<<< HEAD
             <input className={styles.accountInput} placeholder="Enter Username" type="username"
               value={form.username} onChange={set("username")} />
+=======
+            <input className={styles.accountInput} placeholder="Enter Username" type="text"
+              value={form.email} onChange={set("email")} />
+>>>>>>> 4a4f810 (Feat: create account modal functional)
           </div>
         </div>
 
@@ -79,7 +111,7 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
         <div className={styles.accountFieldGroup}>
           <label className={styles.accountLabel}>Password</label>
           <div className={styles.passwordRow}>
-            <div className={styles.passwordWrapper}>
+                value={form.MI} onChange={set("MI")} />
               <input
                 className={styles.accountInput}
                 placeholder="Enter Password"
@@ -87,7 +119,7 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
                 value={form.password}
                 onChange={set("password")}
               />
-              <button className={styles.eyeBtn} onClick={() => setShowPass(!showPass)}>
+              <button className={styles.eyeBtn} type="button" onClick={() => setShowPass(!showPass)}>
                 {showPass ? "🙈" : "👁️"}
               </button>
             </div>
@@ -97,19 +129,22 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
                 placeholder="Enter Password Again"
                 type={showConfirm ? "text" : "password"}
                 value={form.confirmPassword}
-                onChange={set("confirmPassword")}
-              />
-              <button className={styles.eyeBtn} onClick={() => setShowConfirm(!showConfirm)}>
-                {showConfirm ? "🙈" : "👁️"}
               </button>
-            </div>
-          </div>
+                value={form.username} onChange={set("username")} />
         </div>
+
+        {submitError && (
+          <div style={{ color: "#c33", marginTop: "6px", marginBottom: "8px", fontSize: "14px" }}>
+            {submitError}
+          </div>
+        )}
 
         {/* Footer */}
         <div className={styles.createAccountFooter}>
-          <button className={styles.accountCancelBtn} onClick={onClose}>Cancel</button>
-          <button className={styles.accountCreateBtn} onClick={handleCreate}>Create</button>
+          <button className={styles.accountCancelBtn} onClick={onClose} disabled={submitting}>Cancel</button>
+          <button className={styles.accountCreateBtn} onClick={handleCreate} disabled={submitting}>
+            {submitting ? "Creating..." : "Create"}
+          </button>
         </div>
       </div>
     </div>

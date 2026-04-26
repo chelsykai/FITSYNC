@@ -1,5 +1,20 @@
 import { supabase } from '../lib/supabaseClient';
 
+const normalizeAccountInput = (accountData) => {
+  const firstName = (accountData.firstName || '').trim();
+  const lastName = (accountData.lastName || '').trim();
+  const username = (accountData.username || accountData.email || '').trim();
+
+  return {
+    firstName,
+    lastName,
+    username,
+    role: accountData.role || 'Staff',
+    status: accountData.status || 'active',
+    password: accountData.password || ''
+  };
+};
+
 /**
  * Fetch all user accounts from the system_user table
  */
@@ -34,16 +49,18 @@ export const fetchAccounts = async () => {
  */
 export const addAccount = async (accountData) => {
   try {
+    const normalized = normalizeAccountInput(accountData);
+
     const { data, error } = await supabase
       .from('system_user')
       .insert([
         {
-          first_name: accountData.firstName || '',
-          last_name: accountData.lastName || '',
-          username: accountData.username || '',
-          password: accountData.password || '', // Password should be hashed on backend ideally
-          role: accountData.role || 'Staff',
-          status: accountData.status || 'active'
+          first_name: normalized.firstName,
+          last_name: normalized.lastName,
+          username: normalized.username,
+          password: normalized.password, // Password should be hashed on backend ideally
+          role: normalized.role,
+          status: normalized.status
         }
       ])
       .select();
@@ -73,17 +90,18 @@ export const addAccount = async (accountData) => {
  */
 export const updateAccount = async (accountId, accountData) => {
   try {
+    const normalized = normalizeAccountInput(accountData);
     const updateData = {
-      first_name: accountData.firstName || '',
-      last_name: accountData.lastName || '',
-      username: accountData.username || '',
-      role: accountData.role,
-      status: accountData.status || 'active'
+      first_name: normalized.firstName,
+      last_name: normalized.lastName,
+      username: normalized.username,
+      role: normalized.role,
+      status: normalized.status
     };
 
     // Only include password if it's provided and not empty
-    if (accountData.password) {
-      updateData.password = accountData.password;
+    if (normalized.password) {
+      updateData.password = normalized.password;
     }
 
     const { data, error } = await supabase
