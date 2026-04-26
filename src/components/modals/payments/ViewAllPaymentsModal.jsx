@@ -148,8 +148,6 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
                   <td>
                     <div className={styles.receiptActions}>
                       <button className={styles.receiptLinkBtn} onClick={() => setReceipt(p)}>view</button>
-                      <span className={styles.receiptDivider}>|</span>
-                      <button className={styles.receiptLinkBtn} onClick={() => setReceipt(p)}>receipt</button>
                     </div>
                   </td>
                 </tr>
