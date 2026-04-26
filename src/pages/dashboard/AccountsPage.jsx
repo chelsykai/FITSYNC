@@ -83,6 +83,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
       setAccounts((prev) => [createdAccount, ...prev]);
     } catch (err) {
       setError("Failed to create account: " + err.message);
+      throw err;
     }
   };
 

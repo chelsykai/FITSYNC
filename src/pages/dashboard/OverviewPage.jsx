@@ -305,7 +305,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
         <ViewAllModal members={members} onClose={() => setShowAll(false)} />
       )}
       {showExport && (
-        <ExportModal onClose={() => setShowExport(false)} />
+        <ExportModal members={members} onClose={() => setShowExport(false)} />
       )}
     </>
   );

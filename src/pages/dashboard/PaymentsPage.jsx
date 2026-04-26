@@ -4,6 +4,7 @@ import Sidebar from "../../components/sidebar/sidebar";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 import { supabase } from "../../lib/supabaseClient";
+import { fetchMembers } from "../../services/memberService";
 
 /**
  * Fetch total count of members from the database
@@ -143,24 +144,36 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     thisMonth: 0,
     pending: 0,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loadingPayments, setLoadingPayments] = useState(true);
+  const [loadingMembers, setLoadingMembers] = useState(true);
   const [search, setSearch] = useState("");
   const [showExport, setShowExport] = useState(false);
   const [showViewAll, setShowViewAll] = useState(false);
+  const [members, setMembers] = useState([]);
+
+  // Fetch members on component mount
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        setLoadingMembers(true);
+        const data = await fetchMembers();
+        setMembers(data);
+      } catch (err) {
+        console.error("Error fetching members:", err);
+        setMembers([]);
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+
+    loadMembers();
+  }, []);
 
   useEffect(() => {
     const loadPayments = async () => {
-      setLoading(true);
-      setError("");
-      
-      // Fetch both payments and member count in parallel
-      const [paymentData, memberCount] = await Promise.all([
-        fetchPayments(),
-        fetchMemberCount(),
-      ]);
-
-      setPayments(paymentData);
+      setLoadingPayments(true);
+      const data = await fetchPayments();
+      setPayments(data);
 
       const calculatedStats = calculateStats(paymentData, memberCount);
       setStats({
@@ -173,7 +186,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
         pending: calculatedStats.pending,
       });
 
-      setLoading(false);
+      setLoadingPayments(false);
     };
 
     loadPayments();
@@ -203,7 +216,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     p.status.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) {
+  if (loadingPayments) {
     return (
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
@@ -237,7 +250,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
               <span className={styles.statIcon}>👥</span>
               <div>
                 <p className={styles.statLabel}>Active Memberships</p>
-                <p className={styles.statValue}>{stats.activeMemberships}</p>
+                <p className={styles.statValue}>{loadingMembers ? "..." : members.length}</p>
               </div>
             </div>
             <div
@@ -368,7 +381,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
 
       {/* Modals */}
       {showExport && (
-        <PaymentsExportModal onClose={() => setShowExport(false)} />
+        <PaymentsExportModal payments={payments} members={members} onClose={() => setShowExport(false)} />
       )}
       {showViewAll && (
         <ViewAllPaymentsModal
