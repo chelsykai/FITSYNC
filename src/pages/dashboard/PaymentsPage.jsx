@@ -4,6 +4,7 @@ import Sidebar from "../../components/sidebar/sidebar";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 import { supabase } from "../../lib/supabaseClient";
+import { fetchMembers } from "../../services/memberService";
 
 /**
  * Fetch all payment records from the database with member info
@@ -86,25 +87,25 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     thisMonth: 0,
     pending: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loadingPayments, setLoadingPayments] = useState(true);
+  const [loadingMembers, setLoadingMembers] = useState(true);
   const [search, setSearch] = useState("");
   const [showExport, setShowExport] = useState(false);
   const [showViewAll, setShowViewAll] = useState(false);
   const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // Fetch members on component mount
   useEffect(() => {
     const loadMembers = async () => {
       try {
-        setLoading(true);
+        setLoadingMembers(true);
         const data = await fetchMembers();
         setMembers(data);
       } catch (err) {
         console.error("Error fetching members:", err);
         setMembers([]);
       } finally {
-        setLoading(false);
+        setLoadingMembers(false);
       }
     };
 
@@ -113,7 +114,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
 
   useEffect(() => {
     const loadPayments = async () => {
-      setLoading(true);
+      setLoadingPayments(true);
       const data = await fetchPayments();
       setPayments(data);
 
@@ -128,7 +129,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
         pending: calculatedStats.pending,
       });
 
-      setLoading(false);
+      setLoadingPayments(false);
     };
 
     loadPayments();
@@ -157,7 +158,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     p.status.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) {
+  if (loadingPayments) {
     return (
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
@@ -191,7 +192,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
               <span className={styles.statIcon}>👥</span>
               <div>
                 <p className={styles.statLabel}>Active Memberships</p>
-                <p className={styles.statValue}>{loading ? "..." : members.length}</p>
+                <p className={styles.statValue}>{loadingMembers ? "..." : members.length}</p>
               </div>
             </div>
             <div

@@ -22,21 +22,10 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
-<<<<<<< HEAD
-  const handleCreate = () => {
-    if (!form.firstName || !form.role || !form.username || !form.password) return;
-    onCreate?.({
-      id: generatedId,
-      name: `${form.firstName} ${form.initial ? form.initial + ". " : ""}${form.lastName}`.trim(),
-      role: form.role,
-      username: form.username,
-    });
-    onClose();
-=======
   const handleCreate = async () => {
     const firstName = form.firstName.trim();
     const lastName = form.lastName.trim();
-    const username = form.email.trim();
+    const username = form.username.trim();
     const password = form.password;
     const confirmPassword = form.confirmPassword;
 
@@ -49,16 +38,26 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
 
     if (password !== confirmPassword) {
       setSubmitError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await onCreate?.({
+        firstName,
+        lastName,
+        role: form.role,
+        username,
+        email: username,
         password,
         status: "active",
       });
-      const username = form.username.trim();
+      onClose();
     } catch (err) {
       setSubmitError(err?.message || "Failed to create account.");
     } finally {
       setSubmitting(false);
     }
->>>>>>> 4a4f810 (Feat: create account modal functional)
   };
 
   return (
@@ -85,6 +84,12 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
             <input className={styles.accountInput} placeholder="Last Name"
               value={form.lastName} onChange={set("lastName")} />
             <input className={`${styles.accountInput} ${styles.initialInput}`} placeholder="Initial"
+              value={form.MI} onChange={set("MI")} />
+          </div>
+        </div>
+
+        {/* Role + Username */}
+        <div className={styles.accountTwoCol}>
           <div className={styles.accountFieldGroup}>
             <label className={styles.accountLabel}>Role</label>
             <div className={styles.selectWrapper}>
@@ -97,13 +102,13 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
           </div>
           <div className={styles.accountFieldGroup}>
             <label className={styles.accountLabel}>Username</label>
-<<<<<<< HEAD
-            <input className={styles.accountInput} placeholder="Enter Username" type="username"
-              value={form.username} onChange={set("username")} />
-=======
-            <input className={styles.accountInput} placeholder="Enter Username" type="text"
-              value={form.email} onChange={set("email")} />
->>>>>>> 4a4f810 (Feat: create account modal functional)
+            <input
+              className={styles.accountInput}
+              placeholder="Enter Username"
+              type="text"
+              value={form.username}
+              onChange={set("username")}
+            />
           </div>
         </div>
 
@@ -111,7 +116,7 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
         <div className={styles.accountFieldGroup}>
           <label className={styles.accountLabel}>Password</label>
           <div className={styles.passwordRow}>
-                value={form.MI} onChange={set("MI")} />
+            <div className={styles.passwordWrapper}>
               <input
                 className={styles.accountInput}
                 placeholder="Enter Password"
@@ -129,8 +134,13 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
                 placeholder="Enter Password Again"
                 type={showConfirm ? "text" : "password"}
                 value={form.confirmPassword}
+                onChange={set("confirmPassword")}
+              />
+              <button className={styles.eyeBtn} type="button" onClick={() => setShowConfirm(!showConfirm)}>
+                {showConfirm ? "🙈" : "👁️"}
               </button>
-                value={form.username} onChange={set("username")} />
+            </div>
+          </div>
         </div>
 
         {submitError && (
