@@ -135,6 +135,7 @@ const calculateStats = (payments, activeMemberships = 0) => {
 
 export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
   const [payments, setPayments] = useState([]);
+  const [error, setError] = useState("");
   const [stats, setStats] = useState({
     totalTransactions: 0,
     activeMemberships: 0,
@@ -171,22 +172,36 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
 
   useEffect(() => {
     const loadPayments = async () => {
-      setLoadingPayments(true);
-      const data = await fetchPayments();
-      setPayments(data);
+      try {
+        setLoadingPayments(true);
+        setError("");
 
-      const calculatedStats = calculateStats(paymentData, memberCount);
-      setStats({
-        totalTransactions: calculatedStats.totalTransactions,
-        activeMemberships: calculatedStats.activeMemberships,
-      });
-      setRevenue({
-        today: calculatedStats.today,
-        thisMonth: calculatedStats.thisMonth,
-        pending: calculatedStats.pending,
-      });
+        const [paymentData, memberCount] = await Promise.all([
+          fetchPayments(),
+          fetchMemberCount(),
+        ]);
 
-      setLoadingPayments(false);
+        setPayments(paymentData);
+
+        const calculatedStats = calculateStats(paymentData, memberCount);
+        setStats({
+          totalTransactions: calculatedStats.totalTransactions,
+          activeMemberships: calculatedStats.activeMemberships,
+        });
+        setRevenue({
+          today: calculatedStats.today,
+          thisMonth: calculatedStats.thisMonth,
+          pending: calculatedStats.pending,
+        });
+      } catch (err) {
+        console.error("Error loading payments:", err);
+        setError("Unable to load payment records right now. Please try again.");
+        setPayments([]);
+        setStats({ totalTransactions: 0, activeMemberships: 0 });
+        setRevenue({ today: 0, thisMonth: 0, pending: 0 });
+      } finally {
+        setLoadingPayments(false);
+      }
     };
 
     loadPayments();
