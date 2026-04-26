@@ -1,24 +1,68 @@
 import { supabase } from "../lib/supabaseClient";
 
+const MEMBER_PHOTO_BUCKET = "member_photo";
+const MEMBER_PHOTO_PREFIX = "member_photos";
+
+const sanitizeFileName = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+const getStoragePathFromUrl = (value) => {
+  if (!value || typeof value !== "string") return null;
+
+  if (value.startsWith(`${MEMBER_PHOTO_PREFIX}/`)) {
+    return value;
+  }
+
+  const marker = `/object/public/${MEMBER_PHOTO_BUCKET}/`;
+  const markerIndex = value.indexOf(marker);
+  if (markerIndex === -1) return null;
+
+  return value.slice(markerIndex + marker.length);
+};
+
+const getPhotoAccessUrl = async (photoRef) => {
+  if (!photoRef) return null;
+
+  // Keep existing fully-qualified URLs working for legacy rows.
+  if (photoRef.startsWith("http://") || photoRef.startsWith("https://")) {
+    return photoRef;
+  }
+
+  // New records store the storage object path in photo_url.
+  const { data, error } = await supabase.storage
+    .from(MEMBER_PHOTO_BUCKET)
+    .createSignedUrl(photoRef, 60 * 60);
+
+  if (!error && data?.signedUrl) {
+    return data.signedUrl;
+  }
+
+  const { data: publicData } = supabase.storage
+    .from(MEMBER_PHOTO_BUCKET)
+    .getPublicUrl(photoRef);
+  return publicData?.publicUrl || null;
+};
+
 /**
  * Upload member photo to Supabase storage
  */
 export const uploadMemberPhoto = async (file, memberId) => {
   if (!file) return null;
 
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${memberId}.${fileExt}`;
-  const filePath = `member_photos/${fileName}`;
+  const safeName = sanitizeFileName(file.name || "photo");
+  const filePath = `${MEMBER_PHOTO_PREFIX}/${memberId}/${Date.now()}-${safeName}`;
 
   const { error: uploadError } = await supabase.storage
-    .from("members")
-    .upload(filePath, file, { upsert: true });
+    .from(MEMBER_PHOTO_BUCKET)
+    .upload(filePath, file, {
+      upsert: false,
+      contentType: file.type || "application/octet-stream",
+      cacheControl: "3600",
+    });
 
   if (uploadError) throw uploadError;
 
-  // Return the public URL of the uploaded photo
-  const { data } = supabase.storage.from("members").getPublicUrl(filePath);
-  return data.publicUrl;
+  // Store object path so it stays linked to this member regardless of bucket visibility.
+  return filePath;
 };
 
 /**
@@ -55,27 +99,7 @@ export const addMember = async (memberData) => {
   const joinDate = new Date().toISOString().split("T")[0];
 
   // Insert member record into database
-  const { data, error } = await supabase.from("member").insert([
-    {
-      member_id: memberId,
-      full_name: fullName,
-      email: email,
-      phone: phone,
-      address: address,
-      birthday: birthday,
-      membership_type: membershipType,
-      monthly_validity: monthlyValidity,
-      membership_validity: membershipValidity,
-      gender: gender,
-      photo_url: photoUrl,
-      join_date: joinDate,
-      created_at: new Date().toISOString(),
-    },
-  ]);
-
-  if (error) throw error;
-
-  return {
+  const payload = {
     member_id: memberId,
     full_name: fullName,
     email: email,
@@ -88,6 +112,32 @@ export const addMember = async (memberData) => {
     gender: gender,
     photo_url: photoUrl,
     join_date: joinDate,
+    created_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("member")
+    .insert([payload])
+    .select()
+    .single();
+
+  if (error) {
+    // Prevent orphaned uploads when insert fails.
+    if (photoUrl) {
+      await supabase.storage.from(MEMBER_PHOTO_BUCKET).remove([photoUrl]);
+    }
+    throw error;
+  }
+
+  const photoAccessUrl = await getPhotoAccessUrl(data.photo_url);
+
+  return {
+    ...data,
+    photo_url: photoAccessUrl,
+    // Compatibility keys used by existing confirmation modal.
+    memberId: data.member_id,
+    fullName: data.full_name,
+    membershipType: data.membership_type,
   };
 };
 
@@ -101,7 +151,20 @@ export const fetchMembers = async () => {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data || [];
+
+  const members = data || [];
+  return Promise.all(
+    members.map(async (member) => {
+      const photoPath = getStoragePathFromUrl(member.photo_url);
+      if (!photoPath) return member;
+
+      const photoUrl = await getPhotoAccessUrl(photoPath);
+      return {
+        ...member,
+        photo_url: photoUrl,
+      };
+    })
+  );
 };
 
 /**

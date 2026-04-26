@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import styles from "../Modal.module.css";
 import { addMember } from "../../../services/memberService";
 
@@ -22,11 +22,36 @@ export default function AddMemberModal({ onClose, onSuccess }) {
   const [error, setError] = useState(null);
   const fileRef = useRef();
 
+  useEffect(() => {
+    return () => {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
+
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
+      return;
+    }
+
+    const maxFileSize = 5 * 1024 * 1024;
+    if (file.size > maxFileSize) {
+      setError("Photo size must be 5MB or less.");
+      return;
+    }
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
+    setError(null);
     setForm({ ...form, photo: file });
     setPreview(URL.createObjectURL(file));
   };
