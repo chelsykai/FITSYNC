@@ -19,6 +19,40 @@
   margin: 0 0 24px 0;
 }
 
+.tabRow {
+  display: inline-flex;
+  gap: 8px;
+  background: #e8f2df;
+  border: 1px solid #d4e6c5;
+  border-radius: 14px;
+  padding: 6px;
+  margin-bottom: 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tabBtn {
+  border: none;
+  background: transparent;
+  color: #5f7651;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabBtn:hover {
+  background: rgba(126, 186, 86, 0.14);
+}
+
+.tabBtnActive {
+  background: linear-gradient(180deg, #7eba56 0%, #6aa947 100%);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(126, 186, 86, 0.28);
+}
+
 /* STAT CARDS */
 .statRow {
   display: flex;
@@ -189,3 +223,100 @@
 }
 
 .viewAllBtn:hover { background-color: #555; }
+
+.scannerCard {
+  background: linear-gradient(180deg, #eef7e8 0%, #e5f0de 100%);
+  border: 1px solid #d3e3c2;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.scannerHeader {
+  margin-bottom: 16px;
+}
+
+.scannerTitle {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #23331f;
+}
+
+.scannerSubtitle {
+  margin: 0;
+  color: #5f7651;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.scannerViewport {
+  display: flex;
+  justify-content: center;
+  padding: 18px;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #d8e8cc;
+  border-radius: 16px;
+}
+
+.scannerFrame {
+  width: min(100%, 420px);
+  min-height: 320px;
+}
+
+.scannerStatus {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.scannerStatus_idle,
+.scannerStatus_ready {
+  background: #f7fbf4;
+  color: #4d6440;
+  border: 1px solid #d8e8cc;
+}
+
+.scannerStatus_starting,
+.scannerStatus_processing {
+  background: #f2f8ec;
+  color: #4f7a37;
+  border: 1px solid #cfe2bd;
+}
+
+.scannerStatus_success {
+  background: #eaf7e1;
+  color: #2f6b1e;
+  border: 1px solid #bde0a9;
+}
+
+.scannerStatus_error {
+  background: #fff1f1;
+  color: #b42318;
+  border: 1px solid #f3c2c2;
+}
+
+.scannerHint {
+  font-size: 12px;
+  color: #5f7651;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .tabRow {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .tabBtn {
+    flex: 1;
+  }
+
+  .scannerCard {
+    padding: 18px;
+  }
+}
