@@ -2,11 +2,13 @@ import { useState } from "react";
 import styles from "../Modal.module.css";
 import EditMemberModal from "./EditMemberModal";
 import DeleteMemberModal from "./DeleteMemberModal";
+import MemberProfileModal from "./MemberProfileModal";
 
 export default function ViewAllMembersModal({ members, onClose, onMemberDeleted }) {
   const [displayMembers, setDisplayMembers] = useState(members);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   const handleMemberDeleted = (deletedMember) => {
     // Remove the deleted member from the display list
@@ -36,7 +38,13 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
             </thead>
             <tbody>
               {displayMembers.map((m) => (
-                <tr key={m.member_id}>
+                <tr 
+                  key={m.member_id}
+                  onClick={() => setSelectedMember(m)}
+                  style={{ cursor: "pointer" }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f5f5f5"}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
+                >
                   <td>{m.member_id}</td>
                   <td>{m.full_name}</td>
                   <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
@@ -44,7 +52,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
                   <td>{m.monthly_validity}</td>
                   <td>{m.membership_validity}</td>
                   <td>{m.last_visit || "N/A"}</td>
-                  <td>
+                  <td onClick={(e) => e.stopPropagation()}>
                     <div className={styles.actionBtns}>
                       <button
                         className={styles.editBtn}
@@ -89,6 +97,13 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
           member={deleteTarget}
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleMemberDeleted}
+        />
+      )}
+
+      {selectedMember && (
+        <MemberProfileModal
+          member={selectedMember}
+          onClose={() => setSelectedMember(null)}
         />
       )}
     </>
