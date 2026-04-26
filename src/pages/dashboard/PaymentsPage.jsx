@@ -90,6 +90,26 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
   const [search, setSearch] = useState("");
   const [showExport, setShowExport] = useState(false);
   const [showViewAll, setShowViewAll] = useState(false);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch members on component mount
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchMembers();
+        setMembers(data);
+      } catch (err) {
+        console.error("Error fetching members:", err);
+        setMembers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMembers();
+  }, []);
 
   useEffect(() => {
     const loadPayments = async () => {
@@ -171,7 +191,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
               <span className={styles.statIcon}>👥</span>
               <div>
                 <p className={styles.statLabel}>Active Memberships</p>
-                <p className={styles.statValue}>{stats.activeMemberships}</p>
+                <p className={styles.statValue}>{loading ? "..." : members.length}</p>
               </div>
             </div>
             <div
@@ -280,7 +300,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
 
       {/* Modals */}
       {showExport && (
-        <PaymentsExportModal onClose={() => setShowExport(false)} />
+        <PaymentsExportModal payments={payments} members={members} onClose={() => setShowExport(false)} />
       )}
       {showViewAll && (
         <ViewAllPaymentsModal
