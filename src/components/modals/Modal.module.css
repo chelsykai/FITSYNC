@@ -350,71 +350,208 @@
 
 /* ── Profile modal ── */
 .profileModal {
-  background: #E5F0DE;
-  border-radius: 16px;
-  padding: 28px 32px;
-  width: 400px;
+  background: linear-gradient(180deg, #eef7e9 0%, #e1efd8 100%);
+  border: 1px solid #c7dfb8;
+  border-radius: 20px;
+  padding: 22px;
+  width: min(92vw, 560px);
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 48px rgba(34, 51, 34, 0.24);
   text-align: center;
+}
+
+.profileHero {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid #d8e8cc;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
 }
 
 .profileAvatar {
   font-size: 56px;
-  background: grey;
+  background: #c8cfbe;
+  border: 3px solid #ffffff;
   border-radius: 100%;
-  width: 90px;
-  height: 90px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 12px auto;
+  margin: 0;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.14);
+}
+
+.profileTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.profileQrBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #d8e8cc;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.profileQrCanvas {
+  width: 150px;
+  height: 150px;
+}
+
+.profileQrLabel {
+  font-size: 10px;
+  color: #4f7a37;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  margin: 8px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.profileIdentity {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .profileName {
-  font-size: 16px;
-  font-weight: 700;
-  color: #222;
-  margin: 0 0 6px 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #23331f;
+  margin: 0;
   font-family: "Montserrat", sans-serif;
 }
 
+.profileIdText {
+  margin: 5px 0 8px 0;
+  font-size: 12px;
+  color: #56734a;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+}
+
 .profileBadge {
-  background: #E5F0DE;
-  color: #7eba56;
-  border: 1px solid #7eba56;
+  background: #f2f9ec;
+  color: #4f7a37;
+  border: 1px solid #6ea94a;
   border-radius: 20px;
-  padding: 2px 14px;
-  font-size: 11px;
+  padding: 3px 14px;
+  font-size: 10px;
   font-weight: 700;
   display: inline-block;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   font-family: "Montserrat", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .profileGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   text-align: left;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+
+.profileItem {
+  background: #ffffff;
+  border: 1px solid #d8e8cc;
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 56px;
+}
+
+@media (max-width: 560px) {
+  .profileModal {
+    padding: 16px;
+  }
+
+  .profileTopRow {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .profileAvatar {
+    width: 88px;
+    height: 88px;
+  }
+
+  .profileQrCanvas {
+    width: 130px;
+    height: 130px;
+  }
+
+  .profileGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .profileLabel {
   font-size: 10px;
   font-weight: 700;
-  color: #888;
-  margin: 0 0 2px 0;
+  color: #6a8360;
+  margin: 0 0 4px 0;
   font-family: "Montserrat", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
 }
 
 .profileValue {
-  font-size: 12px;
-  font-weight: 600;
-  color: #333;
+  font-size: 13px;
+  font-weight: 700;
+  color: #24371f;
   margin: 0;
   font-family: "Montserrat", sans-serif;
+  word-break: break-word;
+}
+
+.profileActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.profileEmailBtn,
+.profileCloseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 11px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.profileEmailBtn {
+  background: #7eba56;
+  color: #ffffff;
+}
+
+.profileEmailBtn:hover {
+  background: #6aa947;
+}
+
+.profileCloseBtn {
+  background: #2f3f2c;
+  color: #ffffff;
+}
+
+.profileCloseBtn:hover {
+  background: #41553d;
 }
 
 /* ── Table action buttons ── */
