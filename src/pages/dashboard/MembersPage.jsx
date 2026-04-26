@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import styles from "./MembersPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import MembersExportModal from "../../components/modals/members/MembersExportModal";

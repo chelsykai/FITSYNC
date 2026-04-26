@@ -1,0 +1,213 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  font-family: "Montserrat", sans-serif;
+  background-color: #f5f5f5;
+}
+
+.content {
+  flex: 1;
+  padding: 36px 40px;
+  overflow-y: auto;
+  margin-left: 180px;
+}
+
+.title {
+  color: #7eba56;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+}
+
+.scannerCard {
+  background: linear-gradient(180deg, #eef7e8 0%, #e5f0de 100%);
+  border: 1px solid #d3e3c2;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.scannerHeader {
+  margin-bottom: 16px;
+}
+
+.scannerTitle {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #23331f;
+}
+
+.scannerSubtitle {
+  margin: 0;
+  color: #5f7651;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.scanHighlightCard {
+  background: linear-gradient(180deg, #ffffff 0%, #f3f9ee 100%);
+  border: 1px solid #cde1bf;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+.scanHighlightCardFade {
+  opacity: 0;
+}
+
+.scanHighlightPhoto,
+.scanHighlightPlaceholder {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  border: 2px solid #cde1bf;
+  object-fit: cover;
+  background: #ecf3e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  flex-shrink: 0;
+}
+
+.scanHighlightInfo {
+  min-width: 0;
+}
+
+.scanHighlightTitle {
+  margin: 0 0 4px 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  color: #6a8360;
+  font-weight: 700;
+}
+
+.scanHighlightName {
+  margin: 0;
+  color: #1f311b;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.scanHighlightId {
+  margin: 3px 0 0 0;
+  color: #547249;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.scannerViewport {
+  display: flex;
+  justify-content: center;
+  padding: 18px;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #d8e8cc;
+  border-radius: 16px;
+}
+
+.scannerFrame {
+  width: min(100%, 420px);
+  min-height: 320px;
+}
+
+.scannerActions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.scannerStartBtn,
+.scannerStopBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.scannerStartBtn {
+  background: linear-gradient(180deg, #7eba56 0%, #6aa947 100%);
+  color: #fff;
+}
+
+.scannerStartBtn:hover {
+  transform: translateY(-1px);
+}
+
+.scannerStartBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.scannerStopBtn {
+  background: #2f3f2c;
+  color: #fff;
+}
+
+.scannerStopBtn:hover {
+  background: #41553d;
+}
+
+.scannerStatus {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.scannerStatus_idle,
+.scannerStatus_ready {
+  background: #f7fbf4;
+  color: #4d6440;
+  border: 1px solid #d8e8cc;
+}
+
+.scannerStatus_starting,
+.scannerStatus_processing {
+  background: #f2f8ec;
+  color: #4f7a37;
+  border: 1px solid #cfe2bd;
+}
+
+.scannerStatus_success {
+  background: #eaf7e1;
+  color: #2f6b1e;
+  border: 1px solid #bde0a9;
+}
+
+.scannerStatus_error {
+  background: #fff1f1;
+  color: #b42318;
+  border: 1px solid #f3c2c2;
+}
+
+.scannerHint {
+  font-size: 12px;
+  color: #5f7651;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .content {
+    padding: 24px 18px;
+    margin-left: 0;
+  }
+}

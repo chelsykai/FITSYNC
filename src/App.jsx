@@ -7,6 +7,7 @@ import MembersPage from "./pages/dashboard/MembersPage";
 import PaymentsPage from "./pages/dashboard/PaymentsPage";
 import NotificationsPage from "./pages/dashboard/NotificationsPage";
 import AccountsPage from "./pages/dashboard/AccountsPage";
+import ScannerPage from "./pages/dashboard/ScannerPage";
 import RecordPaymentPage from "./pages/dashboard/RecordPaymentPage";
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
       {route === "payments"      && <PaymentsPage activePage="payments" onNavigate={navigate} />}
       {route === "notifications" && <NotificationsPage activePage="notifications" onNavigate={navigate} />}
       {route === "accounts"      && <AccountsPage activePage="accounts" onNavigate={navigate} />}
+      {route === "scanner"       && <ScannerPage activePage="scanner" onNavigate={navigate} />}
       {route === "recordPayment" && <RecordPaymentPage activePage="payments" onNavigate={navigate} />}
     </>
   );
