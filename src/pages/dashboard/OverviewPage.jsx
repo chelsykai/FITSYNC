@@ -4,11 +4,19 @@ import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllModal from "../../components/modals/overview/ViewAllModal";
 import ExportModal from "../../components/modals/overview/ExportModal";
 import { fetchMembers } from "../../services/memberService";
+import {
+  fetchTodayAttendanceByTimeBins,
+  fetchTodayAttendanceCount,
+  fetchCurrentMonthAttendanceByDay,
+  fetchCurrentYearAttendanceByMonth,
+} from "../../services/attendanceService";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
-const stats = { checkins: 44, activeMembers: 890, walkIns: 13 };
+const stats = { walkIns: 13 };
 
-const gymActivity = [10, 6, 12, 4, 3, 5, 2, 4, 6, 3, 5, 4];
+const EMPTY_DAILY_ACTIVITY = Array(12).fill(0);
+const CHECKIN_SLOT_LABELS = ["12A", "2A", "4A", "6A", "8A", "10A", "12P", "2P", "4P", "6P", "8P", "10P"];
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const membershipTypeColors = {
   "Regular": "#4a9e4a",
@@ -129,23 +137,33 @@ function PopulationLegend({ data }) {
   );
 }
 
-function BarChart({ data }) {
-  const max = Math.max(...data), width = 340, height = 120, barW = 18;
-  const gap = (width - data.length * barW) / (data.length + 1);
+function BarChart({ data, labels }) {
+  const max = Math.max(...data, 1);
+  const width = 560;
+  const height = 190;
+  const leftPad = 24;
+  const rightPad = 10;
+  const chartWidth = width - leftPad - rightPad;
+  const barW = Math.max(14, Math.floor(chartWidth / (data.length * 1.8)));
+  const gap = (chartWidth - data.length * barW) / (data.length + 1);
+  const step = Math.max(1, Math.ceil(max / 4));
+  const ticks = [0, step, step * 2, step * 3, step * 4];
+
   return (
-    <svg width={width} height={height + 20}>
-      {[0, 3, 6, 9, 12].map((v) => (
+    <svg width="100%" viewBox={`0 0 ${width} ${height + 32}`}>
+      {ticks.map((v) => (
         <text key={v} x={0} y={height - (v / max) * height + 4}
           fontSize="9" fill="#aaa" fontFamily="Montserrat, sans-serif">{v}</text>
       ))}
+
       {data.map((val, i) => {
-        const x = gap + i * (barW + gap) + 12;
+        const x = leftPad + gap + i * (barW + gap);
         const barH = (val / max) * height;
         return (
           <g key={i}>
             <rect x={x} y={height - barH} width={barW} height={barH} fill="#7eba56" rx={3} />
             <text x={x + barW / 2} y={height + 14} textAnchor="middle"
-              fontSize="9" fill="#aaa" fontFamily="Montserrat, sans-serif">{i + 1}</text>
+              fontSize="9" fill="#aaa" fontFamily="Montserrat, sans-serif">{labels?.[i] || i + 1}</text>
           </g>
         );
       })}
@@ -154,34 +172,74 @@ function BarChart({ data }) {
 }
 
 export default function OverviewPage({ onNavigate, activePage = "overview" }) {
-  const [year, setYear] = useState(2025);
   const [showAll, setShowAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [populationData, setPopulationData] = useState([]);
+  const [todayCheckIns, setTodayCheckIns] = useState(0);
+  const [gymActivity, setGymActivity] = useState(EMPTY_DAILY_ACTIVITY);
+  const [activityRange, setActivityRange] = useState("today");
 
   // Fetch members on component mount
   useEffect(() => {
-    const loadMembers = async () => {
+    const loadOverviewData = async () => {
       try {
         setLoading(true);
-        const data = await fetchMembers();
-        setMembers(data);
-        setPopulationData(calculatePopulation(data));
+        const [memberData, walkInCount] = await Promise.all([
+          fetchMembers(),
+          fetchTodayAttendanceCount(),
+        ]);
+        setMembers(memberData);
+        setPopulationData(calculatePopulation(memberData));
+        setTodayCheckIns(walkInCount);
         setError(null);
       } catch (err) {
-        console.error("Error fetching members:", err);
-        setError("Failed to load members");
+        console.error("Error fetching overview data:", err);
+        setError("Failed to load overview data");
         setMembers([]);
+        setTodayCheckIns(0);
       } finally {
         setLoading(false);
       }
     };
 
-    loadMembers();
+    loadOverviewData();
   }, []);
+
+  useEffect(() => {
+    const loadActivity = async () => {
+      try {
+        if (activityRange === "today") {
+          const todayBins = await fetchTodayAttendanceByTimeBins();
+          setGymActivity(todayBins);
+          return;
+        }
+
+        if (activityRange === "month") {
+          const monthByDay = await fetchCurrentMonthAttendanceByDay();
+          setGymActivity(monthByDay);
+          return;
+        }
+
+        const yearByMonth = await fetchCurrentYearAttendanceByMonth();
+        setGymActivity(yearByMonth);
+      } catch (err) {
+        console.error("Error fetching attendance activity:", err);
+        setGymActivity(EMPTY_DAILY_ACTIVITY);
+      }
+    };
+
+    loadActivity();
+  }, [activityRange]);
+
+  const activityLabels =
+    activityRange === "today"
+      ? CHECKIN_SLOT_LABELS
+      : activityRange === "month"
+      ? Array.from({ length: gymActivity.length }, (_, index) => String(index + 1))
+      : MONTH_LABELS;
 
   return (
     <>
@@ -196,7 +254,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
               <span className={styles.statIcon}>📅</span>
               <div>
                 <p className={styles.statLabel}>Today's Checkins</p>
-                <p className={styles.statValue}>{stats.checkins}</p>
+                <p className={styles.statValue}>{loading ? "..." : todayCheckIns}</p>
               </div>
             </div>
             <div className={styles.statCard}>
@@ -280,13 +338,19 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
           <div className={styles.chartsRow}>
             <div className={styles.chartCard}>
               <div className={styles.chartHeader}>
-                <h2 className={styles.chartTitle}>Gym Activity</h2>
-                <select className={styles.yearSelect} value={year}
-                  onChange={(e) => setYear(Number(e.target.value))}>
-                  {[2023, 2024, 2025 ,2026].map((y) => <option key={y} value={y}>{y}</option>)}
+                <h2 className={styles.chartTitle}>Today's Check-ins Activity</h2>
+                <select
+                  className={styles.yearSelect}
+                  value={activityRange}
+                  onChange={(e) => setActivityRange(e.target.value)}
+                  aria-label="Select activity range"
+                >
+                  <option value="today">Today</option>
+                  <option value="month">Month</option>
+                  <option value="year">Year</option>
                 </select>
               </div>
-              <BarChart data={gymActivity} />
+              <BarChart data={gymActivity} labels={activityLabels} />
             </div>
             
             <div className={styles.chartCard}>
