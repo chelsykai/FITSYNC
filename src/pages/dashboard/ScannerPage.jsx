@@ -219,7 +219,7 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
   return (
     <div className={styles.layout}>
       <Sidebar activePage={activePage} onNavigate={onNavigate} />
-      <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
         <h1 className={styles.title}>Scanner</h1>
 
         <div className={styles.scannerCard}>

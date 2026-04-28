@@ -161,9 +161,7 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
   return (
     <div className={styles.layout}>
       <Sidebar activePage={activePage} onNavigate={onNavigate} />
-      <div className={styles.content}>
-
-        {/* Page Title */}
+        <div className={`${styles.content} tab-slide-animation`}>
         <div className={styles.titleRow}>
           <span className={styles.titleIcon}>🗂️</span>
           <h1 className={styles.title}>Record Payment</h1>

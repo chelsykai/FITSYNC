@@ -249,7 +249,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     return (
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Payments</h1>
           <div style={{ textAlign: "center", padding: "40px", fontSize: "16px", color: "#666" }}>
             Loading payment records...
@@ -263,7 +263,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Payments</h1>
 
           {/* Stat Cards */}

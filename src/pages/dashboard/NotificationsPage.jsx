@@ -276,7 +276,7 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Gym Notifications</h1>
 
           {/* Search */}

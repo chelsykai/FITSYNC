@@ -294,7 +294,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.welcome}>Welcome, User!</h1>
 
           {/* Stat Cards */}

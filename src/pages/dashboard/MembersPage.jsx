@@ -198,7 +198,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Members</h1>
 
           {/* Stat Cards */}
@@ -288,7 +288,6 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
                   <th>Membership Type</th>
                   <th>Monthly Validity</th>
                   <th>Membership Validity</th>
-                  <th>Last Visit</th>
                 </tr>
               </thead>
               <tbody>
@@ -301,11 +300,10 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
                     <td>{m.membership_type}</td>
                     <td>{m.monthly_validity}</td>
                     <td>{m.membership_validity}</td>
-                    <td>{m.last_visit || "N/A"}</td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className={styles.noResults}>No members found.</td></tr>
+                  <tr><td colSpan={6} className={styles.noResults}>No members found.</td></tr>
                 )}
               </tbody>
             </table>

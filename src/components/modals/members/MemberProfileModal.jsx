@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "../Modal.module.css";
 import ConfirmModal from "../ConfirmModal";
+import { generateMemberIDPDF } from "../../../utils/generateMemberIDPDF";
 
 export default function MemberProfileModal({ member, onClose, onDelete }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -121,6 +122,25 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
           >
             Email Member
           </a>
+          <button
+            className={styles.profileEmailBtn}
+            onClick={async () => {
+              try {
+                const memberForPDF = {
+                  photo_url: member.photo_url,
+                  memberId: member.member_id || member.memberId || member.id,
+                  fullName: member.full_name || member.name,
+                  membership_type: member.membership_type,
+                };
+                await generateMemberIDPDF(memberForPDF);
+              } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error("Failed to generate PDF:", err);
+              }
+            }}
+          >
+            Print ID
+          </button>
           <button
             className={styles.profileDeleteBtn}
             onClick={() => {

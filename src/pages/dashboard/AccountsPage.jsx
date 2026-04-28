@@ -152,7 +152,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
 
           {/* ACCOUNTS PAGE */}
           {!showAudit && (
