@@ -536,6 +536,26 @@
   cursor: pointer;
 }
 
+.profileDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 11px;
+  text-decoration: none;
+  cursor: pointer;
+  background: #e05555;
+  color: #ffffff;
+}
+
+.profileDeleteBtn:hover {
+  background: #c43e3e;
+}
+
 .profileEmailBtn {
   background: #7eba56;
   color: #ffffff;

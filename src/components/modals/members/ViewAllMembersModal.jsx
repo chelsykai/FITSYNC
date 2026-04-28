@@ -104,6 +104,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
         <MemberProfileModal
           member={selectedMember}
           onClose={() => setSelectedMember(null)}
+          onDelete={handleMemberDeleted}
         />
       )}
     </>

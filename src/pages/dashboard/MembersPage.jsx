@@ -7,7 +7,7 @@ import MemberProfileModal from "../../components/modals/members/MemberProfileMod
 import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
 import { supabase } from "../../lib/supabaseClient";
-import { fetchMembers } from "../../services/memberService";
+import { fetchMembers, deleteMember } from "../../services/memberService";
 
 export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [members, setMembers] = useState([]);
@@ -181,6 +181,18 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     setMembers(prevMembers => prevMembers.filter(m => m.member_id !== deletedMember.member_id));
   };
 
+  const handleProfileDelete = async (member) => {
+    try {
+      const memberId = member?.member_id || member?.memberId || member?.id;
+      if (!memberId) throw new Error('Missing member ID');
+      await deleteMember(memberId);
+      setMembers(prevMembers => prevMembers.filter(m => m.member_id !== memberId));
+    } catch (err) {
+      console.error('Failed to delete member from profile modal:', err);
+      throw err;
+    }
+  };
+
   return (
     <>
       <div className={styles.layout}>
@@ -324,7 +336,11 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         />
       )}
       {showProfile && (
-        <MemberProfileModal member={showProfile} onClose={() => setShowProfile(null)} />
+        <MemberProfileModal
+          member={showProfile}
+          onClose={() => setShowProfile(null)}
+          onDelete={handleProfileDelete}
+        />
       )}
       {showViewAll && (
         <ViewAllMembersModal
