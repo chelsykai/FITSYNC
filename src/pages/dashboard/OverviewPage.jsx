@@ -184,21 +184,35 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   const [activityRange, setActivityRange] = useState("today");
 
   const loadOverviewData = useCallback(async (showLoader = false) => {
+    if (showLoader) setLoading(true);
     try {
-      if (showLoader) setLoading(true);
-      const [memberData, walkInCount] = await Promise.all([
-        fetchMembers(),
-        fetchTodayAttendanceCount(),
-      ]);
-      setMembers(memberData);
-      setPopulationData(calculatePopulation(memberData));
-      setTodayCheckIns(walkInCount);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching overview data:", err);
-      setError("Failed to load overview data");
-      setMembers([]);
-      setTodayCheckIns(0);
+      let memberData = [];
+      let walkInCount = 0;
+
+      try {
+        memberData = await fetchMembers();
+        setMembers(memberData);
+        setPopulationData(calculatePopulation(memberData));
+      } catch (err) {
+        console.error("Error fetching members:", err);
+        setError(`Failed to load members: ${err?.message || err}`);
+        setMembers([]);
+      }
+
+      try {
+        walkInCount = await fetchTodayAttendanceCount();
+        setTodayCheckIns(walkInCount);
+      } catch (err) {
+        console.error("Error fetching today attendance count:", err);
+        // If members already failed, keep that error; otherwise show attendance error.
+        setError((prev) => prev ? prev : `Failed to load attendance: ${err?.message || err}`);
+        setTodayCheckIns(0);
+      }
+
+      // Clear error if both succeeded
+      if (memberData.length > 0 && typeof walkInCount === 'number' && !error) {
+        setError(null);
+      }
     } finally {
       if (showLoader) setLoading(false);
     }
