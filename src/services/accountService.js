@@ -4,8 +4,13 @@ const normalizeAccountInput = (accountData) => {
   const firstName = (accountData.firstName || '').trim();
   const lastName = (accountData.lastName || '').trim();
   const username = (accountData.username || accountData.email || '').trim();
+  const userIdRaw = accountData.id ?? accountData.user_id;
+  const normalizedUserId = userIdRaw === undefined || userIdRaw === null || userIdRaw === ''
+    ? null
+    : String(userIdRaw).trim();
 
   return {
+    userId: normalizedUserId,
     firstName,
     lastName,
     username,
@@ -13,6 +18,41 @@ const normalizeAccountInput = (accountData) => {
     status: accountData.status || 'active',
     password: accountData.password || ''
   };
+};
+
+const generateYearRandomUserId = () => {
+  const year = String(new Date().getFullYear());
+  const digitLength = Math.random() < 0.5 ? 3 : 4;
+  const min = digitLength === 3 ? 100 : 1000;
+  const max = digitLength === 3 ? 999 : 9999;
+  const randomDigits = Math.floor(Math.random() * (max - min + 1)) + min;
+  return `${year}${randomDigits}`;
+};
+
+const isUserIdAvailable = async (userId) => {
+  const { data, error } = await supabase
+    .from('system_user')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return !data;
+};
+
+const resolveUniqueUserId = async (preferredId) => {
+  if (preferredId && (await isUserIdAvailable(preferredId))) {
+    return preferredId;
+  }
+
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const candidate = generateYearRandomUserId();
+    if (await isUserIdAvailable(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error('Failed to generate a unique Staff ID. Please try again.');
 };
 
 /**
@@ -50,11 +90,13 @@ export const fetchAccounts = async () => {
 export const addAccount = async (accountData) => {
   try {
     const normalized = normalizeAccountInput(accountData);
+    const userId = await resolveUniqueUserId(normalized.userId);
 
     const { data, error } = await supabase
       .from('system_user')
       .insert([
         {
+          user_id: userId,
           first_name: normalized.firstName,
           last_name: normalized.lastName,
           username: normalized.username,
@@ -65,7 +107,12 @@ export const addAccount = async (accountData) => {
       ])
       .select();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error('Staff ID already exists. Please try again.');
+      }
+      throw error;
+    }
 
     // Transform the returned data
     const user = data[0];

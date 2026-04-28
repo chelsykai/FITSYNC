@@ -1,16 +1,28 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
 
-const nextId = (accounts) => {
-  const numericIds = (accounts || [])
-    .map((a) => parseInt(a.id, 10))
-    .filter((value) => !Number.isNaN(value));
-  const max = numericIds.length > 0 ? Math.max(...numericIds) : 0;
-  return String(max + 1);
+const generateStaffId = (accounts) => {
+  const existingIds = new Set((accounts || []).map((a) => String(a.id || "").trim()));
+  const year = String(new Date().getFullYear());
+
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const digitLength = Math.random() < 0.5 ? 3 : 4;
+    const min = digitLength === 3 ? 100 : 1000;
+    const max = digitLength === 3 ? 999 : 9999;
+    const randomDigits = Math.floor(Math.random() * (max - min + 1)) + min;
+    const candidate = `${year}${randomDigits}`;
+
+    if (!existingIds.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Rare fallback if many collisions occur in a single session.
+  return `${year}${Date.now().toString().slice(-4)}`;
 };
 
 export default function CreateAccountModal({ accounts, onClose, onCreate }) {
-  const generatedId = nextId(accounts);
+  const [generatedId] = useState(() => generateStaffId(accounts));
   const [form, setForm] = useState({
     firstName: "", lastName: "", MI: "",
     role: "", username: "", password: "", confirmPassword: "",
@@ -44,6 +56,7 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
     try {
       setSubmitting(true);
       await onCreate?.({
+        id: generatedId,
         firstName,
         lastName,
         role: form.role,
