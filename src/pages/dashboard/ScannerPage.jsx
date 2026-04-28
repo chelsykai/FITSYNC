@@ -9,6 +9,7 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
   const scannerRef = useRef(null);
   const membersRef = useRef([]);
   const scannerInstanceRef = useRef(null);
+  const audioContextRef = useRef(null);
   const lastScanRef = useRef({ id: "", at: 0 });
   const fadeTimerRef = useRef(null);
   const clearTimerRef = useRef(null);
@@ -56,6 +57,38 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
     return `${message} (${name})`;
   };
 
+  const playScanSound = async () => {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      if (!audioContextRef.current || audioContextRef.current.state === "closed") {
+        audioContextRef.current = new AudioContextClass();
+      }
+
+      const audioContext = audioContextRef.current;
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
+
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.18);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (err) {
+      console.error("Error playing scan sound:", err);
+    }
+  };
+
   useEffect(() => {
     membersRef.current = members;
   }, [members]);
@@ -99,6 +132,15 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
         if (scannerRef.current) {
           scannerRef.current.innerHTML = "";
         }
+
+        if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+          try {
+            await audioContextRef.current.close();
+          } catch (err) {
+            console.error("Error closing audio context:", err);
+          }
+          audioContextRef.current = null;
+        }
       };
 
       stopScanner();
@@ -133,6 +175,8 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
             return;
           }
           lastScanRef.current = { id: scannedId, at: now };
+
+          await playScanSound();
 
           try {
             setScannerState("processing");
@@ -211,6 +255,15 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
     }
     if (scannerRef.current) {
       scannerRef.current.innerHTML = "";
+    }
+
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      try {
+        await audioContextRef.current.close();
+      } catch (err) {
+        console.error("Error closing audio context:", err);
+      }
+      audioContextRef.current = null;
     }
     setScannerState("idle");
     setScannerMessage("Click Start Camera to begin scanning a member QR code.");
