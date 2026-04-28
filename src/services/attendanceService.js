@@ -5,6 +5,21 @@ const formatDate = (date) => date.toISOString().split("T")[0];
 const formatTime = (date) =>
   date.toTimeString().slice(0, 8);
 
+export const fetchTodayAttendanceForMember = async (memberId) => {
+  const today = formatDate(new Date());
+
+  const { data, error } = await supabase
+    .from("member_attendance")
+    .select("id, member_id, member_name, attendance_date, attendance_time")
+    .eq("member_id", memberId)
+    .eq("attendance_date", today)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data || null;
+};
+
 export const recordMemberAttendance = async (member) => {
   const memberId = member?.member_id || member?.memberId || member?.id;
   const memberName = member?.full_name || member?.name || "Unknown";
@@ -16,6 +31,16 @@ export const recordMemberAttendance = async (member) => {
   const now = new Date();
   const attendanceDate = formatDate(now);
   const attendanceTime = formatTime(now);
+
+  const existingAttendance = await fetchTodayAttendanceForMember(memberId);
+  if (existingAttendance) {
+    const duplicateError = new Error(
+      `${memberName} has already been scanned today.`
+    );
+    duplicateError.code = "ATTENDANCE_ALREADY_RECORDED";
+    duplicateError.details = existingAttendance;
+    throw duplicateError;
+  }
 
   const { data, error } = await supabase
     .from("member_attendance")

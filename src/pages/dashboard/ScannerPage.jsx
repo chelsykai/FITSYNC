@@ -13,6 +13,7 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
   const lastScanRef = useRef({ id: "", at: 0 });
   const fadeTimerRef = useRef(null);
   const clearTimerRef = useRef(null);
+  const duplicateTimerRef = useRef(null);
   const [members, setMembers] = useState([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [scannerState, setScannerState] = useState("idle");
@@ -71,19 +72,26 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
         await audioContext.resume();
       }
 
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      const now = audioContext.currentTime;
+      const notes = [523.25, 659.25];
 
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.02);
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.18);
+      notes.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        const startTime = now + index * 0.14;
+        const endTime = startTime + 0.16;
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.2);
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(frequency, startTime);
+        gainNode.gain.setValueAtTime(0.0001, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.14, startTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, endTime);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.start(startTime);
+        oscillator.stop(endTime);
+      });
     } catch (err) {
       console.error("Error playing scan sound:", err);
     }
@@ -118,6 +126,9 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
       }
       if (clearTimerRef.current) {
         clearTimeout(clearTimerRef.current);
+      }
+      if (duplicateTimerRef.current) {
+        clearTimeout(duplicateTimerRef.current);
       }
 
       const stopScanner = async () => {
@@ -178,6 +189,8 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
 
           await playScanSound();
 
+          let duplicateScan = false;
+
           try {
             setScannerState("processing");
             setScannerMessage(`Scanned ${scannedId}. Recording attendance...`);
@@ -213,6 +226,9 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
             if (clearTimerRef.current) {
               clearTimeout(clearTimerRef.current);
             }
+            if (duplicateTimerRef.current) {
+              clearTimeout(duplicateTimerRef.current);
+            }
 
             fadeTimerRef.current = setTimeout(() => {
               setScanHighlightVisible(false);
@@ -223,13 +239,27 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
             }, 10000);
           } catch (err) {
             console.error("Attendance scan error:", err);
-            setScannerState("error");
+            duplicateScan = err?.code === "ATTENDANCE_ALREADY_RECORDED";
+            setScannerState(duplicateScan ? "duplicate" : "error");
             setScannerMessage(err.message || "Failed to record attendance.");
+
+            if (duplicateScan) {
+              if (duplicateTimerRef.current) {
+                clearTimeout(duplicateTimerRef.current);
+              }
+
+              duplicateTimerRef.current = setTimeout(() => {
+                setScannerState("ready");
+                setScannerMessage("Camera ready. Point it at a member QR code.");
+              }, 5000);
+            }
           } finally {
-            setTimeout(() => {
-              setScannerState("ready");
-              setScannerMessage("Camera ready. Point it at a member QR code.");
-            }, 400);
+            if (!duplicateScan) {
+              setTimeout(() => {
+                setScannerState("ready");
+                setScannerMessage("Camera ready. Point it at a member QR code.");
+              }, 400);
+            }
           }
         }
       );
@@ -275,7 +305,11 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
         <div className={`${styles.content} tab-slide-animation`}>
         <h1 className={styles.title}>Scanner</h1>
 
-        <div className={styles.scannerCard}>
+        <div
+          className={`${styles.scannerCard} ${
+            scannerState === "duplicate" ? styles.scannerCardDuplicate : ""
+          }`}
+        >
           <div className={styles.scannerHeader}>
             <h2 className={styles.scannerTitle}>Attendance Scanner</h2>
             <p className={styles.scannerSubtitle}>
@@ -306,7 +340,11 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
             </div>
           )}
 
-          <div className={styles.scannerViewport}>
+          <div
+            className={`${styles.scannerViewport} ${
+              scannerState === "duplicate" ? styles.scannerViewportDuplicate : ""
+            }`}
+          >
             <div id="scanner-camera" ref={scannerRef} className={styles.scannerFrame} />
           </div>
 
