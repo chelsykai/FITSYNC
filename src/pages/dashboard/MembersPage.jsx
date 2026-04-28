@@ -8,6 +8,7 @@ import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersM
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers, deleteMember } from "../../services/memberService";
+import { generateMemberIDPDF } from "../../utils/generateMemberIDPDF";
 
 export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [members, setMembers] = useState([]);
@@ -332,7 +333,14 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         <MemberRegisteredModal
           member={registeredMember}
           onClose={() => setRegisteredMember(null)}
-          onPrint={(m) => console.log("print", m)}
+          onPrint={async (m) => {
+            try {
+              await generateMemberIDPDF(m);
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.error("Failed to generate PDF:", err);
+            }
+          }}
         />
       )}
       {showProfile && (
