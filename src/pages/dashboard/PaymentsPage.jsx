@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styles from "./PaymentsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
@@ -152,77 +152,91 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
   const [showViewAll, setShowViewAll] = useState(false);
   const [members, setMembers] = useState([]);
 
-  // Fetch members on component mount
-  useEffect(() => {
-    const loadMembers = async () => {
-      try {
-        setLoadingMembers(true);
-        const data = await fetchMembers();
-        setMembers(data);
-      } catch (err) {
-        console.error("Error fetching members:", err);
-        setMembers([]);
-      } finally {
-        setLoadingMembers(false);
-      }
-    };
+  const loadMembers = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoadingMembers(true);
+      const data = await fetchMembers();
+      setMembers(data);
+    } catch (err) {
+      console.error("Error fetching members:", err);
+      setMembers([]);
+    } finally {
+      if (showLoader) setLoadingMembers(false);
+    }
+  }, []);
 
-    loadMembers();
+  const loadPayments = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoadingPayments(true);
+      setError("");
+
+      const [paymentData, memberCount] = await Promise.all([
+        fetchPayments(),
+        fetchMemberCount(),
+      ]);
+
+      setPayments(paymentData);
+
+      const calculatedStats = calculateStats(paymentData, memberCount);
+      setStats({
+        totalTransactions: calculatedStats.totalTransactions,
+        activeMemberships: calculatedStats.activeMemberships,
+      });
+      setRevenue({
+        today: calculatedStats.today,
+        thisMonth: calculatedStats.thisMonth,
+        pending: calculatedStats.pending,
+      });
+    } catch (err) {
+      console.error("Error loading payments:", err);
+      setError("Unable to load payment records right now. Please try again.");
+      setPayments([]);
+      setStats({ totalTransactions: 0, activeMemberships: 0 });
+      setRevenue({ today: 0, thisMonth: 0, pending: 0 });
+    } finally {
+      if (showLoader) setLoadingPayments(false);
+    }
   }, []);
 
   useEffect(() => {
-    const loadPayments = async () => {
-      try {
-        setLoadingPayments(true);
-        setError("");
+    loadMembers(true);
+    loadPayments(true);
 
-        const [paymentData, memberCount] = await Promise.all([
-          fetchPayments(),
-          fetchMemberCount(),
-        ]);
-
-        setPayments(paymentData);
-
-        const calculatedStats = calculateStats(paymentData, memberCount);
-        setStats({
-          totalTransactions: calculatedStats.totalTransactions,
-          activeMemberships: calculatedStats.activeMemberships,
-        });
-        setRevenue({
-          today: calculatedStats.today,
-          thisMonth: calculatedStats.thisMonth,
-          pending: calculatedStats.pending,
-        });
-      } catch (err) {
-        console.error("Error loading payments:", err);
-        setError("Unable to load payment records right now. Please try again.");
-        setPayments([]);
-        setStats({ totalTransactions: 0, activeMemberships: 0 });
-        setRevenue({ today: 0, thisMonth: 0, pending: 0 });
-      } finally {
-        setLoadingPayments(false);
-      }
-    };
-
-    loadPayments();
-
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel("record_payment_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "record_payment" },
-        (payload) => {
-          console.log("Real-time update received:", payload);
-          loadPayments();
-        }
-      )
+    const paymentsChannel = supabase
+      .channel("payments-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "record_payment" }, () => {
+        loadPayments();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadMembers();
+        loadPayments();
+      })
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(paymentsChannel);
     };
-  }, []);
+  }, [loadMembers, loadPayments]);
+
+  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadMembers();
+      loadPayments();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadMembers();
+      loadPayments();
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadMembers, loadPayments]);
 
   const filtered = payments.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||

@@ -1,8 +1,9 @@
-  import { useState, useEffect } from "react";
+  import { useState, useEffect, useCallback } from "react";
 import styles from "./OverviewPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllModal from "../../components/modals/overview/ViewAllModal";
 import ExportModal from "../../components/modals/overview/ExportModal";
+import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import {
   fetchTodayAttendanceByTimeBins,
@@ -182,57 +183,91 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   const [gymActivity, setGymActivity] = useState(EMPTY_DAILY_ACTIVITY);
   const [activityRange, setActivityRange] = useState("today");
 
-  // Fetch members on component mount
-  useEffect(() => {
-    const loadOverviewData = async () => {
-      try {
-        setLoading(true);
-        const [memberData, walkInCount] = await Promise.all([
-          fetchMembers(),
-          fetchTodayAttendanceCount(),
-        ]);
-        setMembers(memberData);
-        setPopulationData(calculatePopulation(memberData));
-        setTodayCheckIns(walkInCount);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching overview data:", err);
-        setError("Failed to load overview data");
-        setMembers([]);
-        setTodayCheckIns(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadOverviewData();
+  const loadOverviewData = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+      const [memberData, walkInCount] = await Promise.all([
+        fetchMembers(),
+        fetchTodayAttendanceCount(),
+      ]);
+      setMembers(memberData);
+      setPopulationData(calculatePopulation(memberData));
+      setTodayCheckIns(walkInCount);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching overview data:", err);
+      setError("Failed to load overview data");
+      setMembers([]);
+      setTodayCheckIns(0);
+    } finally {
+      if (showLoader) setLoading(false);
+    }
   }, []);
 
-  useEffect(() => {
-    const loadActivity = async () => {
-      try {
-        if (activityRange === "today") {
-          const todayBins = await fetchTodayAttendanceByTimeBins();
-          setGymActivity(todayBins);
-          return;
-        }
-
-        if (activityRange === "month") {
-          const monthByDay = await fetchCurrentMonthAttendanceByDay();
-          setGymActivity(monthByDay);
-          return;
-        }
-
-        const yearByMonth = await fetchCurrentYearAttendanceByMonth();
-        setGymActivity(yearByMonth);
-      } catch (err) {
-        console.error("Error fetching attendance activity:", err);
-        setGymActivity(EMPTY_DAILY_ACTIVITY);
+  const loadActivity = useCallback(async () => {
+    try {
+      if (activityRange === "today") {
+        const todayBins = await fetchTodayAttendanceByTimeBins();
+        setGymActivity(todayBins);
+        return;
       }
+
+      if (activityRange === "month") {
+        const monthByDay = await fetchCurrentMonthAttendanceByDay();
+        setGymActivity(monthByDay);
+        return;
+      }
+
+      const yearByMonth = await fetchCurrentYearAttendanceByMonth();
+      setGymActivity(yearByMonth);
+    } catch (err) {
+      console.error("Error fetching attendance activity:", err);
+      setGymActivity(EMPTY_DAILY_ACTIVITY);
+    }
+  }, [activityRange]);
+
+  useEffect(() => {
+    loadOverviewData(true);
+
+    const overviewChannel = supabase
+      .channel("overview-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadOverviewData();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "member_attendance" }, () => {
+        loadOverviewData();
+        loadActivity();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(overviewChannel);
+    };
+  }, [loadOverviewData, loadActivity]);
+
+  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadOverviewData();
+      loadActivity();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadOverviewData();
+      loadActivity();
     };
 
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadOverviewData, loadActivity]);
+
+  useEffect(() => {
     loadActivity();
-  }, [activityRange]);
+  }, [loadActivity]);
 
   const activityLabels =
     activityRange === "today"

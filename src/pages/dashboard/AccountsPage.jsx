@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styles from "./AccountsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import CreateAccountModal from "../../components/modals/accounts/CreateAccountModal";
 import EditAccountModal from "../../components/modals/accounts/EditAccountModal";
 import DeleteAccountModal from "../../components/modals/accounts/DeleteAccountModal";
+import { supabase } from "../../lib/supabaseClient";
 import { fetchAccounts, addAccount, updateAccount, deleteAccount } from "../../services/accountService";
 import { fetchAuditLogs, getAuditUsers } from "../../services/auditService";
 
@@ -24,51 +25,90 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const [editTarget, setEditTarget]   = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // Fetch accounts from Supabase on component mount
+  const loadAccounts = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+      setError(null);
+      const data = await fetchAccounts();
+      setAccounts(data);
+    } catch (err) {
+      setError(err.message || "Failed to load accounts");
+      console.error("Error loading accounts:", err);
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchAccounts();
-        setAccounts(data);
-      } catch (err) {
-        setError(err.message || "Failed to load accounts");
-        console.error("Error loading accounts:", err);
-      } finally {
-        setLoading(false);
-      }
+    loadAccounts(true);
+
+    const accountsChannel = supabase
+      .channel("accounts-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_user" }, () => {
+        loadAccounts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(accountsChannel);
+    };
+  }, [loadAccounts]);
+
+  // Fallback auto-refresh in case realtime delete events are not emitted by DB settings.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadAccounts();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadAccounts();
     };
 
-    loadAccounts();
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadAccounts]);
+
+  const loadAuditData = useCallback(async () => {
+    try {
+      setAuditLoading(true);
+      setAuditError(null);
+      const [logs, users] = await Promise.all([
+        fetchAuditLogs(),
+        getAuditUsers()
+      ]);
+      setAuditLogs(logs);
+      setAdmins(users);
+      // Reset filter to "all admins" when loading new data
+      setFilterAdmin("all admins");
+    } catch (err) {
+      setAuditError(err.message || "Failed to load audit logs");
+      console.error("Error loading audit data:", err);
+    } finally {
+      setAuditLoading(false);
+    }
   }, []);
 
   // Fetch audit logs from Supabase when audit tab is opened
   useEffect(() => {
     if (!showAudit) return; // Only fetch when audit tab is shown
 
-    const loadAuditData = async () => {
-      try {
-        setAuditLoading(true);
-        setAuditError(null);
-        const [logs, users] = await Promise.all([
-          fetchAuditLogs(),
-          getAuditUsers()
-        ]);
-        setAuditLogs(logs);
-        setAdmins(users);
-        // Reset filter to "all admins" when loading new data
-        setFilterAdmin("all admins");
-      } catch (err) {
-        setAuditError(err.message || "Failed to load audit logs");
-        console.error("Error loading audit data:", err);
-      } finally {
-        setAuditLoading(false);
-      }
-    };
-
     loadAuditData();
-  }, [showAudit]);
+
+    const auditChannel = supabase
+      .channel("audit-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "audit_trail" }, () => {
+        loadAuditData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(auditChannel);
+    };
+  }, [showAudit, loadAuditData]);
 
   const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
   const paginated  = accounts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -90,7 +130,8 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const handleSave = async (updated) => {
     try {
       const updatedAccount = await updateAccount(updated.id, updated);
-      setAccounts((prev) => prev.map((a) => a.id === updated.id ? updatedAccount : a));
+      const updatedId = String(updated.id);
+      setAccounts((prev) => prev.map((a) => String(a.id) === updatedId ? updatedAccount : a));
     } catch (err) {
       setError("Failed to update account: " + err.message);
     }
@@ -99,7 +140,9 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const handleDelete = async (target) => {
     try {
       await deleteAccount(target.id);
-      setAccounts((prev) => prev.filter((a) => a.id !== target.id));
+      const deletedId = String(target.id);
+      setAccounts((prev) => prev.filter((a) => String(a.id) !== deletedId));
+      loadAccounts();
     } catch (err) {
       setError("Failed to delete account: " + err.message);
     }

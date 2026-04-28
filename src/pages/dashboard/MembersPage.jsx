@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./MembersPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import MembersExportModal from "../../components/modals/members/MembersExportModal";
@@ -6,6 +6,7 @@ import AddMemberModal from "../../components/modals/members/AddMemberModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
 import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
+import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 
 export default function MembersPage({ onNavigate, activePage = "members" }) {
@@ -19,24 +20,53 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [showViewAll, setShowViewAll] = useState(false);
   const [registeredMember, setRegisteredMember] = useState(null);
 
-  // Fetch members on component mount
+  const loadMembers = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+      const data = await fetchMembers();
+      setMembers(data);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching members:", err);
+      setError("Failed to load members");
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
+  // Fetch members on component mount and subscribe to realtime member changes
   useEffect(() => {
-    const loadMembers = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchMembers();
-        setMembers(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching members:", err);
-        setError("Failed to load members");
-      } finally {
-        setLoading(false);
-      }
+    loadMembers(true);
+
+    const memberChannel = supabase
+      .channel("members-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadMembers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(memberChannel);
+    };
+  }, [loadMembers]);
+
+  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadMembers();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadMembers();
     };
 
-    loadMembers();
-  }, []);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadMembers]);
 
   // Calculate stats from members data
   const calculateActiveToday = () => {
