@@ -151,6 +151,14 @@
   border: 2px solid rgba(159, 29, 29, 0.45);
 }
 
+/* Mirror the live video/canvas to create a selfie-style preview */
+.scannerFrameMirrored :global(video),
+.scannerFrameMirrored :global(canvas),
+.scannerFrameMirrored :global(iframe) {
+  transform: scaleX(-1);
+  transform-origin: center;
+}
+
 .scannerActions {
   display: flex;
   justify-content: center;

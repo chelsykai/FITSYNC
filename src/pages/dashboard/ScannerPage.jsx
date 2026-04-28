@@ -176,7 +176,7 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
 
       await scannerInstanceRef.current.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 240, height: 240 } },
+        { fps: 10, qrbox: { width: 240, height: 240 }, disableFlip: true },
         async (decodedText) => {
           const scannedId = String(decodedText || "").trim();
           if (!scannedId) return;
@@ -345,7 +345,7 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
               scannerState === "duplicate" ? styles.scannerViewportDuplicate : ""
             }`}
           >
-            <div id="scanner-camera" ref={scannerRef} className={styles.scannerFrame} />
+            <div id="scanner-camera" ref={scannerRef} className={`${styles.scannerFrame} ${styles.scannerFrameMirrored}`} />
           </div>
 
           <div className={styles.scannerActions}>
@@ -362,7 +362,7 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
           </div>
 
           <div className={styles.scannerHint}>
-            QR must contain the exact member ID, for example: <strong>MEM-2026-5149</strong>
+            Members only.
           </div>
         </div>
       </div>
