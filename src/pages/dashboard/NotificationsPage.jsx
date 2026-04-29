@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import styles from "./NotificationsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ViewLogModal from "../../components/modals/notifications/ViewLogModal";
+import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { sendMemberNotificationEmail } from "../../services/notificationEmailService";
 
@@ -157,23 +158,52 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   const [error, setError] = useState(null);
   const filtersDDRef   = useRef();
 
+  const loadNotifications = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+      const members = await fetchMembers();
+      setNotifications(buildNotificationsFromMembers(members));
+      setError(null);
+    } catch (err) {
+      console.error("Error loading notifications:", err);
+      setError("Failed to load notifications.");
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        setLoading(true);
-        const members = await fetchMembers();
-        setNotifications(buildNotificationsFromMembers(members));
-        setError(null);
-      } catch (err) {
-        console.error("Error loading notifications:", err);
-        setError("Failed to load notifications.");
-      } finally {
-        setLoading(false);
-      }
+    loadNotifications(true);
+
+    const notificationsChannel = supabase
+      .channel("notifications-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadNotifications();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notificationsChannel);
+    };
+  }, [loadNotifications]);
+
+  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadNotifications();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadNotifications();
     };
 
-    loadNotifications();
-  }, []);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadNotifications]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -246,7 +276,7 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Gym Notifications</h1>
 
           {/* Search */}

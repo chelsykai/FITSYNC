@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./MembersPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import MembersExportModal from "../../components/modals/members/MembersExportModal";
@@ -6,7 +6,9 @@ import AddMemberModal from "../../components/modals/members/AddMemberModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
 import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
-import { fetchMembers } from "../../services/memberService";
+import { supabase } from "../../lib/supabaseClient";
+import { fetchMembers, deleteMember } from "../../services/memberService";
+import { generateMemberIDPDF } from "../../utils/generateMemberIDPDF";
 
 export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [members, setMembers] = useState([]);
@@ -19,24 +21,53 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [showViewAll, setShowViewAll] = useState(false);
   const [registeredMember, setRegisteredMember] = useState(null);
 
-  // Fetch members on component mount
+  const loadMembers = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+      const data = await fetchMembers();
+      setMembers(data);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching members:", err);
+      setError("Failed to load members");
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
+  // Fetch members on component mount and subscribe to realtime member changes
   useEffect(() => {
-    const loadMembers = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchMembers();
-        setMembers(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching members:", err);
-        setError("Failed to load members");
-      } finally {
-        setLoading(false);
-      }
+    loadMembers(true);
+
+    const memberChannel = supabase
+      .channel("members-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadMembers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(memberChannel);
+    };
+  }, [loadMembers]);
+
+  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadMembers();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadMembers();
     };
 
-    loadMembers();
-  }, []);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadMembers]);
 
   // Calculate stats from members data
   const calculateActiveToday = () => {
@@ -151,11 +182,23 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     setMembers(prevMembers => prevMembers.filter(m => m.member_id !== deletedMember.member_id));
   };
 
+  const handleProfileDelete = async (member) => {
+    try {
+      const memberId = member?.member_id || member?.memberId || member?.id;
+      if (!memberId) throw new Error('Missing member ID');
+      await deleteMember(memberId);
+      setMembers(prevMembers => prevMembers.filter(m => m.member_id !== memberId));
+    } catch (err) {
+      console.error('Failed to delete member from profile modal:', err);
+      throw err;
+    }
+  };
+
   return (
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Members</h1>
 
           {/* Stat Cards */}
@@ -245,7 +288,6 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
                   <th>Membership Type</th>
                   <th>Monthly Validity</th>
                   <th>Membership Validity</th>
-                  <th>Last Visit</th>
                 </tr>
               </thead>
               <tbody>
@@ -258,11 +300,10 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
                     <td>{m.membership_type}</td>
                     <td>{m.monthly_validity}</td>
                     <td>{m.membership_validity}</td>
-                    <td>{m.last_visit || "N/A"}</td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className={styles.noResults}>No members found.</td></tr>
+                  <tr><td colSpan={6} className={styles.noResults}>No members found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -290,11 +331,22 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         <MemberRegisteredModal
           member={registeredMember}
           onClose={() => setRegisteredMember(null)}
-          onPrint={(m) => console.log("print", m)}
+          onPrint={async (m) => {
+            try {
+              await generateMemberIDPDF(m);
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.error("Failed to generate PDF:", err);
+            }
+          }}
         />
       )}
       {showProfile && (
-        <MemberProfileModal member={showProfile} onClose={() => setShowProfile(null)} />
+        <MemberProfileModal
+          member={showProfile}
+          onClose={() => setShowProfile(null)}
+          onDelete={handleProfileDelete}
+        />
       )}
       {showViewAll && (
         <ViewAllMembersModal

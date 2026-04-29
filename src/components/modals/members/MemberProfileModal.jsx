@@ -1,7 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "../Modal.module.css";
+import ConfirmModal from "../ConfirmModal";
+import { generateMemberIDPDF } from "../../../utils/generateMemberIDPDF";
 
-export default function MemberProfileModal({ member, onClose }) {
+export default function MemberProfileModal({ member, onClose, onDelete }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmError, setConfirmError] = useState(null);
   const qrContainerRef = useRef();
 
   useEffect(() => {
@@ -68,8 +73,9 @@ export default function MemberProfileModal({ member, onClose }) {
   ];
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.profileModal} onClick={(e) => e.stopPropagation()}>
+    <>
+      <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.profileModal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.profileHero}>
           <div className={styles.profileTopRow}>
             <div className={styles.profileAvatar}>
@@ -116,9 +122,63 @@ export default function MemberProfileModal({ member, onClose }) {
           >
             Email Member
           </a>
+          <button
+            className={styles.profileEmailBtn}
+            onClick={async () => {
+              try {
+                const memberForPDF = {
+                  photo_url: member.photo_url,
+                  memberId: member.member_id || member.memberId || member.id,
+                  fullName: member.full_name || member.name,
+                  membership_type: member.membership_type,
+                };
+                await generateMemberIDPDF(memberForPDF);
+              } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error("Failed to generate PDF:", err);
+              }
+            }}
+          >
+            Print ID
+          </button>
+          <button
+            className={styles.profileDeleteBtn}
+            onClick={() => {
+              setConfirmError(null);
+              setConfirmOpen(true);
+            }}
+          >
+            Delete
+          </button>
           <button className={styles.profileCloseBtn} onClick={onClose}>Close</button>
         </div>
       </div>
-    </div>
+      </div>
+      {confirmOpen && (
+        <ConfirmModal
+          title="Delete Member"
+          message={`Are you sure you want to delete ${displayName}? This action cannot be undone.`}
+          loading={confirmLoading}
+          error={confirmError}
+          confirmText="Yes, Delete"
+          cancelText="Cancel"
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={async () => {
+            try {
+              setConfirmLoading(true);
+              setConfirmError(null);
+              await onDelete?.(member);
+              setConfirmOpen(false);
+              onClose?.();
+            } catch (err) {
+              setConfirmError(err?.message || String(err));
+            } finally {
+              setConfirmLoading(false);
+            }
+          }}
+        />
+      )}
+    </>
   );
 }
+

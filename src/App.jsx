@@ -47,18 +47,38 @@ function App() {
     return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", fontSize: "18px", color: "#666" }}>Loading...</div>;
   }
 
+  const renderPage = () => {
+    const pageProps = { onNavigate: navigate };
+    
+    switch(route) {
+      case "login":
+        return <LogInPage key="login" {...pageProps} />;
+      case "create":
+        return <CreatePage key="create" {...pageProps} />;
+      case "forgot":
+        return <ForgotPasswordPage key="forgot" {...pageProps} />;
+      case "overview":
+        return <OverviewPage key="overview" activePage="overview" {...pageProps} />;
+      case "members":
+        return <MembersPage key="members" activePage="members" {...pageProps} />;
+      case "payments":
+        return <PaymentsPage key="payments" activePage="payments" {...pageProps} />;
+      case "notifications":
+        return <NotificationsPage key="notifications" activePage="notifications" {...pageProps} />;
+      case "accounts":
+        return <AccountsPage key="accounts" activePage="accounts" {...pageProps} />;
+      case "scanner":
+        return <ScannerPage key="scanner" activePage="scanner" {...pageProps} />;
+      case "recordPayment":
+        return <RecordPaymentPage key="recordPayment" activePage="payments" {...pageProps} />;
+      default:
+        return <LogInPage key="login" {...pageProps} />;
+    }
+  };
+
   return (
     <>
-      {route === "login"         && <LogInPage onNavigate={navigate} />}
-      {route === "create"        && <CreatePage onNavigate={navigate} />}
-      {route === "forgot"        && <ForgotPasswordPage onNavigate={navigate} />}
-      {route === "overview"      && <OverviewPage activePage="overview" onNavigate={navigate} />}
-      {route === "members"       && <MembersPage activePage="members" onNavigate={navigate} />}
-      {route === "payments"      && <PaymentsPage activePage="payments" onNavigate={navigate} />}
-      {route === "notifications" && <NotificationsPage activePage="notifications" onNavigate={navigate} />}
-      {route === "accounts"      && <AccountsPage activePage="accounts" onNavigate={navigate} />}
-      {route === "scanner"       && <ScannerPage activePage="scanner" onNavigate={navigate} />}
-      {route === "recordPayment" && <RecordPaymentPage activePage="payments" onNavigate={navigate} />}
+      {renderPage()}
     </>
   );
 }
