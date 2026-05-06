@@ -5,6 +5,36 @@ const MEMBER_PHOTO_PREFIX = "member_photos";
 
 const sanitizeFileName = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
+const parseValidityAmount = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  const match = raw.match(/(\d+)/);
+  if (!match) return null;
+  const amount = Number.parseInt(match[1], 10);
+  return Number.isInteger(amount) && amount > 0 ? amount : null;
+};
+
+const computeExpirationDate = (joinDate, membershipValidity, monthlyValidity) => {
+  const baseDate = new Date(joinDate);
+  if (Number.isNaN(baseDate.getTime())) return null;
+
+  const years = parseValidityAmount(membershipValidity);
+  if (years) {
+    const expiryDate = new Date(baseDate);
+    expiryDate.setFullYear(expiryDate.getFullYear() + years);
+    return expiryDate.toISOString().split("T")[0];
+  }
+
+  const months = parseValidityAmount(monthlyValidity);
+  if (months) {
+    const expiryDate = new Date(baseDate);
+    expiryDate.setMonth(expiryDate.getMonth() + months);
+    return expiryDate.toISOString().split("T")[0];
+  }
+
+  return null;
+};
+
 const getStoragePathFromUrl = (value) => {
   if (!value || typeof value !== "string") return null;
 
@@ -78,6 +108,7 @@ export const addMember = async (memberData) => {
     membershipType,
     monthlyValidity,
     membershipValidity,
+    joinDate,
     gender,
     photo,
   } = memberData;
@@ -95,8 +126,8 @@ export const addMember = async (memberData) => {
     photoUrl = await uploadMemberPhoto(photo, memberId);
   }
 
-  // Get current date for join date
-  const joinDate = new Date().toISOString().split("T")[0];
+  // Default join date to today's date when not explicitly provided.
+  const resolvedJoinDate = joinDate || new Date().toISOString().split("T")[0];
 
   // Insert member record into database
   const payload = {
@@ -109,9 +140,10 @@ export const addMember = async (memberData) => {
     membership_type: membershipType,
     monthly_validity: monthlyValidity,
     membership_validity: membershipValidity,
+    expiration_date: computeExpirationDate(resolvedJoinDate, membershipValidity, monthlyValidity),
     gender: gender,
     photo_url: photoUrl,
-    join_date: joinDate,
+    join_date: resolvedJoinDate,
     created_at: new Date().toISOString(),
   };
 
@@ -149,7 +181,7 @@ export const fetchMembers = async () => {
     const resp = await supabase
       .from("member")
       .select(
-        "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, created_at"
+        "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, expiration_date, created_at"
       )
       .order("created_at", { ascending: false });
 
@@ -208,4 +240,25 @@ export const updateMember = async (memberId, updates) => {
 
   if (error) throw error;
   return data?.[0] || null;
+};
+
+export const updateMemberMembership = async (memberId, updates) => {
+  const currentJoinDate = updates.joinDate || new Date().toISOString().split("T")[0];
+  const payload = {
+    monthly_validity: updates.monthlyValidity || null,
+    membership_validity: updates.membershipValidity || null,
+    expiration_date: updates.cancelMembership
+      ? null
+      : computeExpirationDate(currentJoinDate, updates.membershipValidity, updates.monthlyValidity),
+  };
+
+  const { data, error } = await supabase
+    .from("member")
+    .update(payload)
+    .eq("member_id", memberId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data || null;
 };

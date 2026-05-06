@@ -26,6 +26,64 @@ const membershipTypeColors = {
   "Senior": "#c8c8c8",
 };
 
+const formatValidity = (value, unit) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "N/A";
+  if (/[a-z]/i.test(raw)) return raw;
+  return `${raw} ${unit}${raw === "1" ? "" : "s"}`;
+};
+
+const getMembershipPlanParts = (membershipValidity, monthlyValidity) => {
+  const yearlyRaw = String(membershipValidity || "").trim();
+  const monthlyRaw = String(monthlyValidity || "").trim();
+
+  if (yearlyRaw) {
+    return { term: formatValidity(yearlyRaw, "Year"), frequency: "" };
+  }
+
+  if (monthlyRaw) {
+    return { term: formatValidity(monthlyRaw, "Month"), frequency: "Monthly Pay" };
+  }
+
+  return { term: "N/A", frequency: "" };
+};
+
+const getMembershipExpiryDate = (member) => {
+  if (member?.expiration_date) {
+    const storedExpiry = new Date(member.expiration_date);
+    if (!Number.isNaN(storedExpiry.getTime())) return storedExpiry;
+  }
+
+  if (!member?.join_date) return null;
+
+  const joinDate = new Date(member.join_date);
+  if (Number.isNaN(joinDate.getTime())) return null;
+
+  const yearlyRaw = String(member.membership_validity || "").trim();
+  if (yearlyRaw) {
+    const yearlyMatch = yearlyRaw.match(/(\d+)/);
+    if (!yearlyMatch) return null;
+    const years = Number.parseInt(yearlyMatch[1], 10);
+    if (!Number.isInteger(years) || years <= 0) return null;
+    const expiryDate = new Date(joinDate);
+    expiryDate.setFullYear(expiryDate.getFullYear() + years);
+    return expiryDate;
+  }
+
+  const monthlyRaw = String(member.monthly_validity || "").trim();
+  if (monthlyRaw) {
+    const monthlyMatch = monthlyRaw.match(/(\d+)/);
+    if (!monthlyMatch) return null;
+    const months = Number.parseInt(monthlyMatch[1], 10);
+    if (!Number.isInteger(months) || months <= 0) return null;
+    const expiryDate = new Date(joinDate);
+    expiryDate.setMonth(expiryDate.getMonth() + months);
+    return expiryDate;
+  }
+
+  return null;
+};
+
 // Function to calculate population distribution from members
 function calculatePopulation(members) {
   if (members.length === 0) {
@@ -290,6 +348,22 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
       ? Array.from({ length: gymActivity.length }, (_, index) => String(index + 1))
       : MONTH_LABELS;
 
+  const expiringSoonMembers = members
+    .filter((member) => {
+      const expiryDate = getMembershipExpiryDate(member);
+      if (!expiryDate) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const fourteenDaysAhead = new Date(today);
+      fourteenDaysAhead.setDate(fourteenDaysAhead.getDate() + 14);
+      return expiryDate >= today && expiryDate <= fourteenDaysAhead;
+    })
+    .sort((a, b) => {
+      const dateA = getMembershipExpiryDate(a);
+      const dateB = getMembershipExpiryDate(b);
+      return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
+    });
+
   return (
     <>
       <div className={styles.layout}>
@@ -355,23 +429,32 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
                   <th>Name</th>
                   <th>Join Date</th>
                   <th>Membership Type</th>
-                  <th>Monthly Validity</th>
-                  <th>Membership Validity</th>
+                  <th className={styles.membershipPlanCol}>Membership Plan</th>
+                  <th>Expiration Date</th>
                 </tr>
               </thead>
               <tbody>
-                {members.slice(0, 7).map((m) => (
-                  <tr key={m.member_id}>
-                    <td>{m.member_id}</td>
-                    <td>{m.full_name}</td>
-                    <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
-                    <td>{m.membership_type}</td>
-                    <td>{m.monthly_validity}</td>
-                    <td>{m.membership_validity}</td>
-                  </tr>
-                ))}
-                {!loading && members.length === 0 && (
-                  <tr><td colSpan={6} className={styles.noResults}>No members found.</td></tr>
+                {expiringSoonMembers.slice(0, 7).map((m) => {
+                  const membershipPlan = getMembershipPlanParts(m.membership_validity, m.monthly_validity);
+                  const expiryDate = getMembershipExpiryDate(m);
+                  return (
+                    <tr key={m.member_id}>
+                      <td>{m.member_id}</td>
+                      <td>{m.full_name}</td>
+                      <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
+                      <td>{m.membership_type}</td>
+                      <td className={styles.membershipPlanCol}>
+                        <span className={styles.membershipPlanTerm}>{membershipPlan.term}</span>
+                        {membershipPlan.frequency ? (
+                          <span className={styles.membershipPlanFrequency}> ({membershipPlan.frequency})</span>
+                        ) : null}
+                      </td>
+                      <td>{expiryDate ? expiryDate.toLocaleDateString() : "N/A"}</td>
+                    </tr>
+                  );
+                })}
+                {!loading && expiringSoonMembers.length === 0 && (
+                  <tr><td colSpan={6} className={styles.noResults}>No members expiring soon.</td></tr>
                 )}
               </tbody>
             </table>
@@ -399,12 +482,17 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
                   <option value="year">Year</option>
                 </select>
               </div>
-              <BarChart data={gymActivity} labels={activityLabels} />
+              <div className={styles.chartBody}>
+                <BarChart data={gymActivity} labels={activityLabels} />
+              </div>
             </div>
             
             <div className={styles.chartCard}>
-              <h2 className={styles.chartTitle}>Population</h2>
-              <div style={{ width: "100%", height: "350px" }}>
+              <div className={styles.chartHeader}>
+                <h2 className={styles.chartTitle}>Population</h2>
+                <div className={styles.chartHeaderSpacer} />
+              </div>
+              <div className={styles.chartBody} style={{ width: "100%", height: "350px" }}>
                 <DonutChart data={populationData} />
               </div>
               <PopulationLegend data={populationData} />
@@ -415,7 +503,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
 
       {/* Modals */}
       {showAll && (
-        <ViewAllModal members={members} onClose={() => setShowAll(false)} />
+        <ViewAllModal members={expiringSoonMembers} onClose={() => setShowAll(false)} />
       )}
       {showExport && (
         <ExportModal members={members} onClose={() => setShowExport(false)} />

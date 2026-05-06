@@ -126,6 +126,36 @@
   padding: 0;
 }
 
+.quickFilterRow {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 16px 0;
+  flex-wrap: wrap;
+}
+
+.quickFilterBtn {
+  border: 1px solid #cadfc2;
+  background: #edf5e8;
+  color: #4f6742;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.quickFilterBtn:hover {
+  background: #e1efd8;
+}
+
+.quickFilterBtnActive {
+  background: #7eba56;
+  color: #fff;
+  border-color: #7eba56;
+}
+
 /* TABLE CARD */
 .tableCard {
   background: #E5F0DE;
@@ -178,18 +208,32 @@
 
 .table th {
   text-align: left;
-  color: #888;
-  font-weight: 600;
-  padding: 8px 12px;
+  color: #555;
+  font-weight: 700;
+  padding: 10px 14px;
   border-bottom: 1px solid #c8e0b0;
   background: transparent;
 }
 
 .table td {
-  padding: 10px 12px;
+  padding: 10px 14px;
   color: #444;
   border-bottom: 1px solid #d8edca;
   background: transparent;
+}
+
+.membershipPlanCol {
+  text-align: left;
+}
+
+.membershipPlanTerm {
+  font-weight: 700;
+  color: #2f3d28;
+}
+
+.membershipPlanFrequency {
+  font-weight: 500;
+  color: #6b7564;
 }
 
 .table tr:last-child td { border-bottom: none; }

@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import styles from "../Modal.module.css";
 import ConfirmModal from "../ConfirmModal";
 import { generateMemberIDPDF } from "../../../utils/generateMemberIDPDF";
+import EditMembershipModal from "./EditMembershipModal";
 
-export default function MemberProfileModal({ member, onClose, onDelete }) {
+export default function MemberProfileModal({ member, onClose, onDelete, onMembershipUpdated }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
+  const [showEditMembership, setShowEditMembership] = useState(false);
   const qrContainerRef = useRef();
 
   useEffect(() => {
@@ -56,9 +58,10 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
   const birthday = member.birthday
     ? new Date(member.birthday).toLocaleDateString()
     : "N/A";
-  const expiry = member.membership_validity || member.expiry || "N/A";
+  const expiry = member.expiration_date
+    ? new Date(member.expiration_date).toLocaleDateString()
+    : member.membership_validity || member.expiry || "N/A";
   const address = member.address || "N/A";
-  const lastActivity = member.last_visit || member.lastActivity || "N/A";
   const phone = member.phone || "N/A";
   const email = member.email || "N/A";
 
@@ -66,7 +69,6 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
     { label: "Join Date", value: joinDate },
     { label: "Birthday", value: birthday },
     { label: "Expiry", value: expiry },
-    { label: "Last Activity", value: lastActivity },
     { label: "Phone Number", value: phone },
     { label: "Email", value: email },
     { label: "Address", value: address },
@@ -142,6 +144,12 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
             Print ID
           </button>
           <button
+            className={styles.profileEmailBtn}
+            onClick={() => setShowEditMembership(true)}
+          >
+            Edit Membership
+          </button>
+          <button
             className={styles.profileDeleteBtn}
             onClick={() => {
               setConfirmError(null);
@@ -176,6 +184,13 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
               setConfirmLoading(false);
             }
           }}
+        />
+      )}
+      {showEditMembership && (
+        <EditMembershipModal
+          member={member}
+          onClose={() => setShowEditMembership(false)}
+          onSaved={(updatedMember) => onMembershipUpdated?.(updatedMember)}
         />
       )}
     </>

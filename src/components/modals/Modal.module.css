@@ -66,6 +66,20 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
+.membershipPlanCol {
+  text-align: left;
+}
+
+.membershipPlanTerm {
+  font-weight: 700;
+  color: #2f3d28;
+}
+
+.membershipPlanFrequency {
+  font-weight: 500;
+  color: #6b7564;
+}
+
 .modalTable tr:last-child td {
   border-bottom: none;
 }
@@ -744,6 +758,117 @@
 
 .fieldRow .formInput {
   flex: 1;
+}
+
+.labeledField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modernLabel {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: #5d6f53;
+  letter-spacing: 0.28px;
+  text-transform: uppercase;
+  font-family: "Montserrat", sans-serif;
+}
+
+.membershipSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid #d7e4cd;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(244, 249, 239, 0.9) 100%);
+}
+
+.membershipSettingsTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #44563a;
+  font-family: "Montserrat", sans-serif;
+}
+
+.membershipSettingsHint {
+  margin: -2px 0 2px 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6f7869;
+  font-family: "Montserrat", sans-serif;
+}
+
+.autoDateHint {
+  margin: -2px 0 2px 0;
+  font-size: 11px;
+  color: #6a7761;
+  font-family: "Montserrat", sans-serif;
+}
+
+.unitInputWrap {
+  flex: 1;
+  position: relative;
+}
+
+.unitInputWrap .formInput {
+  width: 100%;
+  padding-right: 72px;
+}
+
+.unitInputWrap .formInput:disabled {
+  background: #eef1ed;
+  color: #8b9484;
+  border-color: #d2d8cc;
+  cursor: not-allowed;
+}
+
+.unitSuffix {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  font-family: "Montserrat", sans-serif;
+  pointer-events: none;
+}
+
+.inputContextLabel {
+  margin: 6px 0 0 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6f7869;
+  font-family: "Montserrat", sans-serif;
+  line-height: 1.2;
+}
+
+.planResetBtn {
+  border: 1px solid #c4d1bb;
+  background: #f5f8f2;
+  color: #3f5234;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.planResetBtn:hover {
+  background: #ebf1e5;
+}
+
+.planResetBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 /* Gender */
