@@ -73,19 +73,30 @@ const fetchPayments = async () => {
       memberMap[member.member_id] = member;
     });
 
-    // Combine payment and member data
-    return paymentData.map((record) => {
+    console.log("Payment data length:", paymentData.length); // Debug
+    console.log("Member map keys:", Object.keys(memberMap)); // Debug
+
+    // Map all payment records (no deduplication - each record.id should be unique)
+    const result = paymentData.map((record) => {
       const memberInfo = memberMap[record.member_id] || {};
+      // Handle both possible field names for amount
+      const amount = record.amount_paid || record.amount || 0;
       return {
-        id: record.member_id,
+        id: record.id, // Payment record ID (for React keys)
+        memberId: record.member_id, // Member ID to display
         name: memberInfo.full_name || "Unknown",
         date: new Date(record.date).toLocaleDateString("en-US"),
         rawDate: new Date(record.date),
         type: memberInfo.membership_type || "Unknown",
-        total: record.amount_paid || 0,
-        status: record.status,
+        total: amount,
+        status: record.status || "Paid",
+        mod: record.payment_method || record.mod || "CASH",
+        promoCode: record.promo_code || record.promoCode,
       };
     });
+
+    console.log("Transformed payments:", result); // Debug
+    return result;
   } catch (err) {
     console.error("Error fetching payments:", err);
     return [];
@@ -218,13 +229,8 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     };
   }, [loadMembers, loadPayments]);
 
-  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  // Fallback auto-refresh when user returns to the page
   useEffect(() => {
-    const refreshInterval = window.setInterval(() => {
-      loadMembers();
-      loadPayments();
-    }, 5000);
-
     const handleFocus = () => {
       loadMembers();
       loadPayments();
@@ -233,14 +239,13 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     window.addEventListener("focus", handleFocus);
 
     return () => {
-      window.clearInterval(refreshInterval);
       window.removeEventListener("focus", handleFocus);
     };
   }, [loadMembers, loadPayments]);
 
   const filtered = payments.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.id.includes(search) ||
+    p.memberId.toString().includes(search) ||
     p.type.toLowerCase().includes(search.toLowerCase()) ||
     p.status.toLowerCase().includes(search.toLowerCase())
   );
@@ -346,17 +351,17 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
               </thead>
               <tbody>
                 {payments.length === 0 ? (
-                  <tr><td colSpan={6} className={styles.noResults}>
+                  <tr key="no-payments"><td colSpan={6} className={styles.noResults}>
                     No payment records yet. Click "Add / Record Payment" to create one.
                   </td></tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={6} className={styles.noResults}>
+                  <tr key="no-match"><td colSpan={6} className={styles.noResults}>
                     No records match your search.
                   </td></tr>
                 ) : (
-                  filtered.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.id}</td>
+                  filtered.map((p, index) => (
+                    <tr key={`${p.memberId}-${p.date}-${index}`}>
+                      <td>{p.memberId}</td>
                       <td>{p.name}</td>
                       <td>{p.date}</td>
                       <td>{p.type}</td>

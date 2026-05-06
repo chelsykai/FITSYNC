@@ -53,12 +53,8 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     };
   }, [loadMembers]);
 
-  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  // Refresh members when user returns to the page
   useEffect(() => {
-    const refreshInterval = window.setInterval(() => {
-      loadMembers();
-    }, 5000);
-
     const handleFocus = () => {
       loadMembers();
     };
@@ -66,7 +62,6 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     window.addEventListener("focus", handleFocus);
 
     return () => {
-      window.clearInterval(refreshInterval);
       window.removeEventListener("focus", handleFocus);
     };
   }, [loadMembers]);
