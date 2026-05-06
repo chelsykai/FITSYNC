@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import styles from "../Modal.module.css";
 import { supabase } from "../../../lib/supabaseClient";
+import { formatMMDDYYYY } from "../../../utils/dateFormat";
 
 export default function PaymentReceiptModal({ payment, onClose, onAddPayment }) {
   const [transactions, setTransactions] = useState([]);
@@ -31,7 +32,7 @@ export default function PaymentReceiptModal({ payment, onClose, onAddPayment }) 
         } else {
           // Transform data for display
           const transformedTransactions = (data || []).map((tx) => ({
-            date: tx.date ? new Date(tx.date).toLocaleDateString("en-US") : "N/A",
+            date: formatMMDDYYYY(tx.date),
             txId: tx.id || "N/A",
             desc: tx.description || "Monthly Fee",
             promo: tx.promo_code || "N/A",

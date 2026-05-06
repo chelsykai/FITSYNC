@@ -1,4 +1,5 @@
 import styles from "../Modal.module.css";
+import { formatMMDDYYYY } from "../../../utils/dateFormat";
 
 export default function ViewAllModal({ members, onClose }) {
   const formatValidity = (value, unit) => {
@@ -70,7 +71,7 @@ export default function ViewAllModal({ members, onClose }) {
                 <tr key={m.member_id}>
                   <td>{m.member_id}</td>
                   <td>{m.full_name}</td>
-                  <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
+                  <td>{formatMMDDYYYY(m.join_date)}</td>
                   <td>{m.membership_type}</td>
                   <td className={styles.membershipPlanCol}>
                     <span className={styles.membershipPlanTerm}>{membershipPlan.term}</span>
@@ -78,7 +79,7 @@ export default function ViewAllModal({ members, onClose }) {
                       <span className={styles.membershipPlanFrequency}> ({membershipPlan.frequency})</span>
                     ) : null}
                   </td>
-                  <td>{expiryDate ? expiryDate.toLocaleDateString() : "N/A"}</td>
+                  <td>{formatMMDDYYYY(expiryDate)}</td>
                 </tr>
               );
             })}

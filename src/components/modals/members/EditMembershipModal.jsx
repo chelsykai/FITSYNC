@@ -67,35 +67,58 @@ export default function EditMembershipModal({ member, onClose, onSaved }) {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.modalTitle}>Edit Membership</h2>
+      <div className={styles.addMemberModal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.paymentModalHeader}>
+          <h2 className={styles.modalTitle} style={{ textAlign: "left", marginBottom: 0 }}>Edit Membership</h2>
+          <button className={styles.modalCloseX} onClick={onClose} disabled={loading}>✕</button>
+        </div>
 
-        <div className={styles.fieldRow}>
-          <div className={styles.unitInputWrap}>
-            <input
-              className={styles.formInput}
-              placeholder="Plan Duration"
-              type="number"
-              min="1"
-              step="1"
-              value={monthly}
-              onChange={setNumber(setMonthly)}
-              disabled={Boolean(yearly)}
-            />
-            <span className={styles.unitSuffix}>Months</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
+          <p className={styles.inputContextLabel} style={{ textAlign: "center", marginTop: 6 }}>Adjust the member&apos;s plan — choose either months or years.</p>
+        </div>
+
+        <div className={styles.membershipSettings} style={{ marginTop: 12 }}>
+          <div className={styles.fieldRow}>
+            <div className={styles.unitInputWrap}>
+              <p className={styles.modernLabel}>Plan Duration</p>
+              <input
+                className={styles.formInput}
+                placeholder="Plan Duration"
+                type="number"
+                min="1"
+                step="1"
+                value={monthly}
+                onChange={setNumber(setMonthly)}
+                disabled={Boolean(yearly)}
+              />
+              <span className={styles.unitSuffix}>Months</span>
+              <p className={styles.inputContextLabel}>Use months for short-term monthly pay plans.</p>
+            </div>
+            <div className={styles.unitInputWrap}>
+              <p className={styles.modernLabel}>Membership Term</p>
+              <input
+                className={styles.formInput}
+                placeholder="Membership Term"
+                type="number"
+                min="1"
+                step="1"
+                value={yearly}
+                onChange={setNumber(setYearly)}
+                disabled={Boolean(monthly)}
+              />
+              <span className={styles.unitSuffix}>Years</span>
+              <p className={styles.inputContextLabel}>Use years for long-term memberships.</p>
+            </div>
           </div>
-          <div className={styles.unitInputWrap}>
-            <input
-              className={styles.formInput}
-              placeholder="Membership Term"
-              type="number"
-              min="1"
-              step="1"
-              value={yearly}
-              onChange={setNumber(setYearly)}
-              disabled={Boolean(monthly)}
-            />
-            <span className={styles.unitSuffix}>Years</span>
+          <div className={styles.fieldRow}>
+            <button
+              type="button"
+              className={styles.planResetBtn}
+              onClick={() => { setMonthly(""); setYearly(""); }}
+              disabled={!monthly && !yearly}
+            >
+              Reset Plan Selection
+            </button>
           </div>
         </div>
 
@@ -105,13 +128,14 @@ export default function EditMembershipModal({ member, onClose, onSaved }) {
           </div>
         )}
 
-        <button className={styles.submitBtn} onClick={saveMembership} disabled={loading}>
-          {loading ? "Saving..." : "Save Membership"}
-        </button>
-        <button className={styles.profileDeleteBtn} onClick={cancelMembership} disabled={loading}>
-          Cancel Membership
-        </button>
-        <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Close</button>
+        <div className={styles.modalFooter} style={{ marginTop: 16 }}>
+          <button className={styles.submitBtn} onClick={saveMembership} disabled={loading}>
+            {loading ? "Saving..." : "Save Membership"}
+          </button>
+          <button className={styles.profileDeleteBtn} onClick={cancelMembership} disabled={loading}>
+            Cancel Membership
+          </button>
+        </div>
       </div>
     </div>
   );

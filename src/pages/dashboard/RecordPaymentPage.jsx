@@ -3,10 +3,12 @@ import styles from "./RecordPaymentPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import { supabase } from "../../lib/supabaseClient";
 
+const getTodayDateString = () => new Date().toISOString().split("T")[0];
+
 const defaultForm = {
   memberName: "",
   memberId: "",
-  date: "",
+  date: getTodayDateString(),
   description: "",
   promoCode: "",
   modeOfPayment: "Cash",
@@ -110,6 +112,15 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
 
   const set = (field) => (e) => {
     const value = e.target.value;
+    if (field === "modeOfPayment") {
+      const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
+      setForm({
+        ...form,
+        modeOfPayment: value,
+        referenceNumber: requiresReference ? form.referenceNumber : "",
+      });
+      return;
+    }
     setForm({ ...form, [field]: value });
   };
 
@@ -142,12 +153,18 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
       return;
     }
 
+    const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment);
+    if (requiresReference && !form.referenceNumber.trim()) {
+      setError("Reference Number is required for selected mode of payment");
+      return;
+    }
+
     setLoading(true);
     const result = await add_record(form);
 
     if (result.success) {
       setSuccessMessage("Payment record added successfully!");
-      setForm(defaultForm);
+      setForm({ ...defaultForm, date: getTodayDateString() });
       setTimeout(() => {
         onNavigate("payments");
       }, 1500);
@@ -287,7 +304,7 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>Date</label>
               <input className={styles.formInput} type="date" placeholder="MM/DD/YYYY"
-                value={form.date} onChange={set("date")} />
+                value={form.date} onChange={set("date")} disabled />
             </div>
           </div>
 
@@ -315,11 +332,13 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                 ))}
               </select>
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Reference Number</label>
-              <input className={styles.formInput} placeholder="Enter Reference Number"
-                value={form.referenceNumber} onChange={set("referenceNumber")} />
-            </div>
+            { ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment) && (
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Reference Number</label>
+                <input className={styles.formInput} placeholder="Enter Reference Number"
+                  value={form.referenceNumber} onChange={set("referenceNumber")} />
+              </div>
+            )}
           </div>
 
           {/* Row 3.5 — Total */}

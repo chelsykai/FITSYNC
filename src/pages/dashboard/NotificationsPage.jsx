@@ -5,6 +5,7 @@ import ViewLogModal from "../../components/modals/notifications/ViewLogModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { sendMemberNotificationEmail } from "../../services/notificationEmailService";
+import { formatMMDDYYYY } from "../../utils/dateFormat";
 
 const FILTER_STATUS = ["Pending", "Sent", "Failed"];
 
@@ -82,8 +83,7 @@ function buildNotificationsFromMembers(members) {
       if (expiryDate) {
         const oneDay = 1000 * 60 * 60 * 24;
         const dayDiff = Math.ceil((expiryDate.getTime() - today.getTime()) / oneDay);
-        const expiryText = expiryDate.toLocaleDateString();
-
+        const expiryText = formatMMDDYYYY(expiryDate);
         if (dayDiff < 0) {
           results.push({
             key: `${member.member_id}-overdue`,
@@ -110,14 +110,15 @@ function buildNotificationsFromMembers(members) {
             daysRemaining: dayDiff,
             expiryText,
           });
-        } else if (dayDiff <= 14 && dayDiff >= 7) {
+        } else if (dayDiff > 0 && dayDiff <= 14) {
+          // Match Overview: treat any expiry within the next 14 days as expiring soon
           results.push({
             key: `${member.member_id}-expiring`,
             member,
             id: member.member_id,
             type: "MEMBERSHIP EXPIRING",
             name: member.full_name,
-            detail: `EXPIRY: ${dayDiff} DAYS REMAINING\nEXPIRY DATE: ${expiryText}`,
+            detail: `EXPIRY: ${dayDiff} DAY${dayDiff === 1 ? "" : "S"} REMAINING\nEXPIRY DATE: ${expiryText}`,
             color: "yellow",
             action: "NOTIFY",
             daysRemaining: dayDiff,

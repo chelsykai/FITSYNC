@@ -10,6 +10,7 @@ import MemberRegisteredModal from "../../components/modals/members/MemberRegiste
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers, deleteMember } from "../../services/memberService";
 import { generateMemberIDPDF } from "../../utils/generateMemberIDPDF";
+import { formatMMDDYYYY } from "../../utils/dateFormat";
 
 export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [members, setMembers] = useState([]);
@@ -163,6 +164,11 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   };
 
   const getMemberExpiryDate = (member) => {
+    if (member?.expiration_date) {
+      const storedExpiry = new Date(member.expiration_date);
+      if (!Number.isNaN(storedExpiry.getTime())) return storedExpiry;
+    }
+
     if (!member?.join_date) return null;
     const joinDate = new Date(member.join_date);
     if (Number.isNaN(joinDate.getTime())) return null;
@@ -398,18 +404,20 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
                   <th>Name</th>
                   <th>Birthday</th>
                   <th>Membership Type</th>
-                  <th className={styles.membershipPlanCol}>Membership Plan</th>
+                    <th className={styles.membershipPlanCol}>Membership Plan</th>
+                    <th>Expiration Date</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((m) => {
                   const membershipPlan = getMembershipPlanParts(m.membership_validity, m.monthly_validity);
+                    const expiryDate = getMemberExpiryDate(m);
                   return (
                     <tr key={m.member_id} className={styles.clickableRow}
                       onClick={() => setShowProfile(m)}>
                       <td>{m.member_id}</td>
                       <td>{m.full_name}</td>
-                      <td>{m.birthday ? new Date(m.birthday).toLocaleDateString() : "N/A"}</td>
+                      <td>{m.birthday ? formatMMDDYYYY(m.birthday) : "N/A"}</td>
                       <td>{m.membership_type}</td>
                       <td className={styles.membershipPlanCol}>
                         <span className={styles.membershipPlanTerm}>{membershipPlan.term}</span>
@@ -417,12 +425,13 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
                           <span className={styles.membershipPlanFrequency}> ({membershipPlan.frequency})</span>
                         ) : null}
                       </td>
+                        <td>{expiryDate ? formatMMDDYYYY(expiryDate) : "N/A"}</td>
                     </tr>
                   );
                 })}
-                {filtered.length === 0 && (
-                  <tr><td colSpan={5} className={styles.noResults}>No members found.</td></tr>
-                )}
+                  {filtered.length === 0 && (
+                    <tr><td colSpan={6} className={styles.noResults}>No members found.</td></tr>
+                  )}
               </tbody>
             </table>
             <div className={styles.viewAllWrapper}>

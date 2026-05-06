@@ -866,6 +866,29 @@
   background: #ebf1e5;
 }
 
+/* Modal footer layout for action buttons */
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.modalFooter .submitBtn,
+.modalFooter .profileDeleteBtn {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.modalFooter .closeBtn { width: 120px; }
+
+@media (max-width: 560px) {
+  .modalFooter { flex-direction: column; gap: 8px; }
+  .modalFooter .profileDeleteBtn, .modalFooter .closeBtn { width: 100%; }
+  .modalFooter .submitBtn { width: 100%; flex: none; }
+}
+
 .planResetBtn:disabled {
   cursor: not-allowed;
   opacity: 0.55;
