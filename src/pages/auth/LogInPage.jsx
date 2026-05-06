@@ -115,18 +115,7 @@ export default function LogInPage({ onNavigate }) {
             {loading ? "Logging in..." : "Login"}
           </button>
 
-          <p className={styles.signup}>
-            No account?{" "}
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate("create");
-              }}
-            >
-              Sign up
-            </a>
-          </p>
+          
         </div>
       </div>
     </div>

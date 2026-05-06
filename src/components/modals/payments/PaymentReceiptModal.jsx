@@ -21,7 +21,7 @@ export default function PaymentReceiptModal({ payment, onClose, onAddPayment }) 
         const { data, error: fetchError } = await supabase
           .from("record_payment")
           .select("*")
-          .eq("member_id", payment.id)
+          .eq("member_id", payment.memberId)
           .order("date", { ascending: false });
 
         if (fetchError) {
@@ -50,10 +50,10 @@ export default function PaymentReceiptModal({ payment, onClose, onAddPayment }) 
       }
     };
 
-    if (payment?.id) {
+    if (payment?.memberId) {
       fetchTransactions();
     }
-  }, [payment?.id]);
+  }, [payment?.memberId]);
 
   const handleExportToSheets = async () => {
     try {

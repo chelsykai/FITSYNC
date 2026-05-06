@@ -145,57 +145,43 @@ export const addMember = async (memberData) => {
  * Fetch all members from the database
  */
 export const fetchMembers = async () => {
-  // Try to select last_visit if the column exists; if it doesn't, retry without it.
-  let data;
   try {
     const resp = await supabase
       .from("member")
       .select(
-        "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, last_visit, created_at"
+        "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, created_at"
       )
       .order("created_at", { ascending: false });
 
     if (resp.error) throw resp.error;
-    data = resp.data || [];
+    const data = resp.data || [];
+
+    const members = data || [];
+    return Promise.all(
+      members.map(async (member) => {
+        try {
+          const photoPath = getStoragePathFromUrl(member.photo_url);
+          if (!photoPath) return member;
+
+          const photoUrl = await getPhotoAccessUrl(photoPath);
+          return {
+            ...member,
+            photo_url: photoUrl,
+          };
+        } catch (err) {
+          // If photo retrieval fails for a single member, log and return the raw member so UI can still render.
+          // This prevents one broken storage entry from causing the entire fetch to fail.
+          // eslint-disable-next-line no-console
+          console.warn('Failed to get photo URL for member', member?.member_id, err);
+          return member;
+        }
+      })
+    );
   } catch (err) {
-    // If last_visit column is missing, retry without it. Otherwise rethrow.
-    const msg = (err && err.message) || String(err);
-    if (msg.includes("last_visit") || msg.includes("member.last_visit") || msg.includes("column \"member.last_visit\" does not exist")) {
-      const resp2 = await supabase
-        .from("member")
-        .select(
-          "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, created_at"
-        )
-        .order("created_at", { ascending: false });
-
-      if (resp2.error) throw resp2.error;
-      data = resp2.data || [];
-    } else {
-      throw err;
-    }
+    // eslint-disable-next-line no-console
+    console.error("Error fetching members:", err);
+    throw err;
   }
-
-  const members = data || [];
-  return Promise.all(
-    members.map(async (member) => {
-      try {
-        const photoPath = getStoragePathFromUrl(member.photo_url);
-        if (!photoPath) return member;
-
-        const photoUrl = await getPhotoAccessUrl(photoPath);
-        return {
-          ...member,
-          photo_url: photoUrl,
-        };
-      } catch (err) {
-        // If photo retrieval fails for a single member, log and return the raw member so UI can still render.
-        // This prevents one broken storage entry from causing the entire fetch to fail.
-        // eslint-disable-next-line no-console
-        console.warn('Failed to get photo URL for member', member?.member_id, err);
-        return member;
-      }
-    })
-  );
 };
 
 /**

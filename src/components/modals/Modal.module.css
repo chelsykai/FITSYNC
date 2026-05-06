@@ -803,6 +803,241 @@
 
 .addMemberSubmitBtn:hover { background: #6aa947; }
 
+/* ── Attendance Modal (modern, large) ── */
+.attendanceModal {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbf8 100%);
+  border-radius: 24px;
+  padding: 24px;
+  width: min(98vw, 1200px);
+  max-height: 92vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Inter", "Montserrat", sans-serif;
+}
+
+.attendanceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 5;
+}
+
+.attendanceControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.monthLabel {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  letter-spacing: -0.3px;
+}
+
+.navButton {
+  background: #f5f7f5;
+  border: 1px solid #d8e4d6;
+  color: #2a3a28;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.navButton:hover {
+  background: #e8f1e6;
+  border-color: #c8dac6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.attendanceBody {
+  overflow-y: auto;
+  overflow-x: auto;
+  flex: 1 1 auto;
+  background: transparent;
+  border-radius: 12px;
+}
+
+.attendanceTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+  font-size: 14px;
+}
+
+.attendanceTable thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #7eba56 0%, #6fa847 100%);
+  color: #ffffff;
+  z-index: 3;
+  padding: 14px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border-bottom: none;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.attendanceTable thead th:first-child {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 4;
+}
+
+.attendanceTable tbody tr {
+  transition: background-color 0.12s ease;
+  border-bottom: 1px solid #e8ebe8;
+}
+
+.attendanceTable tbody tr:hover {
+  background-color: #f5f9f3;
+}
+
+.attendanceTable td {
+  padding: 12px 10px;
+  text-align: center;
+  border-right: 1px solid #e8ebe8;
+}
+
+.attendanceTable th {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.attendanceTable td:last-child,
+.attendanceTable th:last-child {
+  border-right: none;
+}
+
+.attendanceNameCell {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  position: sticky;
+  left: 0;
+  background: linear-gradient(90deg, #ffffff 0%, #f8fbf8 100%);
+  z-index: 2;
+  min-width: 220px;
+  will-change: transform;
+}
+
+.attDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 8px;
+  display: inline-block;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  position: relative;
+}
+
+.attDot[data-time]::after {
+  content: attr(data-time);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.attDot[data-time]::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #1a1a1a;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1001;
+}
+
+.attDot.present {
+  background: linear-gradient(135deg, #7eba56 0%, #5fa83a 100%);
+  box-shadow: 0 4px 12px rgba(126, 186, 86, 0.24), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.attDot.absent {
+  background: linear-gradient(135deg, #f5a5a5 0%, #e85050 100%);
+  box-shadow: 0 4px 12px rgba(232, 80, 80, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.attDot.future {
+  background: linear-gradient(135deg, #d0d5dd 0%, #98a2b3 100%);
+  box-shadow: 0 4px 12px rgba(71, 84, 103, 0.16), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  cursor: default;
+}
+
+.attendanceTable tbody tr:hover .attDot {
+  transform: scale(1.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.present {
+  background: linear-gradient(135deg, #7eba56 0%, #5fa83a 100%);
+  box-shadow: 0 4px 12px rgba(126, 186, 86, 0.24), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.absent {
+  background: linear-gradient(135deg, #f5a5a5 0%, #e85050 100%);
+  box-shadow: 0 4px 12px rgba(232, 80, 80, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 900px) {
+  .attendanceNameCell { min-width: 160px; }
+  .attendanceTable { min-width: 600px; }
+}
+
+/* Expose utility classes for CSS Modules usage */
+.present {
+  background: linear-gradient(180deg, #6fcf6b, #3fa83a);
+  box-shadow: 0 4px 10px rgba(63,168,58,0.18);
+}
+
+.absent {
+  background: linear-gradient(180deg, #f39a9a, #d9534f);
+  box-shadow: 0 4px 10px rgba(217,83,79,0.12);
+}
+
+.attendanceTable tr:hover .attDot { transform: scale(1.08); }
+
+@media (max-width: 900px) {
+  .attendanceNameCell { min-width: 160px; }
+  .attendanceTable { min-width: 600px; }
+}
+
 /* ── Member Registered Modal ── */
 .registeredModal {
   background: white;
