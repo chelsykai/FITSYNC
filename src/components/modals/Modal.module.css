@@ -994,6 +994,12 @@
   box-shadow: 0 4px 12px rgba(232, 80, 80, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.2);
 }
 
+.attDot.future {
+  background: linear-gradient(135deg, #d0d5dd 0%, #98a2b3 100%);
+  box-shadow: 0 4px 12px rgba(71, 84, 103, 0.16), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  cursor: default;
+}
+
 .attendanceTable tbody tr:hover .attDot {
   transform: scale(1.12);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);

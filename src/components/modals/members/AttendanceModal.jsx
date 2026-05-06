@@ -9,6 +9,7 @@ const monthNames = [
 
 export default function AttendanceModal({ members = [], onClose }) {
   const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1); // 1-based
   const [attendanceMap, setAttendanceMap] = useState({});
@@ -86,14 +87,21 @@ export default function AttendanceModal({ members = [], onClose }) {
                   <tr key={id}>
                     <td className={styles.attendanceNameCell}>{m.full_name || m.name || id}</td>
                     {days.map((d) => {
+                      const cellDate = new Date(year, month - 1, d);
+                      const isFutureDay = cellDate > todayStart;
                       const attended = attendedSet.has(d);
                       const time = timeMap[id]?.[d] || "";
+                      const dayStatusClass = isFutureDay
+                        ? styles.future
+                        : attended
+                          ? styles.present
+                          : styles.absent;
                       return (
                         <td key={d}>
                           <span
-                            className={attended ? `${styles.attDot} ${styles.present}` : `${styles.attDot} ${styles.absent}`}
-                            data-time={attended && time ? time : undefined}
-                            title={attended && time ? `Attended at ${time}` : ""}
+                            className={`${styles.attDot} ${dayStatusClass}`}
+                            data-time={!isFutureDay && attended && time ? time : undefined}
+                            title={isFutureDay ? "Not yet" : attended && time ? `Attended at ${time}` : ""}
                           />
                         </td>
                       );
