@@ -3,6 +3,7 @@ import styles from "./MembersPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import MembersExportModal from "../../components/modals/members/MembersExportModal";
 import AddMemberModal from "../../components/modals/members/AddMemberModal";
+import AttendanceModal from "../../components/modals/members/AttendanceModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
 import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
@@ -17,6 +18,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [search, setSearch] = useState("");
   const [showExport, setShowExport] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showAttendance, setShowAttendance] = useState(false);
   const [showProfile, setShowProfile] = useState(null);
   const [showViewAll, setShowViewAll] = useState(false);
   const [registeredMember, setRegisteredMember] = useState(null);
@@ -278,6 +280,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
             <div className={styles.actionRow}>
               <button className={styles.exportBtn} onClick={() => setShowExport(true)}>📤 Export</button>
               <button className={styles.addBtn} onClick={() => setShowAddMember(true)}>👤 Add Member</button>
+              <button className={styles.addBtn} onClick={() => setShowAttendance(true)}>🗓️ Attendance</button>
             </div>
             <table className={styles.table}>
               <thead>
@@ -325,6 +328,12 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         <AddMemberModal
           onClose={() => setShowAddMember(false)}
           onSuccess={handleMemberAdded}
+        />
+      )}
+      {showAttendance && (
+        <AttendanceModal
+          members={members}
+          onClose={() => setShowAttendance(false)}
         />
       )}
       {registeredMember && (
