@@ -362,7 +362,7 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
           </div>
 
           <div className={styles.scannerHint}>
-            Members only.
+              Members only.
           </div>
         </div>
       </div>
