@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import styles from "../Modal.module.css";
 import ConfirmModal from "../ConfirmModal";
 import { generateMemberIDPDF } from "../../../utils/generateMemberIDPDF";
+import EditMembershipModal from "./EditMembershipModal";
+import { formatMMDDYYYY } from "../../../utils/dateFormat";
 
-export default function MemberProfileModal({ member, onClose, onDelete }) {
+export default function MemberProfileModal({ member, onClose, onDelete, onMembershipUpdated }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
+  const [showEditMembership, setShowEditMembership] = useState(false);
   const qrContainerRef = useRef();
 
   useEffect(() => {
@@ -51,14 +54,15 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
   const memberType = member.membership_type || member.type || "N/A";
   const memberId = member.member_id || member.memberId || member.id || "N/A";
   const joinDate = member.join_date
-    ? new Date(member.join_date).toLocaleDateString()
+    ? formatMMDDYYYY(member.join_date)
     : member.joinDate || "N/A";
   const birthday = member.birthday
-    ? new Date(member.birthday).toLocaleDateString()
+    ? formatMMDDYYYY(member.birthday)
     : "N/A";
-  const expiry = member.membership_validity || member.expiry || "N/A";
+  const expiry = member.expiration_date
+    ? formatMMDDYYYY(member.expiration_date)
+    : member.membership_validity || member.expiry || "N/A";
   const address = member.address || "N/A";
-  const lastActivity = member.last_visit || member.lastActivity || "N/A";
   const phone = member.phone || "N/A";
   const email = member.email || "N/A";
 
@@ -66,7 +70,6 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
     { label: "Join Date", value: joinDate },
     { label: "Birthday", value: birthday },
     { label: "Expiry", value: expiry },
-    { label: "Last Activity", value: lastActivity },
     { label: "Phone Number", value: phone },
     { label: "Email", value: email },
     { label: "Address", value: address },
@@ -142,6 +145,12 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
             Print ID
           </button>
           <button
+            className={styles.profileEmailBtn}
+            onClick={() => setShowEditMembership(true)}
+          >
+            Edit Membership
+          </button>
+          <button
             className={styles.profileDeleteBtn}
             onClick={() => {
               setConfirmError(null);
@@ -176,6 +185,13 @@ export default function MemberProfileModal({ member, onClose, onDelete }) {
               setConfirmLoading(false);
             }
           }}
+        />
+      )}
+      {showEditMembership && (
+        <EditMembershipModal
+          member={member}
+          onClose={() => setShowEditMembership(false)}
+          onSaved={(updatedMember) => onMembershipUpdated?.(updatedMember)}
         />
       )}
     </>

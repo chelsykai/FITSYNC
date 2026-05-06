@@ -5,6 +5,7 @@ import PaymentsExportModal from "../../components/modals/payments/PaymentsExport
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
+import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
 
 /**
  * Fetch total count of members from the database
@@ -85,8 +86,8 @@ const fetchPayments = async () => {
         id: record.id, // Payment record ID (for React keys)
         memberId: record.member_id, // Member ID to display
         name: memberInfo.full_name || "Unknown",
-        date: new Date(record.date).toLocaleDateString("en-US"),
-        rawDate: new Date(record.date),
+        date: formatMMDDYYYY(record.date),
+        rawDate: parseLocalISODate(record.date),
         type: memberInfo.membership_type || "Unknown",
         total: amount,
         status: record.status || "Paid",
@@ -118,19 +119,21 @@ const calculateStats = (payments, activeMemberships = 0) => {
   let pendingRevenue = 0;
 
   payments.forEach((p) => {
+    if (!p.rawDate) return;
     const paymentDate = new Date(p.rawDate);
     paymentDate.setHours(0, 0, 0, 0); // Set to start of payment date
-    const paymentAmount = p.total || 0;
+    const paymentAmount = Number(p.total) || 0;
+    const normalizedStatus = String(p.status || "").trim().toLowerCase();
 
-    if (paymentDate.getTime() === today.getTime() && p.status === "Paid") {
+    if (paymentDate.getTime() === today.getTime() && normalizedStatus === "paid") {
       todayRevenue += paymentAmount;
     }
 
-    if (paymentDate >= monthStart && p.status === "Paid") {
+    if (paymentDate >= monthStart && normalizedStatus === "paid") {
       monthRevenue += paymentAmount;
     }
 
-    if (p.status === "Pending") {
+    if (normalizedStatus === "pending" || normalizedStatus === "unpaid") {
       pendingRevenue += paymentAmount;
     }
   });

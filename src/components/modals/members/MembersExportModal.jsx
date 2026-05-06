@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
+import { formatMMDDYYYY } from "../../../utils/dateFormat";
 
 const exportMemberOptions = (members) => ["Select All", ...members.map((m) => m.full_name)];
 
@@ -166,9 +167,9 @@ export default function MembersExportModal({ members, onClose }) {
         "Email": m.email || "",
         "Phone": m.phone || "",
         "Address": m.address || "",
-        "Birthday": m.birthday ? new Date(m.birthday).toLocaleDateString() : "",
+        "Birthday": m.birthday ? formatMMDDYYYY(m.birthday) : "",
         "Membership Type": m.membership_type || "",
-        "Join Date": m.join_date ? new Date(m.join_date).toLocaleDateString() : "",
+        "Join Date": m.join_date ? formatMMDDYYYY(m.join_date) : "",
         "Monthly Validity": m.monthly_validity || "",
         "Membership Validity": m.membership_validity || "",
         "Last Visit": m.last_visit || "",
