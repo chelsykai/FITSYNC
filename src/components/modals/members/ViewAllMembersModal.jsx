@@ -36,8 +36,8 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
                 <th>Name</th>
                 <th>Join Date</th>
                 <th>Membership Type</th>
-                <th className={styles.membershipPlanCol}>Membership Plan</th>
-                <th>Expiration Date</th>
+                <th className={styles.membershipPlanCol}>Membership Validity</th>
+                <th>Monthly Expiry</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -52,23 +52,12 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
 
                 const yearlyRaw = String(m.membership_validity || "").trim();
                 const monthlyRaw = String(m.monthly_validity || "").trim();
-                const planTerm = yearlyRaw ? formatValidity(yearlyRaw, "Year") : (monthlyRaw ? formatValidity(monthlyRaw, "Month") : "N/A");
-                const planFrequency = monthlyRaw && !yearlyRaw ? "Monthly Pay" : "";
+                const membershipTerm = formatValidity(yearlyRaw, "Year");
 
                 const getExpiry = () => {
                   if (!m?.join_date) return null;
                   const join = new Date(m.join_date);
                   if (Number.isNaN(join.getTime())) return null;
-
-                  if (yearlyRaw) {
-                    const match = yearlyRaw.match(/(\d+)/);
-                    if (!match) return null;
-                    const years = Number.parseInt(match[1], 10);
-                    if (!Number.isInteger(years) || years <= 0) return null;
-                    const expiry = new Date(join);
-                    expiry.setFullYear(expiry.getFullYear() + years);
-                    return expiry;
-                  }
 
                   if (monthlyRaw) {
                     const match = monthlyRaw.match(/(\d+)/);
@@ -98,10 +87,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
                     <td>{m.join_date ? formatMMDDYYYY(m.join_date) : "N/A"}</td>
                     <td>{m.membership_type}</td>
                     <td className={styles.membershipPlanCol}>
-                      <span className={styles.membershipPlanTerm}>{planTerm}</span>
-                      {planFrequency ? (
-                        <span className={styles.membershipPlanFrequency}> ({planFrequency})</span>
-                      ) : null}
+                      <span className={styles.membershipPlanTerm}>{membershipTerm}</span>
                     </td>
                     <td>{expiryDate ? formatMMDDYYYY(expiryDate) : "N/A"}</td>
                     <td onClick={(e) => e.stopPropagation()}>

@@ -197,7 +197,6 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                     inputMode="numeric"
                     value={form.monthlyValidity}
                     onChange={setNumber("monthlyValidity")}
-                    disabled={Boolean(form.membershipValidity)}
                   />
                   <span className={styles.unitSuffix}>Months</span>
                   <p className={styles.inputContextLabel}>Plan Duration (Months)</p>
@@ -207,12 +206,11 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                     className={styles.formInput}
                     placeholder="Membership Term"
                     type="number"
-                    min="1"
+                    min="0"
                     step="1"
                     inputMode="numeric"
                     value={form.membershipValidity}
                     onChange={setNumber("membershipValidity")}
-                    disabled={Boolean(form.monthlyValidity)}
                   />
                   <span className={styles.unitSuffix}>Years</span>
                   <p className={styles.inputContextLabel}>Membership Term (Years)</p>
