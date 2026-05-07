@@ -84,25 +84,15 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
       }
 
       // Check if member's membership is still active (hasn't expired)
-      if (m.join_date && m.membership_validity) {
+      if (m.join_date && m.monthly_validity) {
         const joinDate = new Date(m.join_date);
         let expiryDate = new Date(joinDate);
 
-        // Parse membership_validity (e.g., "1 Year", "2 Months", "3 Days")
-        const validityMatch = m.membership_validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+        // Parse monthly_validity (e.g., "2 Months")
+        const validityMatch = m.monthly_validity.match(/(\d+)\s*(month)s?/i);
         if (validityMatch) {
           const amount = parseInt(validityMatch[1]);
-          const unit = validityMatch[2].toLowerCase();
-
-          if (unit === 'year') {
-            expiryDate.setFullYear(expiryDate.getFullYear() + amount);
-          } else if (unit === 'month') {
-            expiryDate.setMonth(expiryDate.getMonth() + amount);
-          } else if (unit === 'week') {
-            expiryDate.setDate(expiryDate.getDate() + amount * 7);
-          } else if (unit === 'day') {
-            expiryDate.setDate(expiryDate.getDate() + amount);
-          }
+          expiryDate.setMonth(expiryDate.getMonth() + amount);
 
           // Member is active if expiry date is in the future
           if (expiryDate > today) {
@@ -120,26 +110,16 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     const thirtyDaysAhead = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     return members.filter((m) => {
-      if (!m.join_date || !m.membership_validity) return false;
+      if (!m.join_date || !m.monthly_validity) return false;
 
       const joinDate = new Date(m.join_date);
       let expiryDate = new Date(joinDate);
 
-      // Parse membership_validity (e.g., "1 Year", "2 Months", "3 Days")
-      const validityMatch = m.membership_validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+      // Parse monthly_validity (e.g., "2 Months")
+      const validityMatch = m.monthly_validity.match(/(\d+)\s*(month)s?/i);
       if (validityMatch) {
         const amount = parseInt(validityMatch[1]);
-        const unit = validityMatch[2].toLowerCase();
-
-        if (unit === 'year') {
-          expiryDate.setFullYear(expiryDate.getFullYear() + amount);
-        } else if (unit === 'month') {
-          expiryDate.setMonth(expiryDate.getMonth() + amount);
-        } else if (unit === 'week') {
-          expiryDate.setDate(expiryDate.getDate() + amount * 7);
-        } else if (unit === 'day') {
-          expiryDate.setDate(expiryDate.getDate() + amount);
-        }
+        expiryDate.setMonth(expiryDate.getMonth() + amount);
       }
 
       return expiryDate >= today && expiryDate <= thirtyDaysAhead;
@@ -172,17 +152,6 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     if (!member?.join_date) return null;
     const joinDate = new Date(member.join_date);
     if (Number.isNaN(joinDate.getTime())) return null;
-
-    const yearlyRaw = String(member.membership_validity || "").trim();
-    if (yearlyRaw) {
-      const yearlyMatch = yearlyRaw.match(/(\d+)/);
-      if (!yearlyMatch) return null;
-      const years = Number.parseInt(yearlyMatch[1], 10);
-      if (!Number.isInteger(years) || years <= 0) return null;
-      const expiryDate = new Date(joinDate);
-      expiryDate.setFullYear(expiryDate.getFullYear() + years);
-      return expiryDate;
-    }
 
     const monthlyRaw = String(member.monthly_validity || "").trim();
     if (monthlyRaw) {
@@ -227,27 +196,9 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
 
   const getMembershipPlanParts = (membershipValidity, monthlyValidity) => {
     const yearlyRaw = String(membershipValidity || "").trim();
-    const monthlyRaw = String(monthlyValidity || "").trim();
-
-    // CASE A: Yearly Membership (long-term)
-    if (yearlyRaw) {
-      return {
-        term: formatValidity(yearlyRaw, "Year"),
-        frequency: "",
-      };
-    }
-
-    // CASE B: Monthly Pay (short-term)
-    if (monthlyRaw) {
-      return {
-        term: formatValidity(monthlyRaw, "Month"),
-        frequency: "Monthly Pay",
-      };
-    }
 
     return {
-      term: "N/A",
-      frequency: "",
+      term: formatValidity(yearlyRaw, "Year"),
     };
   };
 
@@ -405,7 +356,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
                   <th>Birthday</th>
                   <th>Membership Type</th>
                     <th className={styles.membershipPlanCol}>Membership Plan</th>
-                    <th>Expiration Date</th>
+                    <th>Monthly Expiry</th>
                 </tr>
               </thead>
               <tbody>
@@ -421,9 +372,6 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
                       <td>{m.membership_type}</td>
                       <td className={styles.membershipPlanCol}>
                         <span className={styles.membershipPlanTerm}>{membershipPlan.term}</span>
-                        {membershipPlan.frequency ? (
-                          <span className={styles.membershipPlanFrequency}> ({membershipPlan.frequency})</span>
-                        ) : null}
                       </td>
                         <td>{expiryDate ? formatMMDDYYYY(expiryDate) : "N/A"}</td>
                     </tr>
