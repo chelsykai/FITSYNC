@@ -297,6 +297,58 @@
 
 .memberIcon { font-size: 14px; }
 
+/* ── Date range row (Export modals) ── */
+.dateRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.dateGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.dateLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  font-family: "Montserrat", sans-serif;
+}
+
+.dateInput {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  color: #333;
+  outline: none;
+  background: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dateInput:focus { border-color: #7eba56; }
+
+.dateSep {
+  font-size: 16px;
+  color: #888;
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.csvNote {
+  font-size: 11px;
+  color: #888;
+  font-family: "Montserrat", sans-serif;
+  text-align: center;
+  margin: 0 0 12px 0;
+}
+
 /* ── Add member form ── */
 .formGrid {
   display: grid;

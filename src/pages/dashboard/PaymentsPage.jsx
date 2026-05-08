@@ -297,7 +297,6 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
               <span className={styles.statIcon}>🖨️</span>
               <div>
                 <p className={styles.statLabel}>Export</p>
-                <p className={styles.statLabel}>Transactions</p>
               </div>
             </div>
           </div>
