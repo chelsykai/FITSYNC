@@ -1,20 +1,88 @@
-  import { useState, useEffect } from "react";
+  import { useState, useEffect, useCallback } from "react";
 import styles from "./OverviewPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllModal from "../../components/modals/overview/ViewAllModal";
 import ExportModal from "../../components/modals/overview/ExportModal";
+import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
+import {
+  fetchTodayAttendanceByTimeBins,
+  fetchTodayAttendanceCount,
+  fetchCurrentMonthAttendanceByDay,
+  fetchCurrentYearAttendanceByMonth,
+} from "../../services/attendanceService";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { formatMMDDYYYY } from "../../utils/dateFormat";
 
-const stats = { checkins: 44, activeMembers: 890, walkIns: 13 };
+const stats = { walkIns: 13 };
 
-const gymActivity = [10, 6, 12, 4, 3, 5, 2, 4, 6, 3, 5, 4];
+const EMPTY_DAILY_ACTIVITY = Array(12).fill(0);
+const CHECKIN_SLOT_LABELS = ["12A", "2A", "4A", "6A", "8A", "10A", "12P", "2P", "4P", "6P", "8P", "10P"];
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const membershipTypeColors = {
   "Regular": "#4a9e4a",
   "Student": "#7fd4c1",
   "PWD": "#a8c8e8",
   "Senior": "#c8c8c8",
+};
+
+const formatValidity = (value, unit) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "N/A";
+  if (/[a-z]/i.test(raw)) return raw;
+  return `${raw} ${unit}${raw === "1" ? "" : "s"}`;
+};
+
+const getMembershipPlanParts = (membershipValidity, monthlyValidity) => {
+  const yearlyRaw = String(membershipValidity || "").trim();
+  const monthlyRaw = String(monthlyValidity || "").trim();
+
+  if (yearlyRaw) {
+    return { term: formatValidity(yearlyRaw, "Year"), frequency: "" };
+  }
+
+  if (monthlyRaw) {
+    return { term: formatValidity(monthlyRaw, "Month"), frequency: "Monthly Pay" };
+  }
+
+  return { term: "N/A", frequency: "" };
+};
+
+const getMembershipExpiryDate = (member) => {
+  if (member?.expiration_date) {
+    const storedExpiry = new Date(member.expiration_date);
+    if (!Number.isNaN(storedExpiry.getTime())) return storedExpiry;
+  }
+
+  if (!member?.join_date) return null;
+
+  const joinDate = new Date(member.join_date);
+  if (Number.isNaN(joinDate.getTime())) return null;
+
+  const yearlyRaw = String(member.membership_validity || "").trim();
+  if (yearlyRaw) {
+    const yearlyMatch = yearlyRaw.match(/(\d+)/);
+    if (!yearlyMatch) return null;
+    const years = Number.parseInt(yearlyMatch[1], 10);
+    if (!Number.isInteger(years) || years <= 0) return null;
+    const expiryDate = new Date(joinDate);
+    expiryDate.setFullYear(expiryDate.getFullYear() + years);
+    return expiryDate;
+  }
+
+  const monthlyRaw = String(member.monthly_validity || "").trim();
+  if (monthlyRaw) {
+    const monthlyMatch = monthlyRaw.match(/(\d+)/);
+    if (!monthlyMatch) return null;
+    const months = Number.parseInt(monthlyMatch[1], 10);
+    if (!Number.isInteger(months) || months <= 0) return null;
+    const expiryDate = new Date(joinDate);
+    expiryDate.setMonth(expiryDate.getMonth() + months);
+    return expiryDate;
+  }
+
+  return null;
 };
 
 // Function to calculate population distribution from members
@@ -129,23 +197,33 @@ function PopulationLegend({ data }) {
   );
 }
 
-function BarChart({ data }) {
-  const max = Math.max(...data), width = 340, height = 120, barW = 18;
-  const gap = (width - data.length * barW) / (data.length + 1);
+function BarChart({ data, labels }) {
+  const max = Math.max(...data, 1);
+  const width = 560;
+  const height = 190;
+  const leftPad = 24;
+  const rightPad = 10;
+  const chartWidth = width - leftPad - rightPad;
+  const barW = Math.max(14, Math.floor(chartWidth / (data.length * 1.8)));
+  const gap = (chartWidth - data.length * barW) / (data.length + 1);
+  const step = Math.max(1, Math.ceil(max / 4));
+  const ticks = [0, step, step * 2, step * 3, step * 4];
+
   return (
-    <svg width={width} height={height + 20}>
-      {[0, 3, 6, 9, 12].map((v) => (
+    <svg width="100%" viewBox={`0 0 ${width} ${height + 32}`}>
+      {ticks.map((v) => (
         <text key={v} x={0} y={height - (v / max) * height + 4}
           fontSize="9" fill="#aaa" fontFamily="Montserrat, sans-serif">{v}</text>
       ))}
+
       {data.map((val, i) => {
-        const x = gap + i * (barW + gap) + 12;
+        const x = leftPad + gap + i * (barW + gap);
         const barH = (val / max) * height;
         return (
           <g key={i}>
             <rect x={x} y={height - barH} width={barW} height={barH} fill="#7eba56" rx={3} />
             <text x={x + barW / 2} y={height + 14} textAnchor="middle"
-              fontSize="9" fill="#aaa" fontFamily="Montserrat, sans-serif">{i + 1}</text>
+              fontSize="9" fill="#aaa" fontFamily="Montserrat, sans-serif">{labels?.[i] || i + 1}</text>
           </g>
         );
       })}
@@ -154,40 +232,144 @@ function BarChart({ data }) {
 }
 
 export default function OverviewPage({ onNavigate, activePage = "overview" }) {
-  const [year, setYear] = useState(2025);
   const [showAll, setShowAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [populationData, setPopulationData] = useState([]);
+  const [todayCheckIns, setTodayCheckIns] = useState(0);
+  const [gymActivity, setGymActivity] = useState(EMPTY_DAILY_ACTIVITY);
+  const [activityRange, setActivityRange] = useState("today");
 
-  // Fetch members on component mount
-  useEffect(() => {
-    const loadMembers = async () => {
+  const loadOverviewData = useCallback(async (showLoader = false) => {
+    if (showLoader) setLoading(true);
+    try {
+      let memberData = [];
+      let walkInCount = 0;
+
       try {
-        setLoading(true);
-        const data = await fetchMembers();
-        setMembers(data);
-        setPopulationData(calculatePopulation(data));
-        setError(null);
+        memberData = await fetchMembers();
+        setMembers(memberData);
+        setPopulationData(calculatePopulation(memberData));
       } catch (err) {
         console.error("Error fetching members:", err);
-        setError("Failed to load members");
+        setError(`Failed to load members: ${err?.message || err}`);
         setMembers([]);
-      } finally {
-        setLoading(false);
       }
+
+      try {
+        walkInCount = await fetchTodayAttendanceCount();
+        setTodayCheckIns(walkInCount);
+      } catch (err) {
+        console.error("Error fetching today attendance count:", err);
+        // If members already failed, keep that error; otherwise show attendance error.
+        setError((prev) => prev ? prev : `Failed to load attendance: ${err?.message || err}`);
+        setTodayCheckIns(0);
+      }
+
+      // Clear error if both succeeded
+      if (memberData.length > 0 && typeof walkInCount === 'number' && !error) {
+        setError(null);
+      }
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
+  const loadActivity = useCallback(async () => {
+    try {
+      if (activityRange === "today") {
+        const todayBins = await fetchTodayAttendanceByTimeBins();
+        setGymActivity(todayBins);
+        return;
+      }
+
+      if (activityRange === "month") {
+        const monthByDay = await fetchCurrentMonthAttendanceByDay();
+        setGymActivity(monthByDay);
+        return;
+      }
+
+      const yearByMonth = await fetchCurrentYearAttendanceByMonth();
+      setGymActivity(yearByMonth);
+    } catch (err) {
+      console.error("Error fetching attendance activity:", err);
+      setGymActivity(EMPTY_DAILY_ACTIVITY);
+    }
+  }, [activityRange]);
+
+  useEffect(() => {
+    loadOverviewData(true);
+
+    const overviewChannel = supabase
+      .channel("overview-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadOverviewData();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "member_attendance" }, () => {
+        loadOverviewData();
+        loadActivity();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(overviewChannel);
+    };
+  }, [loadOverviewData, loadActivity]);
+
+  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadOverviewData();
+      loadActivity();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadOverviewData();
+      loadActivity();
     };
 
-    loadMembers();
-  }, []);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadOverviewData, loadActivity]);
+
+  useEffect(() => {
+    loadActivity();
+  }, [loadActivity]);
+
+  const activityLabels =
+    activityRange === "today"
+      ? CHECKIN_SLOT_LABELS
+      : activityRange === "month"
+      ? Array.from({ length: gymActivity.length }, (_, index) => String(index + 1))
+      : MONTH_LABELS;
+
+  const expiringSoonMembers = members
+    .filter((member) => {
+      const expiryDate = getMembershipExpiryDate(member);
+      if (!expiryDate) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const fourteenDaysAhead = new Date(today);
+      fourteenDaysAhead.setDate(fourteenDaysAhead.getDate() + 14);
+      return expiryDate >= today && expiryDate <= fourteenDaysAhead;
+    })
+    .sort((a, b) => {
+      const dateA = getMembershipExpiryDate(a);
+      const dateB = getMembershipExpiryDate(b);
+      return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
+    });
 
   return (
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.welcome}>Welcome, User!</h1>
 
           {/* Stat Cards */}
@@ -196,7 +378,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
               <span className={styles.statIcon}>📅</span>
               <div>
                 <p className={styles.statLabel}>Today's Checkins</p>
-                <p className={styles.statValue}>{stats.checkins}</p>
+                <p className={styles.statValue}>{loading ? "..." : todayCheckIns}</p>
               </div>
             </div>
             <div className={styles.statCard}>
@@ -248,23 +430,32 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
                   <th>Name</th>
                   <th>Join Date</th>
                   <th>Membership Type</th>
-                  <th>Monthly Validity</th>
-                  <th>Membership Validity</th>
+                  <th className={styles.membershipPlanCol}>Membership Plan</th>
+                  <th>Expiration Date</th>
                 </tr>
               </thead>
               <tbody>
-                {members.slice(0, 7).map((m) => (
-                  <tr key={m.member_id}>
-                    <td>{m.member_id}</td>
-                    <td>{m.full_name}</td>
-                    <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
-                    <td>{m.membership_type}</td>
-                    <td>{m.monthly_validity}</td>
-                    <td>{m.membership_validity}</td>
-                  </tr>
-                ))}
-                {!loading && members.length === 0 && (
-                  <tr><td colSpan={6} className={styles.noResults}>No members found.</td></tr>
+                {expiringSoonMembers.slice(0, 7).map((m) => {
+                  const membershipPlan = getMembershipPlanParts(m.membership_validity, m.monthly_validity);
+                  const expiryDate = getMembershipExpiryDate(m);
+                  return (
+                    <tr key={m.member_id}>
+                      <td>{m.member_id}</td>
+                      <td>{m.full_name}</td>
+                      <td>{formatMMDDYYYY(m.join_date)}</td>
+                      <td>{m.membership_type}</td>
+                      <td className={styles.membershipPlanCol}>
+                        <span className={styles.membershipPlanTerm}>{membershipPlan.term}</span>
+                        {membershipPlan.frequency ? (
+                          <span className={styles.membershipPlanFrequency}> ({membershipPlan.frequency})</span>
+                        ) : null}
+                      </td>
+                      <td>{formatMMDDYYYY(expiryDate)}</td>
+                    </tr>
+                  );
+                })}
+                {!loading && expiringSoonMembers.length === 0 && (
+                  <tr><td colSpan={6} className={styles.noResults}>No members expiring soon.</td></tr>
                 )}
               </tbody>
             </table>
@@ -280,18 +471,29 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
           <div className={styles.chartsRow}>
             <div className={styles.chartCard}>
               <div className={styles.chartHeader}>
-                <h2 className={styles.chartTitle}>Gym Activity</h2>
-                <select className={styles.yearSelect} value={year}
-                  onChange={(e) => setYear(Number(e.target.value))}>
-                  {[2023, 2024, 2025 ,2026].map((y) => <option key={y} value={y}>{y}</option>)}
+                <h2 className={styles.chartTitle}>Today's Check-ins Activity</h2>
+                <select
+                  className={styles.yearSelect}
+                  value={activityRange}
+                  onChange={(e) => setActivityRange(e.target.value)}
+                  aria-label="Select activity range"
+                >
+                  <option value="today">Today</option>
+                  <option value="month">Month</option>
+                  <option value="year">Year</option>
                 </select>
               </div>
-              <BarChart data={gymActivity} />
+              <div className={styles.chartBody}>
+                <BarChart data={gymActivity} labels={activityLabels} />
+              </div>
             </div>
             
             <div className={styles.chartCard}>
-              <h2 className={styles.chartTitle}>Population</h2>
-              <div style={{ width: "100%", height: "350px" }}>
+              <div className={styles.chartHeader}>
+                <h2 className={styles.chartTitle}>Population</h2>
+                <div className={styles.chartHeaderSpacer} />
+              </div>
+              <div className={styles.chartBody} style={{ width: "100%", height: "350px" }}>
                 <DonutChart data={populationData} />
               </div>
               <PopulationLegend data={populationData} />
@@ -302,10 +504,10 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
 
       {/* Modals */}
       {showAll && (
-        <ViewAllModal members={members} onClose={() => setShowAll(false)} />
+        <ViewAllModal members={expiringSoonMembers} onClose={() => setShowAll(false)} />
       )}
       {showExport && (
-        <ExportModal onClose={() => setShowExport(false)} />
+        <ExportModal members={members} onClose={() => setShowExport(false)} />
       )}
     </>
   );

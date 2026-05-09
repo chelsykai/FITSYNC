@@ -5,13 +5,87 @@ import PaymentReceiptModal from "./PaymentReceiptModal";
 export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }) {
   const [receipt, setReceipt] = useState(null);
   const [search, setSearch] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   const filtered = payments.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.id.includes(search) ||
+    p.memberId.toString().includes(search) ||
     p.type.toLowerCase().includes(search.toLowerCase()) ||
     p.status.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleExportToSheets = async () => {
+    try {
+      setExporting(true);
+
+      const excelLib = await import("exceljs");
+      const Workbook = excelLib.Workbook || excelLib.default?.Workbook;
+
+      if (!Workbook) {
+        throw new Error("Excel library failed to load");
+      }
+
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet("Payment Records");
+
+      // Set column headers
+      worksheet.columns = [
+        { header: "Member ID", key: "id", width: 15 },
+        { header: "Name", key: "name", width: 25 },
+        { header: "Payment Date", key: "date", width: 15 },
+        { header: "Membership Type", key: "type", width: 18 },
+        { header: "Total", key: "total", width: 12 },
+        { header: "MOD", key: "mod", width: 12 },
+        { header: "Promo Code", key: "promoCode", width: 15 },
+        { header: "Status", key: "status", width: 12 },
+      ];
+
+      // Add all payment records (not just filtered)
+      payments.forEach((payment) => {
+        worksheet.addRow({
+          id: payment.memberId,
+          name: payment.name,
+          date: payment.date,
+          type: payment.type,
+          total: payment.total,
+          mod: payment.mod || "CASH",
+          promoCode: payment.promoCode || "—",
+          status: payment.status,
+        });
+      });
+
+      // Style the header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF7EBA56" },
+      };
+      worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+
+      // Generate buffer and download
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const downloadUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = `payment_records_${new Date().getTime()}.xlsx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(downloadUrl);
+
+      alert(`Successfully exported ${payments.length} payment record(s)!`);
+    } catch (err) {
+      console.error("Error exporting to sheets:", err);
+      alert("Failed to export payment records. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <>
@@ -53,9 +127,9 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.id}</td>
+              {filtered.map((p, index) => (
+                <tr key={`${p.memberId}-${p.date}-${index}`}>
+                  <td>{p.memberId}</td>
                   <td>
                     <span className={styles.paymentNameLink} onClick={() => setReceipt(p)}>
                       {p.name}
@@ -74,8 +148,6 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
                   <td>
                     <div className={styles.receiptActions}>
                       <button className={styles.receiptLinkBtn} onClick={() => setReceipt(p)}>view</button>
-                      <span className={styles.receiptDivider}>|</span>
-                      <button className={styles.receiptLinkBtn} onClick={() => setReceipt(p)}>receipt</button>
                     </div>
                   </td>
                 </tr>
@@ -89,8 +161,13 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
           {/* Footer */}
           <div className={styles.paymentModalFooter}>
             <div className={styles.paymentModalFooterLeft}>
-              <button className={styles.exportSheetsBtn}>Export to Sheets</button>
-              <button className={styles.printBtn}>Print</button>
+              <button 
+                className={styles.exportSheetsBtn} 
+                onClick={handleExportToSheets}
+                disabled={exporting}
+              >
+                {exporting ? "Exporting..." : "Export to Sheets"}
+              </button>
             </div>
             <button className={styles.addRecordBtn} onClick={onAddPayment}>
               Add / Record Payment

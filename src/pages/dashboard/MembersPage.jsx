@@ -1,42 +1,72 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./MembersPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import MembersExportModal from "../../components/modals/members/MembersExportModal";
 import AddMemberModal from "../../components/modals/members/AddMemberModal";
+import AttendanceModal from "../../components/modals/members/AttendanceModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
 import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
-import { fetchMembers } from "../../services/memberService";
+import { supabase } from "../../lib/supabaseClient";
+import { fetchMembers, deleteMember } from "../../services/memberService";
+import { generateMemberIDPDF } from "../../utils/generateMemberIDPDF";
+import { formatMMDDYYYY } from "../../utils/dateFormat";
 
 export default function MembersPage({ onNavigate, activePage = "members" }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+  const [quickFilter, setQuickFilter] = useState("all");
   const [showExport, setShowExport] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showAttendance, setShowAttendance] = useState(false);
   const [showProfile, setShowProfile] = useState(null);
   const [showViewAll, setShowViewAll] = useState(false);
   const [registeredMember, setRegisteredMember] = useState(null);
 
-  // Fetch members on component mount
+  const loadMembers = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+      const data = await fetchMembers();
+      setMembers(data);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching members:", err);
+      setError("Failed to load members");
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
+  // Fetch members on component mount and subscribe to realtime member changes
   useEffect(() => {
-    const loadMembers = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchMembers();
-        setMembers(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching members:", err);
-        setError("Failed to load members");
-      } finally {
-        setLoading(false);
-      }
+    loadMembers(true);
+
+    const memberChannel = supabase
+      .channel("members-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadMembers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(memberChannel);
+    };
+  }, [loadMembers]);
+
+  // Refresh members when user returns to the page
+  useEffect(() => {
+    const handleFocus = () => {
+      loadMembers();
     };
 
-    loadMembers();
-  }, []);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadMembers]);
 
   // Calculate stats from members data
   const calculateActiveToday = () => {
@@ -54,25 +84,15 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
       }
 
       // Check if member's membership is still active (hasn't expired)
-      if (m.join_date && m.membership_validity) {
+      if (m.join_date && m.monthly_validity) {
         const joinDate = new Date(m.join_date);
         let expiryDate = new Date(joinDate);
 
-        // Parse membership_validity (e.g., "1 Year", "2 Months", "3 Days")
-        const validityMatch = m.membership_validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+        // Parse monthly_validity (e.g., "2 Months")
+        const validityMatch = m.monthly_validity.match(/(\d+)\s*(month)s?/i);
         if (validityMatch) {
           const amount = parseInt(validityMatch[1]);
-          const unit = validityMatch[2].toLowerCase();
-
-          if (unit === 'year') {
-            expiryDate.setFullYear(expiryDate.getFullYear() + amount);
-          } else if (unit === 'month') {
-            expiryDate.setMonth(expiryDate.getMonth() + amount);
-          } else if (unit === 'week') {
-            expiryDate.setDate(expiryDate.getDate() + amount * 7);
-          } else if (unit === 'day') {
-            expiryDate.setDate(expiryDate.getDate() + amount);
-          }
+          expiryDate.setMonth(expiryDate.getMonth() + amount);
 
           // Member is active if expiry date is in the future
           if (expiryDate > today) {
@@ -90,26 +110,16 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     const thirtyDaysAhead = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     return members.filter((m) => {
-      if (!m.join_date || !m.membership_validity) return false;
+      if (!m.join_date || !m.monthly_validity) return false;
 
       const joinDate = new Date(m.join_date);
       let expiryDate = new Date(joinDate);
 
-      // Parse membership_validity (e.g., "1 Year", "2 Months", "3 Days")
-      const validityMatch = m.membership_validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+      // Parse monthly_validity (e.g., "2 Months")
+      const validityMatch = m.monthly_validity.match(/(\d+)\s*(month)s?/i);
       if (validityMatch) {
         const amount = parseInt(validityMatch[1]);
-        const unit = validityMatch[2].toLowerCase();
-
-        if (unit === 'year') {
-          expiryDate.setFullYear(expiryDate.getFullYear() + amount);
-        } else if (unit === 'month') {
-          expiryDate.setMonth(expiryDate.getMonth() + amount);
-        } else if (unit === 'week') {
-          expiryDate.setDate(expiryDate.getDate() + amount * 7);
-        } else if (unit === 'day') {
-          expiryDate.setDate(expiryDate.getDate() + amount);
-        }
+        expiryDate.setMonth(expiryDate.getMonth() + amount);
       }
 
       return expiryDate >= today && expiryDate <= thirtyDaysAhead;
@@ -133,11 +143,64 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     newThisMonth: calculateNewThisMonth(),
   };
 
-  const filtered = members.filter((m) =>
-    m.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    m.member_id?.includes(search) ||
-    m.membership_type?.toLowerCase().includes(search.toLowerCase())
-  );
+  const getMemberExpiryDate = (member) => {
+    if (member?.expiration_date) {
+      const storedExpiry = new Date(member.expiration_date);
+      if (!Number.isNaN(storedExpiry.getTime())) return storedExpiry;
+    }
+
+    if (!member?.join_date) return null;
+    const joinDate = new Date(member.join_date);
+    if (Number.isNaN(joinDate.getTime())) return null;
+
+    const monthlyRaw = String(member.monthly_validity || "").trim();
+    if (monthlyRaw) {
+      const monthlyMatch = monthlyRaw.match(/(\d+)/);
+      if (!monthlyMatch) return null;
+      const months = Number.parseInt(monthlyMatch[1], 10);
+      if (!Number.isInteger(months) || months <= 0) return null;
+      const expiryDate = new Date(joinDate);
+      expiryDate.setMonth(expiryDate.getMonth() + months);
+      return expiryDate;
+    }
+
+    return null;
+  };
+
+  const filtered = members.filter((m) => {
+    const matchesSearch =
+      m.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+      m.member_id?.includes(search) ||
+      m.membership_type?.toLowerCase().includes(search.toLowerCase());
+
+    if (!matchesSearch) return false;
+    if (quickFilter === "all") return true;
+    if (quickFilter === "students") return (m.membership_type || "").toLowerCase() === "student";
+    if (quickFilter === "seniors") return (m.membership_type || "").toLowerCase() === "senior";
+    if (quickFilter === "expired") {
+      const expiryDate = getMemberExpiryDate(m);
+      if (!expiryDate) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return expiryDate < today;
+    }
+    return true;
+  });
+
+  const formatValidity = (value, unit) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "N/A";
+    if (/[a-z]/i.test(raw)) return raw;
+    return `${raw} ${unit}${raw === "1" ? "" : "s"}`;
+  };
+
+  const getMembershipPlanParts = (membershipValidity, monthlyValidity) => {
+    const yearlyRaw = String(membershipValidity || "").trim();
+
+    return {
+      term: formatValidity(yearlyRaw, "Year"),
+    };
+  };
 
   const handleMemberAdded = (newMember) => {
     // Add new member to the list
@@ -151,11 +214,33 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     setMembers(prevMembers => prevMembers.filter(m => m.member_id !== deletedMember.member_id));
   };
 
+  const handleProfileDelete = async (member) => {
+    try {
+      const memberId = member?.member_id || member?.memberId || member?.id;
+      if (!memberId) throw new Error('Missing member ID');
+      await deleteMember(memberId);
+      setMembers(prevMembers => prevMembers.filter(m => m.member_id !== memberId));
+    } catch (err) {
+      console.error('Failed to delete member from profile modal:', err);
+      throw err;
+    }
+  };
+
+  const handleMembershipUpdated = (updatedMember) => {
+    if (!updatedMember?.member_id) return;
+    setMembers((prev) => prev.map((m) => (
+      m.member_id === updatedMember.member_id ? { ...m, ...updatedMember } : m
+    )));
+    setShowProfile((prev) => (prev && prev.member_id === updatedMember.member_id
+      ? { ...prev, ...updatedMember }
+      : prev));
+  };
+
   return (
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Members</h1>
 
           {/* Stat Cards */}
@@ -204,6 +289,32 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
               <button className={styles.clearBtn} onClick={() => setSearch("")}>✕</button>
             )}
           </div>
+          <div className={styles.quickFilterRow}>
+            <button
+              className={`${styles.quickFilterBtn} ${quickFilter === "all" ? styles.quickFilterBtnActive : ""}`}
+              onClick={() => setQuickFilter("all")}
+            >
+              All Members
+            </button>
+            <button
+              className={`${styles.quickFilterBtn} ${quickFilter === "students" ? styles.quickFilterBtnActive : ""}`}
+              onClick={() => setQuickFilter("students")}
+            >
+              Students
+            </button>
+            <button
+              className={`${styles.quickFilterBtn} ${quickFilter === "seniors" ? styles.quickFilterBtnActive : ""}`}
+              onClick={() => setQuickFilter("seniors")}
+            >
+              Seniors
+            </button>
+            <button
+              className={`${styles.quickFilterBtn} ${quickFilter === "expired" ? styles.quickFilterBtnActive : ""}`}
+              onClick={() => setQuickFilter("expired")}
+            >
+              Expired Members
+            </button>
+          </div>
 
           {/* Error message */}
           {error && (
@@ -235,35 +346,40 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
             <div className={styles.actionRow}>
               <button className={styles.exportBtn} onClick={() => setShowExport(true)}>📤 Export</button>
               <button className={styles.addBtn} onClick={() => setShowAddMember(true)}>👤 Add Member</button>
+              <button className={styles.addBtn} onClick={() => setShowAttendance(true)}>🗓️ Attendance</button>
             </div>
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th>Member ID</th>
                   <th>Name</th>
-                  <th>Join Date</th>
+                  <th>Birthday</th>
                   <th>Membership Type</th>
-                  <th>Monthly Validity</th>
-                  <th>Membership Validity</th>
-                  <th>Last Visit</th>
+                    <th className={styles.membershipPlanCol}>Membership Plan</th>
+                    <th>Monthly Expiry</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((m) => (
-                  <tr key={m.member_id} className={styles.clickableRow}
-                    onClick={() => setShowProfile(m)}>
-                    <td>{m.member_id}</td>
-                    <td>{m.full_name}</td>
-                    <td>{m.join_date ? new Date(m.join_date).toLocaleDateString() : "N/A"}</td>
-                    <td>{m.membership_type}</td>
-                    <td>{m.monthly_validity}</td>
-                    <td>{m.membership_validity}</td>
-                    <td>{m.last_visit || "N/A"}</td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr><td colSpan={7} className={styles.noResults}>No members found.</td></tr>
-                )}
+                {filtered.map((m) => {
+                  const membershipPlan = getMembershipPlanParts(m.membership_validity, m.monthly_validity);
+                    const expiryDate = getMemberExpiryDate(m);
+                  return (
+                    <tr key={m.member_id} className={styles.clickableRow}
+                      onClick={() => setShowProfile(m)}>
+                      <td>{m.member_id}</td>
+                      <td>{m.full_name}</td>
+                      <td>{m.birthday ? formatMMDDYYYY(m.birthday) : "N/A"}</td>
+                      <td>{m.membership_type}</td>
+                      <td className={styles.membershipPlanCol}>
+                        <span className={styles.membershipPlanTerm}>{membershipPlan.term}</span>
+                      </td>
+                        <td>{expiryDate ? formatMMDDYYYY(expiryDate) : "N/A"}</td>
+                    </tr>
+                  );
+                })}
+                  {filtered.length === 0 && (
+                    <tr><td colSpan={6} className={styles.noResults}>No members found.</td></tr>
+                  )}
               </tbody>
             </table>
             <div className={styles.viewAllWrapper}>
@@ -286,15 +402,33 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
           onSuccess={handleMemberAdded}
         />
       )}
+      {showAttendance && (
+        <AttendanceModal
+          members={members}
+          onClose={() => setShowAttendance(false)}
+        />
+      )}
       {registeredMember && (
         <MemberRegisteredModal
           member={registeredMember}
           onClose={() => setRegisteredMember(null)}
-          onPrint={(m) => console.log("print", m)}
+          onPrint={async (m) => {
+            try {
+              await generateMemberIDPDF(m);
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.error("Failed to generate PDF:", err);
+            }
+          }}
         />
       )}
       {showProfile && (
-        <MemberProfileModal member={showProfile} onClose={() => setShowProfile(null)} />
+        <MemberProfileModal
+          member={showProfile}
+          onClose={() => setShowProfile(null)}
+          onDelete={handleProfileDelete}
+          onMembershipUpdated={handleMembershipUpdated}
+        />
       )}
       {showViewAll && (
         <ViewAllMembersModal
