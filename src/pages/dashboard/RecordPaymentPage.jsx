@@ -317,11 +317,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
               <input className={styles.formInput} placeholder="Description"
                 value={form.description} onChange={set("description")} />
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>&nbsp;</label>
-              <input className={styles.formInput} placeholder="Promo Code"
-                value={form.promoCode} onChange={set("promoCode")} />
-            </div>
           </div>
 
           {/* Row 3 */}
