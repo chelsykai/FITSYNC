@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
+import ReAuthModal from "../../ReAuthModal";
 
 const dataTypes = ["Select All", "Monthly", "Yearly", "Quarterly"];
 
@@ -88,6 +89,7 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
   const [selected, setSelected] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showReAuth, setShowReAuth] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const todayDate = new Date().toISOString().split('T')[0];
@@ -260,11 +262,19 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
           ))}
         </div>
 
-        <button className={styles.submitBtn} onClick={handleExport} disabled={loading}>
+        <button className={styles.submitBtn} onClick={() => setShowReAuth(true)} disabled={loading}>
           {loading ? "Exporting..." : "Export"}
         </button>
         <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Close</button>
       </div>
+
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel="export payment records"
+          onSuccess={() => { setShowReAuth(false); handleExport(); }}
+          onClose={() => setShowReAuth(false)}
+        />
+      )}
     </div>
   );
 }

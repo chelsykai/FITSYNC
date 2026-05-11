@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
 import { formatMMDDYYYY } from "../../../utils/dateFormat";
+import ReAuthModal from "../../ReAuthModal";
 
 const exportMemberOptions = (members) => ["Select All", ...members.map((m) => m.full_name)];
 
@@ -130,6 +131,7 @@ export default function MembersExportModal({ members, onClose }) {
   const [exportSearch, setExportSearch] = useState("");
   const [exportSelected, setExportSelected] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showReAuth, setShowReAuth] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -312,11 +314,19 @@ export default function MembersExportModal({ members, onClose }) {
           ))}
         </div>
          {/* CSV note */}
-        <button className={styles.submitBtn} onClick={handleExport} disabled={loading}>
+        <button className={styles.submitBtn} onClick={() => setShowReAuth(true)} disabled={loading}>
           {loading ? "Exporting..." : "Export"}
         </button>
         <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Close</button>
       </div>
+
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel="export member data"
+          onSuccess={() => { setShowReAuth(false); handleExport(); }}
+          onClose={() => setShowReAuth(false)}
+        />
+      )}
     </div>
   );
 }

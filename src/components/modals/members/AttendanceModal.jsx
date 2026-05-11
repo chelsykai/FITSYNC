@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import styles from "../Modal.module.css";
 import { fetchAttendanceForMembersMonth } from "../../../services/attendanceService";
+import ReAuthModal from "../../ReAuthModal";
 
 const MONTH_NAMES = [
   "January","February","March","April","May","June",
@@ -21,6 +22,7 @@ export default function AttendanceModal({ members = [], onClose }) {
   const [search,        setSearch]        = useState("");
   const [statusFilter,  setStatusFilter]  = useState("All");
   const [dropYear,      setDropYear]      = useState(false);
+  const [showReAuth,    setShowReAuth]    = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -204,7 +206,7 @@ export default function AttendanceModal({ members = [], onClose }) {
                     </td>
                     <td className={styles.attendanceStatusTd}>
                       <span className={styles.statusSummaryBadge}>
-                        [{stat.presentCt ?? 0} P | {stat.absentCt ?? 0} A]
+                        [{stat.pct ?? 0}% P | {stat.absentCt ?? 0} A]
                       </span>
                     </td>
                     {days.map((d) => {
@@ -257,10 +259,22 @@ export default function AttendanceModal({ members = [], onClose }) {
 
         {/* ── Footer ── */}
         <div className={styles.attendanceFooter}>
-          <button className={styles.exportAttendanceBtn}>Export attendance</button>
+          <button className={styles.exportAttendanceBtn} onClick={() => setShowReAuth(true)}>Export attendance</button>
         </div>
 
       </div>
+
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel="export attendance data"
+          onSuccess={() => {
+            setShowReAuth(false);
+            // TODO: wire your CSV export logic here
+            alert("Attendance export triggered.");
+          }}
+          onClose={() => setShowReAuth(false)}
+        />
+      )}
     </div>
   );
 }
