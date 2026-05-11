@@ -314,11 +314,13 @@ export default function MembersExportModal({ members, onClose }) {
           ))}
         </div>
          {/* CSV note */}
-        <button className={styles.submitBtn} onClick={() => setShowReAuth(true)} disabled={loading}>
-          {loading ? "Exporting..." : "Export"}
-        </button>
-        <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Close</button>
-      </div>
+        <button className={styles.submitBtn} onClick={() => {
+          if (exportSelected.length === 0) {
+          alert("Please select at least one member to export.");
+          return;
+          } setShowReAuth(true); }} disabled={loading} > {loading ? "Exporting..." : "Export"}
+          </button>
+        </div>
 
       {showReAuth && (
         <ReAuthModal

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
 import ReAuthModal from "../../ReAuthModal";
-
 const dataTypes = ["Select All", "Monthly", "Yearly", "Quarterly"];
 
 const toCsv = (rows) => {
@@ -261,13 +260,14 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
             </label>
           ))}
         </div>
-
-        <button className={styles.submitBtn} onClick={() => setShowReAuth(true)} disabled={loading}>
-          {loading ? "Exporting..." : "Export"}
+        <button className={styles.submitBtn} onClick={() => {
+         if (selected.length === 0) {
+          alert("Please select at least one payment type to export.");
+          return;
+         } setShowReAuth(true);}} disabled={loading}>
+        {loading ? "Exporting..." : "Export"}
         </button>
-        <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Close</button>
       </div>
-
       {showReAuth && (
         <ReAuthModal
           actionLabel="export payment records"
