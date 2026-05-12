@@ -661,6 +661,22 @@
 
 .editBtn:hover { background-color: #6aa947; }
 
+.changePassBtn {
+  background-color: #f0a500;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 6px;
+  transition: background 0.2s;
+}
+.changePassBtn:hover { background-color: #d4900a; }
+
+
 .deleteBtn {
   background-color: #e05555;
   color: white;

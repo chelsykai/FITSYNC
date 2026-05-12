@@ -321,7 +321,6 @@ export default function MembersExportModal({ members, onClose }) {
           } setShowReAuth(true); }} disabled={loading} > {loading ? "Exporting..." : "Export"}
           </button>
         </div>
-
       {showReAuth && (
         <ReAuthModal
           actionLabel="export member data"

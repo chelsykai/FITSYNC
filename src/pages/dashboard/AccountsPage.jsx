@@ -6,6 +6,7 @@ import EditAccountModal from "../../components/modals/accounts/EditAccountModal"
 import DeleteAccountModal from "../../components/modals/accounts/DeleteAccountModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchAccounts, addAccount, updateAccount, deleteAccount } from "../../services/accountService";
+import { addWorkingDays } from "../../utils/dateUtils";
 import { fetchAuditLogs, getAuditUsers } from "../../services/auditService";
 
 const ITEMS_PER_PAGE = 5;
@@ -23,7 +24,8 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const [page, setPage]               = useState(1);
   const [showCreate, setShowCreate]   = useState(false);
   const [editTarget, setEditTarget]   = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget]   = useState(null);
+  const [changePassTarget, setChangePassTarget] = useState(null);
 
   const loadAccounts = useCallback(async (showLoader = false) => {
     try {
@@ -148,6 +150,21 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
     }
   };
 
+  const handleRequestPasswordChange = async (account) => {
+    try {
+      const deadline = addWorkingDays(new Date(), 5);
+      const deadlineStr = deadline.toISOString().split("T")[0];
+      await updateAccount(account.id, {
+        password_change_required: true,
+        password_change_deadline: deadlineStr,
+      });
+      alert(`Password change requested for ${account.name}.\nDeadline: ${deadlineStr} (5 working days)`);
+      loadAccounts();
+    } catch (err) {
+      setError("Failed to request password change: " + err.message);
+    }
+  };
+
   return (
     <>
       <div className={styles.layout}>
@@ -218,6 +235,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                             <td>
                               <button className={styles.editBtn} onClick={() => setEditTarget(a)}>Edit</button>
                               <button className={styles.deleteBtn} onClick={() => setDeleteTarget(a)}>Delete</button>
+                              <button className={styles.changePassBtn} onClick={() => handleRequestPasswordChange(a)}>Req. Change</button>
                             </td>
                           </tr>
                         ))}
