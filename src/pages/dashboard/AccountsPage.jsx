@@ -7,6 +7,7 @@ import DeleteAccountModal from "../../components/modals/accounts/DeleteAccountMo
 import { supabase } from "../../lib/supabaseClient";
 import { fetchAccounts, addAccount, updateAccount, deleteAccount } from "../../services/accountService";
 import { addWorkingDays } from "../../utils/dateUtils";
+import ReAuthModal from "../../components/ReAuthModal";
 import { fetchAuditLogs, getAuditUsers } from "../../services/auditService";
 
 const ITEMS_PER_PAGE = 5;
@@ -26,6 +27,8 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const [editTarget, setEditTarget]   = useState(null);
   const [deleteTarget, setDeleteTarget]   = useState(null);
   const [changePassTarget, setChangePassTarget] = useState(null);
+  const [showReAuth,    setShowReAuth]    = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   const loadAccounts = useCallback(async (showLoader = false) => {
     try {
@@ -150,6 +153,22 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
     }
   };
 
+  const requestAction = (type, target = null) => {
+    setPendingAction({ type, target });
+    setShowReAuth(true);
+  };
+
+  const handleReAuthSuccess = () => {
+    setShowReAuth(false);
+    const { type, target } = pendingAction || {};
+    if (type === "create")    setShowCreate(true);
+    if (type === "edit")      setEditTarget(target);
+    if (type === "delete")    setDeleteTarget(target);
+    if (type === "audit")     setShowAudit(true);
+    if (type === "reqChange") handleRequestPasswordChange(target);
+    setPendingAction(null);
+  };
+
   const handleRequestPasswordChange = async (account) => {
     try {
       const deadline = addWorkingDays(new Date(), 5);
@@ -176,7 +195,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
             <>
               <div className={styles.pageHeader}>
                 <h1 className={styles.title}>Accounts</h1>
-                <button className={styles.auditBtn} onClick={() => setShowAudit(true)}>
+                <button className={styles.auditBtn} onClick={() => requestAction("audit")}>
                   Audit Trail &nbsp;›
                 </button>
               </div>
@@ -200,7 +219,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                 )}
 
                 <div className={styles.actionRow}>
-                  <button className={styles.addBtn} onClick={() => setShowCreate(true)}>
+                  <button className={styles.addBtn} onClick={() => requestAction("create")}>
                     ＋ Add Account
                   </button>
                 </div>
@@ -233,9 +252,9 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                             <td>{a.role}</td>
                             <td>{a.email}</td>
                             <td>
-                              <button className={styles.editBtn} onClick={() => setEditTarget(a)}>Edit</button>
-                              <button className={styles.deleteBtn} onClick={() => setDeleteTarget(a)}>Delete</button>
-                              <button className={styles.changePassBtn} onClick={() => handleRequestPasswordChange(a)}>Req. Change</button>
+                              <button className={styles.editBtn} onClick={() => requestAction("edit", a)}>Edit</button>
+                              <button className={styles.deleteBtn} onClick={() => requestAction("delete", a)}>Delete</button>
+                              <button className={styles.changePassBtn} onClick={() => requestAction("reqChange", a)}>Req. Change</button>
                             </td>
                           </tr>
                         ))}
@@ -376,6 +395,19 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
           account={deleteTarget}
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleDelete}
+        />
+      )}
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel={
+            pendingAction?.type === "create"    ? "add a new account" :
+            pendingAction?.type === "edit"      ? "edit this account" :
+            pendingAction?.type === "delete"    ? "delete this account" :
+            pendingAction?.type === "reqChange" ? "request a password change" :
+            "view the audit trail"
+          }
+          onSuccess={handleReAuthSuccess}
+          onClose={() => { setShowReAuth(false); setPendingAction(null); }}
         />
       )}
     </>

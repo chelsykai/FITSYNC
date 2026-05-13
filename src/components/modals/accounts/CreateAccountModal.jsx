@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
+import ReAuthModal from "../../ReAuthModal";
 
 const generateStaffId = (accounts) => {
   const existingIds = new Set((accounts || []).map((a) => String(a.id || "").trim()));
@@ -31,6 +32,7 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showReAuth,  setShowReAuth]  = useState(false);
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
@@ -182,11 +184,35 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
         {/* Footer */}
         <div className={styles.createAccountFooter}>
           <button className={styles.accountCancelBtn} onClick={onClose} disabled={submitting}>Cancel</button>
-          <button className={styles.accountCreateBtn} onClick={handleCreate} disabled={submitting}>
+          <button
+            className={styles.accountCreateBtn}
+            onClick={() => {
+              const firstName = form.firstName.trim();
+              const lastName  = form.lastName.trim();
+              const username  = form.username.trim();
+              if (!firstName || !lastName || !form.role || !username || !form.password) {
+                setSubmitError("Please complete all required fields."); return;
+              }
+              if (form.password !== form.confirmPassword) {
+                setSubmitError("Passwords do not match."); return;
+              }
+              setSubmitError("");
+              setShowReAuth(true);
+            }}
+            disabled={submitting}
+          >
             {submitting ? "Creating..." : "Create"}
           </button>
         </div>
       </div>
+
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel="create this account"
+          onSuccess={() => { setShowReAuth(false); handleCreate(); }}
+          onClose={() => setShowReAuth(false)}
+        />
+      )}
     </div>
   );
 }
