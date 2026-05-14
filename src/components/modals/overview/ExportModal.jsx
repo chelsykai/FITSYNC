@@ -88,6 +88,9 @@ export default function ExportModal({ members = [], onClose }) {
   const [exportTypes, setExportTypes] = useState([]);
   const [exportSearch, setExportSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const todayDate = new Date().toISOString().split('T')[0];
 
   // Helper function to check if a date is today
   const isToday = (date) => {
@@ -248,7 +251,7 @@ export default function ExportModal({ members = [], onClose }) {
         <h2 className={styles.modalTitle}>Export Data</h2>
 
         <p className={styles.exportSectionLabel}>File Format</p>
-        {["CSV", "Excel", "PDF"].map((fmt) => (
+        {["CSV"].map((fmt) => (
           <label key={fmt} className={styles.exportRadioRow}>
             <input
               type="radio"
@@ -262,6 +265,32 @@ export default function ExportModal({ members = [], onClose }) {
             {fmt}
           </label>
         ))}
+
+        {/* Date Range */}
+        <p className={styles.sectionLabel}>Date Range</p>
+        <div className={styles.dateRow}>
+          <div className={styles.dateGroup}>
+            <label className={styles.dateLabel}>From</label>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              max={todayDate}
+            />
+          </div>
+          <span className={styles.dateSep}>—</span>
+          <div className={styles.dateGroup}>
+            <label className={styles.dateLabel}>To</label>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              max={todayDate}
+            />
+          </div>
+        </div>
 
         <p className={styles.exportSectionLabel}>Select Type of Data to Export</p>
         <div className={styles.exportSearch}>
