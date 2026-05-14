@@ -1,0 +1,257 @@
+/* ── Overlay ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+/* ── Card ── */
+.card {
+  background: white;
+  border-radius: 20px;
+  padding: 36px 32px 28px;
+  width: min(420px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  font-family: "Montserrat", sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Green top accent bar */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #7eba56, #5fa83a);
+  border-radius: 20px 20px 0 0;
+}
+
+/* ── Lock icon ── */
+.iconWrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #eaf4e0, #d4ecc0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 16px rgba(126, 186, 86, 0.2);
+}
+
+.lockIcon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+/* ── Title ── */
+.title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 24px 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.subtitle strong {
+  color: #333;
+  font-weight: 700;
+}
+
+/* ── Input group ── */
+.inputGroup {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 6px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #fafafa;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inputWrap:focus-within {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.15);
+  background: white;
+}
+
+.inputError {
+  border-color: #e05555 !important;
+  box-shadow: 0 0 0 3px rgba(224, 85, 85, 0.12) !important;
+}
+
+.inputIcon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  color: #222;
+  letter-spacing: 0.5px;
+}
+
+.input::placeholder {
+  color: #bbb;
+  font-weight: 500;
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Error message ── */
+.errorMsg {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e05555;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Buttons ── */
+.btnRow {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.cancelBtn {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: white;
+  color: #555;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  border-color: #ccc;
+  background: #f5f5f5;
+  color: #333;
+}
+
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmBtn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7eba56, #5fa83a);
+  color: white;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  box-shadow: 0 4px 14px rgba(126, 186, 86, 0.35);
+}
+
+.confirmBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6aa947, #4e9630);
+  box-shadow: 0 6px 18px rgba(126, 186, 86, 0.45);
+  transform: translateY(-1px);
+}
+
+.confirmBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.confirmLoading {
+  pointer-events: none;
+}
+
+/* ── Spinner ── */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Shake animation ── */
+.shake {
+  animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes shake {
+  10%, 90%  { transform: translateX(-3px); }
+  20%, 80%  { transform: translateX(5px);  }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60%  { transform: translateX(5px);  }
+}
+
+/* ── Audit warning note ── */
+.warningNote {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+  margin: 0;
+  font-weight: 600;
+}

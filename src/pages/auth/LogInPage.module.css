@@ -151,3 +151,29 @@
 .signup a:hover {
   color: #6ba347;
 }
+/* PASSWORD EYE TOGGLE */
+.passwordWrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.passwordWrapper .inputField {
+  margin-bottom: 0;
+  padding-right: 44px;
+  width: 100%;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  color: #888;
+  line-height: 1;
+}
