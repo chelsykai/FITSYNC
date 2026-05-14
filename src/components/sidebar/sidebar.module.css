@@ -1,8 +1,8 @@
-.mainContent {
-  margin-left: 160px;
-  padding: 20px;
-}
 
+.mainContent {
+  margin-left: 160px; 
+  padding: 20px;     
+}
 .sidebarWrapper {
   padding: 0px;
   background-color: #f0f0f0;
@@ -16,15 +16,15 @@
   top: 0;
   left: 0;
   bottom: 0;
-  height: 96vh;
+  height: 96vh; 
   background-color: #7eba56;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 0 0 0;
-  border-top-right-radius: 20px;
+  padding: 40px 0 0 0; 
+  border-top-right-radius: 20px; 
   border-bottom-right-radius: 20px;
-  box-shadow: 4px 0px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 4px 0px 15px rgba(0,0,0,0.1);
   z-index: 100;
 }
 
@@ -51,15 +51,15 @@
 
 /* NAV */
 .nav {
-  display: flex;
+display: flex;
   flex-direction: column;
   width: 100%;
   flex: 1;
-  align-items: flex-end;
+  align-items: flex-end; 
 }
 
 .navItem {
-  background: none;
+background: none;
   border: none;
   color: white;
   font-family: "Montserrat", sans-serif;
@@ -67,9 +67,9 @@
   font-weight: 700;
   text-transform: uppercase;
   cursor: pointer;
-  width: 100%;
+  width: 100%; 
   text-align: left;
-  padding: 12px 0 12px 35px;
+  padding: 12px 0 12px 35px; 
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -81,18 +81,21 @@
 }
 
 .navItem.active {
-  background-color: white;
+background-color: white;
+background-color: white;
   color: #7eba56;
-  width: 90%;
-  border-radius: 25px 0 0 25px;
-  padding-left: 25px;
+  width: 90%; 
+  border-top-left-radius: 25px;
+  border-bottom-left-radius: 25px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-left: calc(35px - 10%);
 }
 
-/* LOGOUT */
 .logout {
   width: 100%;
   background: none;
-  border: none;
+  border: none; 
   color: white;
   font-family: "Montserrat", sans-serif;
   font-size: 12px;
@@ -104,86 +107,10 @@
   gap: 10px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  margin-bottom: 40px;
-  padding: 15px 0;
+  margin-bottom: 40px; 
+  padding: 15px 0;   
 }
 
 .logout:hover {
   background-color: rgba(255, 255, 255, 0.18);
-}
-
-/* LOGOUT CONFIRMATION MODAL */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.modal {
-  background: #E5F0DE;
-  border-radius: 12px;
-  padding: 32px 40px;
-  width: 300px;
-  text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-.modalTitle {
-  font-size: 16px;
-  font-weight: 700;
-  color: #222;
-  margin: 0 0 12px 0;
-}
-
-.modalText {
-  font-size: 13px;
-  color: #555;
-  margin: 0 0 24px 0;
-}
-
-.modalButtons {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.yesBtn {
-  background-color: #7eba56;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 28px;
-  font-size: 13px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.yesBtn:hover {
-  background-color: #6aa947;
-}
-
-.cancelBtn {
-  background-color: #7eba56;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 28px;
-  font-size: 13px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.cancelBtn:hover {
-  background-color: #6aa947;
 }
