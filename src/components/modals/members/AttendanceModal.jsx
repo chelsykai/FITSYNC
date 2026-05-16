@@ -154,12 +154,12 @@ export default function AttendanceModal({ members = [], onClose }) {
               className={styles.attendanceSearchInput}
             />
           </div>
-          <select className={styles.filterSelect} value={statusFilter}
+          {/* <select className={styles.filterSelect} value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}>
             {["All","Present","Absent"].map((s) => (
               <option key={s} value={s}>Status: {s}</option>
             ))}
-          </select>
+          </select> */}
         </div>
 
         {error && (
