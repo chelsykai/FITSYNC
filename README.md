@@ -1,7 +1,7 @@
 FITSYNC: QR-Based Membership Tracking (Capstone)
 
 A modern fitness gym management system with QR-based attendance tracking, membership management, and payment processing.
-
+/
 ## Tech Stack
 
 ### Frontend
