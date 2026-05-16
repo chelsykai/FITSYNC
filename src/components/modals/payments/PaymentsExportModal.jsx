@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
-
+import ReAuthModal from "../../ReAuthModal";
 const dataTypes = ["Select All", "Monthly", "Yearly", "Quarterly"];
 
 const toCsv = (rows) => {
@@ -88,6 +88,10 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
   const [selected, setSelected] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showReAuth, setShowReAuth] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const todayDate = new Date().toISOString().split('T')[0];
   
   // Calculate active memberships count from members data
   const activeMembershipsCount = members.length;
@@ -183,7 +187,7 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
         <h2 className={styles.modalTitle}>Export Data</h2>
 
         <p className={styles.sectionLabel}>File Format</p>
-        {["CSV", "Excel", "PDF"].map((fmt) => (
+        {["CSV"].map((fmt) => (
           <label key={fmt} className={styles.radioRow}>
             <input
               type="radio"
@@ -197,6 +201,32 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
             {fmt}
           </label>
         ))}
+
+        {/* Date Range */}
+        <p className={styles.sectionLabel}>Date Range</p>
+        <div className={styles.dateRow}>
+          <div className={styles.dateGroup}>
+            <label className={styles.dateLabel}>From</label>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              max={todayDate}
+            />
+          </div>
+          <span className={styles.dateSep}>—</span>
+          <div className={styles.dateGroup}>
+            <label className={styles.dateLabel}>To</label>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              max={todayDate}
+            />
+          </div>
+        </div>
 
         <p className={styles.sectionLabel}>Select Type of Data to Export</p>
         <div className={styles.modalSearch}>
@@ -230,12 +260,21 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
             </label>
           ))}
         </div>
-
-        <button className={styles.submitBtn} onClick={handleExport} disabled={loading}>
-          {loading ? "Exporting..." : "Export"}
+        <button className={styles.submitBtn} onClick={() => {
+         if (selected.length === 0) {
+          alert("Please select at least one payment type to export.");
+          return;
+         } setShowReAuth(true);}} disabled={loading}>
+        {loading ? "Exporting..." : "Export"}
         </button>
-        <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Close</button>
       </div>
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel="export payment records"
+          onSuccess={() => { setShowReAuth(false); handleExport(); }}
+          onClose={() => setShowReAuth(false)}
+        />
+      )}
     </div>
   );
 }
