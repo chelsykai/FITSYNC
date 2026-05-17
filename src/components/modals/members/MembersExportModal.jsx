@@ -1,5 +1,8 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
+import { formatMMDDYYYY } from "../../../utils/dateFormat";
+import ReAuthModal from "../../ReAuthModal";
+import { isDateWithinRange } from "../../../utils/exportDateRange";
 
 const exportMemberOptions = (members) => ["Select All", ...members.map((m) => m.full_name)];
 
@@ -26,7 +29,7 @@ const toCsv = (rows) => {
 
 const toPdf = async (rows, title) => {
   const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF();
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   
   if (rows.length === 0) {
     doc.text("No data to export", 10, 10);
@@ -38,46 +41,87 @@ const toPdf = async (rows, title) => {
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 10;
   const tableStartY = 20;
+  const tableWidth = pageWidth - 2 * margin;
+  const cellPaddingX = 1.8;
+  const cellPaddingY = 1.6;
+  const lineHeight = 3.6;
+
+  const widthWeights = {
+    "Member ID": 1.2,
+    "Name": 1.5,
+    "Email": 2.1,
+    "Phone": 1.2,
+    "Address": 2.4,
+    "Birthday": 1.2,
+    "Membership Type": 1.5,
+    "Join Date": 1.2,
+    "Monthly Validity": 1.4,
+    "Membership Validity": 1.6,
+    "Last Visit": 1.2,
+  };
+
+  const totalWeight = headers.reduce((sum, header) => sum + (widthWeights[header] || 1.3), 0);
+  const columnWidths = headers.map((header) =>
+    (tableWidth * (widthWeights[header] || 1.3)) / totalWeight
+  );
   
   // Add title
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.text(title, margin, 10);
-  
-  // Calculate column widths
-  const tableWidth = pageWidth - 2 * margin;
-  const columnWidth = tableWidth / headers.length;
-  
-  // Add headers
-  doc.setFontSize(10);
-  doc.setFont(undefined, "bold");
-  let currentY = tableStartY;
-  
-  headers.forEach((header, idx) => {
-    doc.text(header, margin + idx * columnWidth + 2, currentY);
-  });
-  
-  // Add separator line
-  currentY += 7;
-  doc.setDrawColor(0);
-  doc.line(margin, currentY - 2, pageWidth - margin, currentY - 2);
-  
-  // Add data rows
-  doc.setFont(undefined, "normal");
-  doc.setFontSize(9);
-  
-  rows.forEach((row, rowIdx) => {
-    if (currentY > pageHeight - 15) {
-      doc.addPage();
-      currentY = margin;
-    }
-    
-    headers.forEach((header, colIdx) => {
-      const value = String(row[header] ?? "");
-      const wrappedText = doc.splitTextToSize(value, columnWidth - 4);
-      doc.text(wrappedText, margin + colIdx * columnWidth + 2, currentY);
+
+  const drawHeader = (startY) => {
+    doc.setFont(undefined, "bold");
+    doc.setFontSize(8);
+
+    const headerLines = headers.map((header, colIdx) =>
+      doc.splitTextToSize(header, columnWidths[colIdx] - 2 * cellPaddingX)
+    );
+    const maxHeaderLines = Math.max(...headerLines.map((lines) => lines.length));
+    const headerHeight = maxHeaderLines * lineHeight + 2 * cellPaddingY;
+
+    let x = margin;
+    headers.forEach((_, colIdx) => {
+      doc.setDrawColor(170, 170, 170);
+      doc.setFillColor(238, 247, 233);
+      doc.rect(x, startY, columnWidths[colIdx], headerHeight, "FD");
+      doc.text(headerLines[colIdx], x + cellPaddingX, startY + cellPaddingY + lineHeight - 0.2);
+      x += columnWidths[colIdx];
     });
-    
-    currentY += 7;
+
+    return startY + headerHeight;
+  };
+
+  let currentY = drawHeader(tableStartY);
+
+  doc.setFont(undefined, "normal");
+  doc.setFontSize(7.5);
+
+  rows.forEach((row) => {
+    const wrappedCells = headers.map((header, colIdx) => {
+      const value = String(row[header] ?? "").trim();
+      const safeValue = value || "-";
+      return doc.splitTextToSize(safeValue, columnWidths[colIdx] - 2 * cellPaddingX);
+    });
+
+    const maxLines = Math.max(...wrappedCells.map((lines) => lines.length));
+    const rowHeight = maxLines * lineHeight + 2 * cellPaddingY;
+
+    if (currentY + rowHeight > pageHeight - margin) {
+      doc.addPage();
+      currentY = drawHeader(margin);
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(7.5);
+    }
+
+    let x = margin;
+    wrappedCells.forEach((cellLines, colIdx) => {
+      doc.setDrawColor(210, 210, 210);
+      doc.rect(x, currentY, columnWidths[colIdx], rowHeight);
+      doc.text(cellLines, x + cellPaddingX, currentY + cellPaddingY + lineHeight - 0.2);
+      x += columnWidths[colIdx];
+    });
+
+    currentY += rowHeight;
   });
   
   return doc;
@@ -88,11 +132,19 @@ export default function MembersExportModal({ members, onClose }) {
   const [exportSearch, setExportSearch] = useState("");
   const [exportSelected, setExportSelected] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showReAuth, setShowReAuth] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const allOptions = exportMemberOptions(members);
+  const todayDate = new Date().toISOString().split('T')[0];
 
   const filteredExport = allOptions.filter((o) =>
     o.toLowerCase().includes(exportSearch.toLowerCase())
+  );
+
+  const filteredMembers = members.filter((member) =>
+    isDateWithinRange(member.join_date, dateFrom, dateTo)
   );
 
   const toggleExport = (name) => {
@@ -110,7 +162,7 @@ export default function MembersExportModal({ members, onClose }) {
       setLoading(true);
 
       // Filter members based on selection
-      const selectedMembers = members.filter((m) => exportSelected.includes(m.full_name));
+      const selectedMembers = filteredMembers.filter((m) => exportSelected.includes(m.full_name));
 
       if (selectedMembers.length === 0) {
         alert("Please select at least one member to export.");
@@ -125,9 +177,9 @@ export default function MembersExportModal({ members, onClose }) {
         "Email": m.email || "",
         "Phone": m.phone || "",
         "Address": m.address || "",
-        "Birthday": m.birthday ? new Date(m.birthday).toLocaleDateString() : "",
+        "Birthday": m.birthday ? formatMMDDYYYY(m.birthday) : "",
         "Membership Type": m.membership_type || "",
-        "Join Date": m.join_date ? new Date(m.join_date).toLocaleDateString() : "",
+        "Join Date": m.join_date ? formatMMDDYYYY(m.join_date) : "",
         "Monthly Validity": m.monthly_validity || "",
         "Membership Validity": m.membership_validity || "",
         "Last Visit": m.last_visit || "",
@@ -176,7 +228,7 @@ export default function MembersExportModal({ members, onClose }) {
         doc.save(fileName + ".pdf");
       }
 
-      alert(`Successfully exported ${selectedMembers.length} member(s)!`);
+      alert(`Successfully exported ${exportData.length} member(s)!`);
       onClose();
     } catch (err) {
       console.error("Error exporting members:", err);
@@ -192,7 +244,7 @@ export default function MembersExportModal({ members, onClose }) {
         <h2 className={styles.modalTitle}>Export Members Data</h2>
 
         <p className={styles.sectionLabel}>File Format</p>
-        {["CSV", "Excel", "PDF"].map((fmt) => (
+        {["CSV"].map((fmt) => (
           <label key={fmt} className={styles.radioRow}>
             <input
               type="radio"
@@ -206,7 +258,34 @@ export default function MembersExportModal({ members, onClose }) {
             {fmt}
           </label>
         ))}
+        
+        {/* Date Range */}
+        <p className={styles.sectionLabel}>Date Range</p>
+        <div className={styles.dateRow}>
+          <div className={styles.dateGroup}>
+            <label className={styles.dateLabel}>From</label>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              max={todayDate}
+            />
+          </div>
+          <span className={styles.dateSep}>—</span>
+          <div className={styles.dateGroup}>
+            <label className={styles.dateLabel}>To</label>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              max={todayDate}
+            />
+          </div>
+        </div>
 
+         {/* Member Selection */}
         <p className={styles.sectionLabel}>Select Members to Export</p>
         <div className={styles.modalSearch}>
           <span>🔍</span>
@@ -239,12 +318,21 @@ export default function MembersExportModal({ members, onClose }) {
             </label>
           ))}
         </div>
-
-        <button className={styles.submitBtn} onClick={handleExport} disabled={loading}>
-          {loading ? "Exporting..." : "Export"}
-        </button>
-        <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Close</button>
-      </div>
+         {/* CSV note */}
+        <button className={styles.submitBtn} onClick={() => {
+          if (exportSelected.length === 0) {
+          alert("Please select at least one member to export.");
+          return;
+          } setShowReAuth(true); }} disabled={loading} > {loading ? "Exporting..." : "Export"}
+          </button>
+        </div>
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel="export member data"
+          onSuccess={() => { setShowReAuth(false); handleExport(); }}
+          onClose={() => setShowReAuth(false)}
+        />
+      )}
     </div>
   );
 }

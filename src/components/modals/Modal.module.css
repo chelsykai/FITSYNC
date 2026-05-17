@@ -66,6 +66,20 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
+.membershipPlanCol {
+  text-align: left;
+}
+
+.membershipPlanTerm {
+  font-weight: 700;
+  color: #2f3d28;
+}
+
+.membershipPlanFrequency {
+  font-weight: 500;
+  color: #6b7564;
+}
+
 .modalTable tr:last-child td {
   border-bottom: none;
 }
@@ -283,6 +297,58 @@
 
 .memberIcon { font-size: 14px; }
 
+/* ── Date range row (Export modals) ── */
+.dateRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.dateGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.dateLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  font-family: "Montserrat", sans-serif;
+}
+
+.dateInput {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  color: #333;
+  outline: none;
+  background: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dateInput:focus { border-color: #7eba56; }
+
+.dateSep {
+  font-size: 16px;
+  color: #888;
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.csvNote {
+  font-size: 11px;
+  color: #888;
+  font-family: "Montserrat", sans-serif;
+  text-align: center;
+  margin: 0 0 12px 0;
+}
+
 /* ── Add member form ── */
 .formGrid {
   display: grid;
@@ -350,71 +416,235 @@
 
 /* ── Profile modal ── */
 .profileModal {
-  background: #E5F0DE;
-  border-radius: 16px;
-  padding: 28px 32px;
-  width: 400px;
+  background: linear-gradient(180deg, #eef7e9 0%, #e1efd8 100%);
+  border: 1px solid #c7dfb8;
+  border-radius: 20px;
+  padding: 22px;
+  width: min(92vw, 560px);
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 48px rgba(34, 51, 34, 0.24);
   text-align: center;
+}
+
+.profileHero {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid #d8e8cc;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
 }
 
 .profileAvatar {
   font-size: 56px;
-  background: grey;
+  background: #c8cfbe;
+  border: 3px solid #ffffff;
   border-radius: 100%;
-  width: 90px;
-  height: 90px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 12px auto;
+  margin: 0;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.14);
+}
+
+.profileAvatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 100%;
+  object-fit: cover;
+}
+
+.profileTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.profileQrBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #d8e8cc;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.profileQrCanvas {
+  width: 150px;
+  height: 150px;
+}
+
+.profileQrLabel {
+  font-size: 10px;
+  color: #4f7a37;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  margin: 8px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.profileIdentity {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .profileName {
-  font-size: 16px;
-  font-weight: 700;
-  color: #222;
-  margin: 0 0 6px 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #23331f;
+  margin: 0;
   font-family: "Montserrat", sans-serif;
 }
 
+.profileIdText {
+  margin: 5px 0 8px 0;
+  font-size: 12px;
+  color: #56734a;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+}
+
 .profileBadge {
-  background: #E5F0DE;
-  color: #7eba56;
-  border: 1px solid #7eba56;
+  background: #f2f9ec;
+  color: #4f7a37;
+  border: 1px solid #6ea94a;
   border-radius: 20px;
-  padding: 2px 14px;
-  font-size: 11px;
+  padding: 3px 14px;
+  font-size: 10px;
   font-weight: 700;
   display: inline-block;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   font-family: "Montserrat", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .profileGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   text-align: left;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+
+.profileItem {
+  background: #ffffff;
+  border: 1px solid #d8e8cc;
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 56px;
+}
+
+@media (max-width: 560px) {
+  .profileModal {
+    padding: 16px;
+  }
+
+  .profileTopRow {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .profileAvatar {
+    width: 88px;
+    height: 88px;
+  }
+
+  .profileQrCanvas {
+    width: 130px;
+    height: 130px;
+  }
+
+  .profileGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .profileLabel {
   font-size: 10px;
   font-weight: 700;
-  color: #888;
-  margin: 0 0 2px 0;
+  color: #6a8360;
+  margin: 0 0 4px 0;
   font-family: "Montserrat", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
 }
 
 .profileValue {
-  font-size: 12px;
-  font-weight: 600;
-  color: #333;
+  font-size: 13px;
+  font-weight: 700;
+  color: #24371f;
   margin: 0;
   font-family: "Montserrat", sans-serif;
+  word-break: break-word;
+}
+
+.profileActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.profileEmailBtn,
+.profileCloseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 11px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.profileDeleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 11px;
+  text-decoration: none;
+  cursor: pointer;
+  background: #e05555;
+  color: #ffffff;
+}
+
+.profileDeleteBtn:hover {
+  background: #c43e3e;
+}
+
+.profileEmailBtn {
+  background: #7eba56;
+  color: #ffffff;
+}
+
+.profileEmailBtn:hover {
+  background: #6aa947;
+}
+
+.profileCloseBtn {
+  background: #2f3f2c;
+  color: #ffffff;
+}
+
+.profileCloseBtn:hover {
+  background: #41553d;
 }
 
 /* ── Table action buttons ── */
@@ -437,6 +667,22 @@
 }
 
 .editBtn:hover { background-color: #6aa947; }
+
+.changePassBtn {
+  background-color: #f0a500;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 6px;
+  transition: background 0.2s;
+}
+.changePassBtn:hover { background-color: #d4900a; }
+
 
 .deleteBtn {
   background-color: #e05555;
@@ -589,6 +835,140 @@
   flex: 1;
 }
 
+.labeledField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modernLabel {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  color: #5d6f53;
+  letter-spacing: 0.28px;
+  text-transform: uppercase;
+  font-family: "Montserrat", sans-serif;
+}
+
+.membershipSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid #d7e4cd;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(244, 249, 239, 0.9) 100%);
+}
+
+.membershipSettingsTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #44563a;
+  font-family: "Montserrat", sans-serif;
+}
+
+.membershipSettingsHint {
+  margin: -2px 0 2px 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6f7869;
+  font-family: "Montserrat", sans-serif;
+}
+
+.autoDateHint {
+  margin: -2px 0 2px 0;
+  font-size: 11px;
+  color: #6a7761;
+  font-family: "Montserrat", sans-serif;
+}
+
+.unitInputWrap {
+  flex: 1;
+  position: relative;
+}
+
+.unitInputWrap .formInput {
+  width: 100%;
+  padding-right: 72px;
+}
+
+.unitInputWrap .formInput:disabled {
+  background: #eef1ed;
+  color: #8b9484;
+  border-color: #d2d8cc;
+  cursor: not-allowed;
+}
+
+.unitSuffix {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  font-family: "Montserrat", sans-serif;
+  pointer-events: none;
+}
+
+.inputContextLabel {
+  margin: 6px 0 0 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6f7869;
+  font-family: "Montserrat", sans-serif;
+  line-height: 1.2;
+}
+
+.planResetBtn {
+  border: 1px solid #c4d1bb;
+  background: #f5f8f2;
+  color: #3f5234;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.planResetBtn:hover {
+  background: #ebf1e5;
+}
+
+/* Modal footer layout for action buttons */
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
+.modalFooter .submitBtn,
+.modalFooter .profileDeleteBtn {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.modalFooter .closeBtn { width: 120px; }
+
+@media (max-width: 560px) {
+  .modalFooter { flex-direction: column; gap: 8px; }
+  .modalFooter .profileDeleteBtn, .modalFooter .closeBtn { width: 100%; }
+  .modalFooter .submitBtn { width: 100%; flex: none; }
+}
+
+.planResetBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 /* Gender */
 .genderRow {
   display: flex;
@@ -645,6 +1025,623 @@
 }
 
 .addMemberSubmitBtn:hover { background: #6aa947; }
+
+/* ── Attendance Modal upgrades ── */
+.attendanceFilters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.attendanceSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f4ef;
+  border: 1px solid #d8e4d6;
+  border-radius: 10px;
+  padding: 8px 14px;
+  min-width: 220px;
+}
+
+.attendanceSearchInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  color: #333;
+  flex: 1;
+}
+
+.filterSelect {
+  border: 1px solid #d8e4d6;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  color: #333;
+  background: #f0f4ef;
+  outline: none;
+  cursor: pointer;
+}
+
+.attendanceLegend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  font-family: "Montserrat", sans-serif;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendSep {
+  color: #ccc;
+}
+
+.yearDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  overflow: hidden;
+  z-index: 10;
+  min-width: 100px;
+}
+
+.yearOption {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  text-align: left;
+}
+
+.yearOption:hover {
+  background: #f0f4ef;
+  color: #7eba56;
+}
+
+/* Name + status cells */
+.statusSummaryCell {
+  text-align: center;
+  padding: 10px 12px;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #555;
+  min-width: 120px;
+}
+
+.statusSummaryBadge {
+  background: #f0f4ef;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #444;
+  font-family: "Montserrat", sans-serif;
+}
+
+.dayCell {
+  text-align: center;
+  padding: 8px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 38px;
+  width: 38px;
+}
+
+.dayTd {
+  text-align: center;
+  padding: 8px 4px;
+}
+
+/* Dot icons (checkmark / X) */
+.attDot {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.dotIcon {
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+}
+
+/* Avatar circle */
+.memberAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #b8d498;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2a4a18;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Totals row */
+.totalsRow td {
+  background: #f5f9f3;
+  border-top: 2px solid #c8dac6;
+  font-weight: 700;
+}
+
+.totalCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  line-height: 1.2;
+}
+
+/* Footer */
+.attendanceFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.exportAttendanceBtn {
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exportAttendanceBtn:hover {
+  background: #555;
+}/* ── Attendance Modal — full rewrite ── */
+.attendanceModal {
+  background: white;
+  border-radius: 20px;
+  padding: 0;
+  width: min(96vw, 1280px);
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  font-family: "Montserrat", sans-serif;
+  position: relative;
+  z-index: 10000;
+}
+
+/* Top bar */
+.attendanceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  background: white;
+  border-bottom: 1px solid #e8ebe8;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.attendanceControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.monthLabel {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.navButton {
+  background: #f0f4ef;
+  border: 1px solid #d0dace;
+  color: #333;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: "Montserrat", sans-serif;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.navButton:hover {
+  background: #dff0d4;
+  border-color: #7eba56;
+}
+
+/* Legend */
+.attendanceLegend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.legendSep { color: #ccc; }
+
+/* Filter bar */
+.attendanceFilters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.attendanceSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #c9c9c9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 8px 14px;
+  min-width: 200px;
+}
+
+.attendanceSearchInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  color: #333;
+  flex: 1;
+  min-width: 0;
+}
+
+.filterSelect {
+  border: 1px solid #d0dace;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  background: #f0f4ef;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Year dropdown */
+.yearDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+  overflow: hidden;
+  z-index: 20;
+  min-width: 120px;
+}
+
+.yearOption {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  text-align: left;
+}
+
+.yearOption:hover { background: #f0f4ef; color: #7eba56; }
+
+/* Table scroll container */
+.attendanceBody {
+  overflow: auto;
+  flex: 1 1 auto;
+}
+
+/* Table */
+.attendanceTable {
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+  table-layout: fixed;
+  min-width: max-content;
+}
+
+/* Sticky header */
+.attendanceTable thead th {
+  position: sticky;
+  top: 0;
+  background: #7eba56;
+  color: white;
+  z-index: 3;
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.15);
+}
+
+/* Sticky name col header */
+.attendanceTable thead th.attendanceAvatarTh {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  width: 44px;
+  min-width: 44px;
+  background: #7eba56;
+}
+
+.attendanceTable thead th.attendanceNameTh {
+  position: sticky;
+  left: 44px;
+  z-index: 5;
+  min-width: 160px;
+  text-align: left;
+  padding-left: 14px;
+  background: #7eba56;
+}
+
+.attendanceTable thead th.attendanceStatusTh {
+  position: sticky;
+  left: 204px;
+  z-index: 5;
+  min-width: 130px;
+  background: #7eba56;
+}
+
+/* Body rows */
+.attendanceTable tbody tr {
+  border-bottom: 1px solid #eef1ee;
+}
+
+.attendanceTable tbody tr:hover {
+  background: #f5f9f3;
+}
+
+/* Sticky body cells */
+.attendanceAvatarTd {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+  text-align: center;
+  padding: 8px 4px;
+  width: 44px;
+  min-width: 44px;
+}
+
+.attendanceTable tbody tr:hover .attendanceAvatarTd,
+.attendanceTable tbody tr:hover .attendanceNameTd,
+.attendanceTable tbody tr:hover .attendanceStatusTd {
+  background: #f5f9f3;
+}
+
+.attendanceNameTd {
+  position: sticky;
+  left: 44px;
+  background: white;
+  z-index: 2;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  min-width: 160px;
+  white-space: nowrap;
+}
+
+.attendanceStatusTd {
+  position: sticky;
+  left: 204px;
+  background: white;
+  z-index: 2;
+  text-align: center;
+  padding: 8px 10px;
+  min-width: 130px;
+  border-right: 2px solid #e0e8dc;
+}
+
+/* Day cells */
+.dayCell {
+  text-align: center;
+  padding: 8px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  width: 38px;
+  min-width: 38px;
+}
+
+.dayTd {
+  text-align: center;
+  padding: 8px 4px;
+  width: 38px;
+  min-width: 38px;
+}
+
+/* Dots */
+.attDot {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.attDot:hover { transform: scale(1.15); }
+
+.dotIcon {
+  font-size: 13px;
+  font-weight: 800;
+  color: white;
+  line-height: 1;
+}
+
+.present {
+  background: linear-gradient(135deg, #7eba56, #5fa83a);
+  box-shadow: 0 2px 6px rgba(126,186,86,0.3);
+}
+
+.absent {
+  background: linear-gradient(135deg, #f08080, #e05050);
+  box-shadow: 0 2px 6px rgba(220,80,80,0.25);
+}
+
+.future {
+  background: #d4d8d2;
+  cursor: default;
+}
+
+/* Tooltip */
+.attDot[data-time]::after {
+  content: attr(data-time);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: white;
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 100;
+}
+
+.attDot[data-time]:hover::after { opacity: 1; }
+
+/* Status summary badge */
+.statusSummaryBadge {
+  background: #eef3ec;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #444;
+  white-space: nowrap;
+}
+
+/* Avatar */
+.memberAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #b8d498;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2a4a18;
+}
+
+/* Totals row */
+.totalsRow td {
+  background: #f0f6ec !important;
+  border-top: 2px solid #c8dac6;
+  font-weight: 700;
+  position: sticky;
+  bottom: 0;
+}
+
+.totalsRow .attendanceAvatarTd,
+.totalsRow .attendanceNameTd,
+.totalsRow .attendanceStatusTd {
+  background: #e8f2e0 !important;
+  z-index: 3;
+}
+
+.totalCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.3;
+}
+
+/* Footer */
+.attendanceFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  background: white;
+  border-top: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.exportAttendanceBtn {
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exportAttendanceBtn:hover { background: #555; }
 
 /* ── Member Registered Modal ── */
 .registeredModal {
@@ -717,8 +1714,8 @@
 }
 
 .qrCanvas {
-  width: 160px;
-  height: 160px;
+  width: 180px;
+  height: 180px;
 }
 
 .qrLabel {
@@ -726,7 +1723,7 @@
   color: #7eba56;
   font-weight: 700;
   font-family: "Montserrat", sans-serif;
-  margin: 8px 0 0 0;
+  margin: 12px 0 0 0;
 }
 
 .registeredBtns {

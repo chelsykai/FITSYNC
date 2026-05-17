@@ -9,7 +9,7 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
 
   const filtered = payments.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.id.includes(search) ||
+    p.memberId.toString().includes(search) ||
     p.type.toLowerCase().includes(search.toLowerCase()) ||
     p.status.toLowerCase().includes(search.toLowerCase())
   );
@@ -43,7 +43,7 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
       // Add all payment records (not just filtered)
       payments.forEach((payment) => {
         worksheet.addRow({
-          id: payment.id,
+          id: payment.memberId,
           name: payment.name,
           date: payment.date,
           type: payment.type,
@@ -127,9 +127,9 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.id}</td>
+              {filtered.map((p, index) => (
+                <tr key={`${p.memberId}-${p.date}-${index}`}>
+                  <td>{p.memberId}</td>
                   <td>
                     <span className={styles.paymentNameLink} onClick={() => setReceipt(p)}>
                       {p.name}

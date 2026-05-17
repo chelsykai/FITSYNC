@@ -1,28 +1,47 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "../Modal.module.css";
 
-export default function EditAccountModal({ account, onClose, onSave }) {
-  const nameParts = account.name.split(" ");
-  const [form, setForm] = useState({
-    firstName: nameParts[0] || "",
-    lastName:  nameParts[nameParts.length - 1] || "",
-    initial:   nameParts.length > 2 ? nameParts[1].replace(".", "") : "",
-    role:      account.role,
-    email:     account.email,
-    password:  "",
+const getInitialForm = (account) => {
+  const firstName = account?.firstName || account?.name?.split(" ")[0] || "";
+  const lastName =
+    account?.lastName ||
+    account?.name?.split(" ").slice(1).join(" ") ||
+    "";
+
+  return {
+    firstName,
+    lastName,
+    initial: "",
+    role: account?.role || "Staff",
+    username: account?.username || account?.email || "",
+    password: "",
     confirmPassword: "",
-  });
+  };
+};
+
+export default function EditAccountModal({ account, onClose, onSave }) {
+  const [form, setForm] = useState(getInitialForm(account));
   const [showPass, setShowPass]       = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    setForm(getInitialForm(account));
+  }, [account]);
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   const handleSave = () => {
     onSave?.({
       ...account,
+      firstName: form.firstName,
+      lastName: form.lastName,
       name: `${form.firstName} ${form.initial ? form.initial + ". " : ""}${form.lastName}`.trim(),
+      firstName: form.firstName,
+      lastName: form.lastName,
       role: form.role,
       email: form.email,
+      username: form.username,
+      password: form.password || undefined,
     });
     onClose();
   };

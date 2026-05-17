@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import styles from "./NotificationsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ViewLogModal from "../../components/modals/notifications/ViewLogModal";
+import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { sendMemberNotificationEmail } from "../../services/notificationEmailService";
+import { formatMMDDYYYY } from "../../utils/dateFormat";
 
 const FILTER_STATUS = ["Pending", "Sent", "Failed"];
 
@@ -11,7 +13,7 @@ const filterMap = {
   ALL:        () => true,
   EXPIRING:   (n) => n.type === "MEMBERSHIP EXPIRING",
   EXPIRED:    (n) => n.type === "MEMBERSHIP EXPIRED",
-  OVERDUE:    (n) => n.type === "OVERDUE BALANCE",
+  OVERDUE:    (n) => n.type === "MEMBERSHIP OVERDUE",
 };
 
 const dotColor = {
@@ -22,26 +24,32 @@ const dotColor = {
   red:    "#e05555",
 };
 
-const phpFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
+function parseMembershipValidity(yearlyValidity, monthlyValidity) {
+  const yearly = String(yearlyValidity || "").trim();
+  const monthly = String(monthlyValidity || "").trim();
 
-function parseMembershipValidity(validity) {
-  if (!validity) return null;
+  if (yearly) {
+    const yearlyMatch = yearly.match(/(\d+)/);
+    if (!yearlyMatch) return null;
+    return {
+      amount: Number(yearlyMatch[1]),
+      unit: "year",
+    };
+  }
 
-  const validityMatch = validity.match(/(\d+)\s*(year|month|day|week)s?/i);
+  if (!monthly) return null;
+  const validityMatch = monthly.match(/(\d+)\s*(month|day|week)?s?/i);
   if (!validityMatch) return null;
 
   return {
     amount: Number(validityMatch[1]),
-    unit: validityMatch[2].toLowerCase(),
+    unit: (validityMatch[2] || "month").toLowerCase(),
   };
 }
 
-function calculateExpiryDate(joinDate, validity) {
-  const parsed = parseMembershipValidity(validity);
+function calculateExpiryDate(joinDate, yearlyValidity, monthlyValidity) {
+  if (yearlyValidity instanceof Date) return yearlyValidity;
+  const parsed = parseMembershipValidity(yearlyValidity, monthlyValidity);
   if (!joinDate || !parsed) return null;
 
   const expiryDate = new Date(joinDate);
@@ -60,25 +68,6 @@ function calculateExpiryDate(joinDate, validity) {
   return expiryDate;
 }
 
-function getOverdueAmount(member) {
-  const candidates = [
-    member?.overdue_balance,
-    member?.unpaid_balance,
-    member?.balance_due,
-    member?.amount_due,
-    member?.pending_balance,
-  ];
-
-  for (const value of candidates) {
-    const amount = Number(value);
-    if (Number.isFinite(amount) && amount > 0) {
-      return amount;
-    }
-  }
-
-  return 0;
-}
-
 function buildNotificationsFromMembers(members) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -86,55 +75,56 @@ function buildNotificationsFromMembers(members) {
   return members
     .flatMap((member) => {
       const results = [];
-      const expiryDate = calculateExpiryDate(member.join_date, member.membership_validity);
+      const storedExpiry = member.expiration_date ? new Date(member.expiration_date) : null;
+      const expiryDate = storedExpiry && !Number.isNaN(storedExpiry.getTime())
+        ? storedExpiry
+        : calculateExpiryDate(member.join_date, member.membership_validity, member.monthly_validity);
 
       if (expiryDate) {
         const oneDay = 1000 * 60 * 60 * 24;
         const dayDiff = Math.ceil((expiryDate.getTime() - today.getTime()) / oneDay);
-        const expiryText = expiryDate.toLocaleDateString();
-
+        const expiryText = formatMMDDYYYY(expiryDate);
         if (dayDiff < 0) {
+          results.push({
+            key: `${member.member_id}-overdue`,
+            member,
+            id: member.member_id,
+            type: "MEMBERSHIP OVERDUE",
+            name: member.full_name,
+            detail: `OVERDUE BY ${Math.abs(dayDiff)} DAY${Math.abs(dayDiff) === 1 ? "" : "S"}\nEXPIRY DATE: ${expiryText}`,
+            color: "orange",
+            action: "NOTIFY",
+            daysRemaining: dayDiff,
+            expiryText,
+          });
+        } else if (dayDiff === 0) {
           results.push({
             key: `${member.member_id}-expired`,
             member,
             id: member.member_id,
             type: "MEMBERSHIP EXPIRED",
             name: member.full_name,
-            detail: `EXPIRED: ${expiryText}`,
+            detail: `EXPIRES TODAY\nEXPIRY DATE: ${expiryText}`,
             color: "red",
             action: "NOTIFY",
             daysRemaining: dayDiff,
             expiryText,
           });
-        } else if (dayDiff <= 30) {
+        } else if (dayDiff > 0 && dayDiff <= 14) {
+          // Match Overview: treat any expiry within the next 14 days as expiring soon
           results.push({
             key: `${member.member_id}-expiring`,
             member,
             id: member.member_id,
             type: "MEMBERSHIP EXPIRING",
             name: member.full_name,
-            detail: `EXPIRY: ${dayDiff} DAYS REMAINING`,
+            detail: `EXPIRY: ${dayDiff} DAY${dayDiff === 1 ? "" : "S"} REMAINING\nEXPIRY DATE: ${expiryText}`,
             color: "yellow",
             action: "NOTIFY",
             daysRemaining: dayDiff,
             expiryText,
           });
         }
-      }
-
-      const overdueAmount = getOverdueAmount(member);
-      if (overdueAmount > 0) {
-        results.push({
-          key: `${member.member_id}-overdue`,
-          member,
-          id: member.member_id,
-          type: "OVERDUE BALANCE",
-          name: member.full_name,
-          detail: `AMOUNT: ${phpFormatter.format(overdueAmount)}`,
-          color: "orange",
-          action: "NOTIFY",
-          overdueAmountText: phpFormatter.format(overdueAmount),
-        });
       }
 
       return results;
@@ -157,23 +147,52 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   const [error, setError] = useState(null);
   const filtersDDRef   = useRef();
 
+  const loadNotifications = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+      const members = await fetchMembers();
+      setNotifications(buildNotificationsFromMembers(members));
+      setError(null);
+    } catch (err) {
+      console.error("Error loading notifications:", err);
+      setError("Failed to load notifications.");
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        setLoading(true);
-        const members = await fetchMembers();
-        setNotifications(buildNotificationsFromMembers(members));
-        setError(null);
-      } catch (err) {
-        console.error("Error loading notifications:", err);
-        setError("Failed to load notifications.");
-      } finally {
-        setLoading(false);
-      }
+    loadNotifications(true);
+
+    const notificationsChannel = supabase
+      .channel("notifications-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadNotifications();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notificationsChannel);
+    };
+  }, [loadNotifications]);
+
+  // Fallback auto-refresh in case realtime events are delayed or unavailable.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadNotifications();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadNotifications();
     };
 
-    loadNotifications();
-  }, []);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadNotifications]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -246,7 +265,7 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Gym Notifications</h1>
 
           {/* Search */}

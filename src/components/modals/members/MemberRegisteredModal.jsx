@@ -2,48 +2,41 @@ import { useEffect, useRef } from "react";
 import styles from "../Modal.module.css";
 
 export default function MemberRegisteredModal({ member, onClose, onPrint }) {
-  const canvasRef = useRef();
+  const qrContainerRef = useRef();
 
-  // Generate QR code using the free qrcode.js approach via canvas
   useEffect(() => {
-    if (!canvasRef.current || !member?.memberId) return;
+    const memberId = member?.memberId || member?.member_id;
+    if (!qrContainerRef.current || !memberId) return;
 
-    const qrData = `FITSYNC|${member.memberId}|${member.fullName}|${member.membershipType}`;
-    const canvas = canvasRef.current;
+    const qrContainer = qrContainerRef.current;
+    const qrData = memberId;
     const size = 180;
-    canvas.width = size;
-    canvas.height = size;
 
-    // Load QR library dynamically from CDN
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
-    script.onload = () => {
-      canvas.innerHTML = "";
-      const container = document.createElement("div");
-      document.body.appendChild(container);
+    // Load QR library from CDN
+    if (!window.QRCode) {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+      script.async = true;
+      script.onload = () => generateQR();
+      document.head.appendChild(script);
+    } else {
+      generateQR();
+    }
+
+    function generateQR() {
+      qrContainer.innerHTML = "";
       // eslint-disable-next-line no-undef
-      new QRCode(container, {
+      new QRCode(qrContainer, {
         text: qrData,
         width: size,
         height: size,
         colorDark: "#000000",
         colorLight: "#ffffff",
       });
-      setTimeout(() => {
-        const img = container.querySelector("img");
-        if (img) {
-          const ctx = canvas.getContext("2d");
-          const image = new Image();
-          image.onload = () => ctx.drawImage(image, 0, 0, size, size);
-          image.src = img.src;
-        }
-        document.body.removeChild(container);
-      }, 100);
-    };
-    document.head.appendChild(script);
+    }
 
     return () => {
-      if (document.head.contains(script)) document.head.removeChild(script);
+      qrContainer.innerHTML = "";
     };
   }, [member]);
 
@@ -70,7 +63,7 @@ export default function MemberRegisteredModal({ member, onClose, onPrint }) {
 
         {/* QR Code */}
         <div className={styles.qrWrapper}>
-          <canvas ref={canvasRef} className={styles.qrCanvas} />
+          <div ref={qrContainerRef} className={styles.qrCanvas} />
           <p className={styles.qrLabel}>Scan QR to Verify</p>
         </div>
 

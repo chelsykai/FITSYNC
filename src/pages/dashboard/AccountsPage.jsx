@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styles from "./AccountsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import CreateAccountModal from "../../components/modals/accounts/CreateAccountModal";
 import EditAccountModal from "../../components/modals/accounts/EditAccountModal";
 import DeleteAccountModal from "../../components/modals/accounts/DeleteAccountModal";
+import { supabase } from "../../lib/supabaseClient";
 import { fetchAccounts, addAccount, updateAccount, deleteAccount } from "../../services/accountService";
+import { addWorkingDays } from "../../utils/dateUtils";
+import ReAuthModal from "../../components/ReAuthModal";
 import { fetchAuditLogs, getAuditUsers } from "../../services/auditService";
 
 const ITEMS_PER_PAGE = 5;
@@ -16,66 +19,128 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const [auditLogs, setAuditLogs]     = useState([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError]   = useState(null);
-  const [admins, setAdmins]           = useState(["all admins"]);
+  const [admins, setAdmins]           = useState(["all users"]);
   const [showAudit, setShowAudit]     = useState(false);
-  const [filterAdmin, setFilterAdmin] = useState("all admins");
+  const [filterAdmin, setFilterAdmin] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [page, setPage]               = useState(1);
   const [showCreate, setShowCreate]   = useState(false);
   const [editTarget, setEditTarget]   = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget]   = useState(null);
+  const [changePassTarget, setChangePassTarget] = useState(null);
+  const [showReAuth,    setShowReAuth]    = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
-  // Fetch accounts from Supabase on component mount
+  const loadAccounts = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoading(true);
+      setError(null);
+      const data = await fetchAccounts();
+      setAccounts(data);
+    } catch (err) {
+      setError(err.message || "Failed to load accounts");
+      console.error("Error loading accounts:", err);
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const loadAccounts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchAccounts();
-        setAccounts(data);
-      } catch (err) {
-        setError(err.message || "Failed to load accounts");
-        console.error("Error loading accounts:", err);
-      } finally {
-        setLoading(false);
-      }
+    loadAccounts(true);
+
+    const accountsChannel = supabase
+      .channel("accounts-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_user" }, () => {
+        loadAccounts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(accountsChannel);
+    };
+  }, [loadAccounts]);
+
+  // Fallback auto-refresh in case realtime delete events are not emitted by DB settings.
+  useEffect(() => {
+    const refreshInterval = window.setInterval(() => {
+      loadAccounts();
+    }, 5000);
+
+    const handleFocus = () => {
+      loadAccounts();
     };
 
-    loadAccounts();
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadAccounts]);
+
+  const loadAuditData = useCallback(async () => {
+    try {
+      setAuditLoading(true);
+      setAuditError(null);
+      const [logs, users] = await Promise.all([
+        fetchAuditLogs(),
+        getAuditUsers()
+      ]);
+      setAuditLogs(logs);
+      setAdmins(users);
+      // Reset filter to empty when loading new data
+      setFilterAdmin("");
+    } catch (err) {
+      setAuditError(err.message || "Failed to load audit logs");
+      console.error("Error loading audit data:", err);
+    } finally {
+      setAuditLoading(false);
+    }
   }, []);
 
   // Fetch audit logs from Supabase when audit tab is opened
   useEffect(() => {
     if (!showAudit) return; // Only fetch when audit tab is shown
 
-    const loadAuditData = async () => {
-      try {
-        setAuditLoading(true);
-        setAuditError(null);
-        const [logs, users] = await Promise.all([
-          fetchAuditLogs(),
-          getAuditUsers()
-        ]);
-        setAuditLogs(logs);
-        setAdmins(users);
-        // Reset filter to "all admins" when loading new data
-        setFilterAdmin("all admins");
-      } catch (err) {
-        setAuditError(err.message || "Failed to load audit logs");
-        console.error("Error loading audit data:", err);
-      } finally {
-        setAuditLoading(false);
-      }
-    };
-
     loadAuditData();
-  }, [showAudit]);
+
+    const auditChannel = supabase
+      .channel("audit-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "audit_trail" }, () => {
+        loadAuditData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(auditChannel);
+    };
+  }, [showAudit, loadAuditData]);
 
   const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
   const paginated  = accounts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const filteredLogs = filterAdmin === "all admins"
-    ? auditLogs
-    : auditLogs.filter((l) => l.user === filterAdmin);
+  const filteredLogs = (() => {
+    const val = (filterAdmin || '').trim().toLowerCase();
+    if (!val || val === 'all users' || val === 'all admins') return auditLogs;
+    return auditLogs.filter((l) => (l.user || '').toLowerCase().includes(val));
+  })();
+
+  // Apply date range filter on top of admin filter
+  const filteredLogsByDate = (() => {
+    const s = startDate ? new Date(startDate + 'T00:00:00') : null;
+    const e = endDate ? new Date(endDate + 'T23:59:59.999') : null;
+
+    return filteredLogs.filter((l) => {
+      const timeStr = l.timeISO || l.time || null;
+      if (!timeStr) return true; // keep logs without parseable time
+      const t = new Date(timeStr);
+      if (Number.isNaN(t.getTime())) return true;
+      if (s && t < s) return false;
+      if (e && t > e) return false;
+      return true;
+    });
+  })();
 
   const handleCreate = async (newAccount) => {
     try {
@@ -90,7 +155,10 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const handleSave = async (updated) => {
     try {
       const updatedAccount = await updateAccount(updated.id, updated);
-      setAccounts((prev) => prev.map((a) => a.id === updated.id ? updatedAccount : a));
+      const updatedId = String(updated.id);
+      setAccounts((prev) => prev.map((a) => String(a.id) === updatedId ? updatedAccount : a));
+      setEditTarget(null); // Close the modal
+      loadAccounts(); // Refresh the table
     } catch (err) {
       setError("Failed to update account: " + err.message);
     }
@@ -98,10 +166,43 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
 
   const handleDelete = async (target) => {
     try {
-      await deleteAccount(target.id);
-      setAccounts((prev) => prev.filter((a) => a.id !== target.id));
+      await deleteAccount(target.id, target);
+      const deletedId = String(target.id);
+      setAccounts((prev) => prev.filter((a) => String(a.id) !== deletedId));
+      loadAccounts();
     } catch (err) {
       setError("Failed to delete account: " + err.message);
+    }
+  };
+
+  const requestAction = (type, target = null) => {
+    setPendingAction({ type, target });
+    setShowReAuth(true);
+  };
+
+  const handleReAuthSuccess = () => {
+    setShowReAuth(false);
+    const { type, target } = pendingAction || {};
+    if (type === "create")    setShowCreate(true);
+    if (type === "edit")      setEditTarget(target);
+    if (type === "delete")    setDeleteTarget(target);
+    if (type === "audit")     setShowAudit(true);
+    if (type === "reqChange") handleRequestPasswordChange(target);
+    setPendingAction(null);
+  };
+
+  const handleRequestPasswordChange = async (account) => {
+    try {
+      const deadline = addWorkingDays(new Date(), 5);
+      const deadlineStr = deadline.toISOString().split("T")[0];
+      await updateAccount(account.id, {
+        password_change_required: true,
+        password_change_deadline: deadlineStr,
+      });
+      alert(`Password change requested for ${account.name}.\nDeadline: ${deadlineStr} (5 working days)`);
+      loadAccounts();
+    } catch (err) {
+      setError("Failed to request password change: " + err.message);
     }
   };
 
@@ -109,14 +210,14 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
 
           {/* ACCOUNTS PAGE */}
           {!showAudit && (
             <>
               <div className={styles.pageHeader}>
                 <h1 className={styles.title}>Accounts</h1>
-                <button className={styles.auditBtn} onClick={() => setShowAudit(true)}>
+                <button className={styles.auditBtn} onClick={() => requestAction("audit")}>
                   Audit Trail &nbsp;›
                 </button>
               </div>
@@ -140,7 +241,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                 )}
 
                 <div className={styles.actionRow}>
-                  <button className={styles.addBtn} onClick={() => setShowCreate(true)}>
+                  <button className={styles.addBtn} onClick={() => requestAction("create")}>
                     ＋ Add Account
                   </button>
                 </div>
@@ -173,8 +274,9 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                             <td>{a.role}</td>
                             <td>{a.email}</td>
                             <td>
-                              <button className={styles.editBtn} onClick={() => setEditTarget(a)}>Edit</button>
-                              <button className={styles.deleteBtn} onClick={() => setDeleteTarget(a)}>Delete</button>
+                              <button className={styles.editBtn} onClick={() => requestAction("edit", a)}>Edit</button>
+                              <button className={styles.deleteBtn} onClick={() => requestAction("delete", a)}>Delete</button>
+                              <button className={styles.changePassBtn} onClick={() => requestAction("reqChange", a)}>Req. Change</button>
                             </td>
                           </tr>
                         ))}
@@ -231,11 +333,21 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                 </p>
 
                 <div className={styles.filterRow}>
-                  <span className={styles.filterLabel}>Filter by admin</span>
-                  <select className={styles.filterSelect} value={filterAdmin}
-                    onChange={(e) => setFilterAdmin(e.target.value)}>
-                    {admins.map((a) => <option key={a} value={a}>{a}</option>)}
-                  </select>
+                  <span className={styles.filterLabel}>Search user</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input
+                      className={styles.filterSelect}
+                      placeholder="Type username..."
+                      value={filterAdmin}
+                      onChange={(e) => setFilterAdmin(e.target.value)}
+                    />
+                  </div>
+
+                  <span className={styles.filterLabel} style={{ marginLeft: '16px' }}>Date range</span>
+                  <input type="date" className={styles.filterDate} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  <span style={{ margin: '0 8px' }}>to</span>
+                  <input type="date" className={styles.filterDate} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <button className={styles.clearBtn} onClick={() => { setStartDate(''); setEndDate(''); }}>Clear Dates</button>
                 </div>
 
                 {auditLoading ? (
@@ -253,30 +365,89 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                     <tr>
                       <th>Time</th>
                       <th>User</th>
+                      <th>Role</th>
                       <th>Action</th>
                       <th>Changes</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredLogs.map((log, i) => (
+                    {filteredLogsByDate.map((log, i) => (
                       <tr key={i}>
                         <td className={styles.timeCell}>{log.time}</td>
                         <td><strong>{log.user}</strong></td>
+                        <td>{log.role || 'N/A'}</td>
                         <td>{log.action}</td>
                         <td>
                           <div className={styles.changes}>
-                            {Object.entries(log.changes).map(([k, v]) => (
-                              <div key={k}>
-                                <span className={styles.changeKey}>{k}:</span>{" "}
-                                <span className={
-                                  v === "record added" || v === "member added" || v === "notification sent"
-                                    ? styles.statusSuccess
-                                    : v === "failed to add record"
-                                    ? styles.statusError
-                                    : ""
-                                }>{v}</span>
-                              </div>
-                            ))}
+                            {(() => {
+                              const action = log.action || '';
+                              const accountName = log.changes?.accountName || '';
+                              const subjectName =
+                                log.changes?.accountName ||
+                                log.changes?.memberName ||
+                                log.changes?.fullName ||
+                                log.changes?.name ||
+                                log.changes?.member ||
+                                log.changes?.member_id ||
+                                '';
+                              const changes = log.changes || {};
+
+                              if (action.includes('Deleted')) {
+                                return (
+                                  <span style={{ color: '#dc3545', fontWeight: '500' }}>
+                                    deleted {subjectName || accountName}
+                                  </span>
+                                );
+                              } else if (action.includes('Created')) {
+                                return (
+                                  <span style={{ color: '#28a745', fontWeight: '500' }}>
+                                    created {subjectName || accountName}
+                                  </span>
+                                );
+                              } else if (action.includes('Updated')) {
+                                // Show field changes: name: old -> new
+                                const changeEntries = Object.entries(changes).filter(
+                                  ([k]) => k !== 'accountId' && k !== 'accountName'
+                                );
+
+                                if (changeEntries.length === 0) {
+                                  return <span>No changes recorded</span>;
+                                }
+
+                                return (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {subjectName && (
+                                      <div>
+                                        <span style={{ fontWeight: '500' }}>Updated:</span> {subjectName}
+                                      </div>
+                                    )}
+                                    {changeEntries.map(([k, v]) => {
+                                      if (typeof v === 'object' && v.old !== undefined && v.new !== undefined) {
+                                        return (
+                                          <div key={k}>
+                                            <span style={{ fontWeight: '500' }}>{k}:</span> {v.old} → {v.new}
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </div>
+                                );
+                              }
+
+                              // Recorded payment actions
+                              if (action.toLowerCase().includes('record')) {
+                                const memberId = changes.memberId || changes.member_id || changes.member || '';
+                                const amount = changes.amount || changes.amount_paid || '';
+                                return (
+                                  <span style={{ color: '#007bff', fontWeight: '500' }}>
+                                    recorded payment{memberId ? ` for ${memberId}` : ''}{amount ? ` — ₱${amount}` : ''}
+                                  </span>
+                                );
+                              }
+
+                              return <span>Unknown action</span>;
+                            })()}
                           </div>
                         </td>
                       </tr>
@@ -315,6 +486,19 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
           account={deleteTarget}
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleDelete}
+        />
+      )}
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel={
+            pendingAction?.type === "create"    ? "add a new account" :
+            pendingAction?.type === "edit"      ? "edit this account" :
+            pendingAction?.type === "delete"    ? "delete this account" :
+            pendingAction?.type === "reqChange" ? "request a password change" :
+            "view the audit trail"
+          }
+          onSuccess={handleReAuthSuccess}
+          onClose={() => { setShowReAuth(false); setPendingAction(null); }}
         />
       )}
     </>

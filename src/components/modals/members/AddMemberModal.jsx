@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import styles from "../Modal.module.css";
 import { addMember } from "../../../services/memberService";
 
+const getTodayDateString = () => new Date().toISOString().split("T")[0];
+
 const defaultForm = {
   fullName: "",
   email: "",
@@ -11,6 +13,7 @@ const defaultForm = {
   membershipType: "Student",
   monthlyValidity: "",
   membershipValidity: "",
+  joinDate: getTodayDateString(),
   gender: "Male",
   photo: null,
 };
@@ -31,6 +34,22 @@ export default function AddMemberModal({ onClose, onSuccess }) {
   }, [preview]);
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  const setNumber = (field) => (e) => {
+    const nextValue = e.target.value;
+    if (nextValue === "") {
+      setForm({ ...form, [field]: "" });
+      return;
+    }
+    const sanitized = nextValue.replace(/[^\d]/g, "");
+    setForm({ ...form, [field]: sanitized });
+  };
+  const resetMembershipPlan = () => {
+    setForm((prev) => ({
+      ...prev,
+      monthlyValidity: "",
+      membershipValidity: "",
+    }));
+  };
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
@@ -66,9 +85,31 @@ export default function AddMemberModal({ onClose, onSuccess }) {
     setError(null);
 
     try {
-      const newMember = await addMember(form);
+      const monthlyValidityMonths = Number.parseInt(form.monthlyValidity, 10);
+      const membershipValidityYears = Number.parseInt(form.membershipValidity, 10);
+      const hasMonthlyPlan = Number.isInteger(monthlyValidityMonths) && monthlyValidityMonths > 0;
+      const hasYearlyMembership = Number.isInteger(membershipValidityYears) && membershipValidityYears > 0;
+
+      if (!hasMonthlyPlan && !hasYearlyMembership) {
+        setError("Please enter at least one plan: Months or Years.");
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        ...form,
+        monthlyValidity: hasMonthlyPlan
+          ? `${monthlyValidityMonths} Month${monthlyValidityMonths === 1 ? "" : "s"}`
+          : "",
+        membershipValidity: hasYearlyMembership
+          ? `${membershipValidityYears} Year${membershipValidityYears === 1 ? "" : "s"}`
+          : "",
+        joinDate: form.joinDate || getTodayDateString(),
+      };
+
+      const newMember = await addMember(payload);
       onSuccess?.(newMember);
-      setForm(defaultForm);
+      setForm({ ...defaultForm, joinDate: getTodayDateString() });
       setPreview(null);
     } catch (err) {
       setError(err.message || "Failed to add member. Please try again.");
@@ -101,31 +142,89 @@ export default function AddMemberModal({ onClose, onSuccess }) {
           {/* Right — form fields */}
           <div className={styles.addMemberFields}>
             <div className={styles.fieldRow}>
-              <input className={styles.formInput} placeholder="Full Name"
-                value={form.fullName} onChange={set("fullName")} />
-              <input className={styles.formInput} placeholder="Email Address" type="email"
-                value={form.email} onChange={set("email")} />
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Full Name</label>
+                <input className={styles.formInput} placeholder="Enter full name"
+                  value={form.fullName} onChange={set("fullName")} />
+              </div>
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Email Address</label>
+                <input className={styles.formInput} placeholder="name@email.com" type="email"
+                  value={form.email} onChange={set("email")} />
+              </div>
             </div>
             <div className={styles.fieldRow}>
-              <input className={styles.formInput} placeholder="Phone Number"
-                value={form.phone} onChange={set("phone")} />
-              <input className={styles.formInput} placeholder="Address"
-                value={form.address} onChange={set("address")} />
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Phone Number</label>
+                <input className={styles.formInput} placeholder="09XXXXXXXXX"
+                  value={form.phone} onChange={set("phone")} />
+              </div>
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Address</label>
+                <input className={styles.formInput} placeholder="Street, City"
+                  value={form.address} onChange={set("address")} />
+              </div>
             </div>
-            <div className={styles.fieldRow}>
-              <input className={styles.formInput} placeholder="Birthday" type="date"
+            <div className={styles.labeledField}>
+              <label className={styles.modernLabel}>Birthday</label>
+              <input className={styles.formInput} type="date"
                 value={form.birthday} onChange={set("birthday")} />
-              <select className={styles.formInput} value={form.membershipType} onChange={set("membershipType")}>
-                {["Student", "Regular", "Senior", "PWD"].map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
             </div>
-            <div className={styles.fieldRow}>
-              <input className={styles.formInput} placeholder="Monthly Validity (e.g. 1 month)"
-                value={form.monthlyValidity} onChange={set("monthlyValidity")} />
-              <input className={styles.formInput} placeholder="Membership Validity (e.g. 1 Year)"
-                value={form.membershipValidity} onChange={set("membershipValidity")} />
+
+            <div className={styles.membershipSettings}>
+              <p className={styles.membershipSettingsTitle}>Membership Settings</p>
+
+              <div className={styles.fieldRow}>
+                <div className={styles.labeledField}>
+                  <label className={styles.modernLabel}>Member Type</label>
+                  <select className={styles.formInput} value={form.membershipType} onChange={set("membershipType")}>
+                    {["Student", "Regular", "Senior", "PWD"].map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.fieldRow}>
+                <div className={styles.unitInputWrap}>
+                  <input
+                    className={styles.formInput}
+                    placeholder="Plan Duration"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputMode="numeric"
+                    value={form.monthlyValidity}
+                    onChange={setNumber("monthlyValidity")}
+                  />
+                  <span className={styles.unitSuffix}>Months</span>
+                  <p className={styles.inputContextLabel}>Plan Duration (Months)</p>
+                </div>
+                <div className={styles.unitInputWrap}>
+                  <input
+                    className={styles.formInput}
+                    placeholder="Membership Term"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    value={form.membershipValidity}
+                    onChange={setNumber("membershipValidity")}
+                  />
+                  <span className={styles.unitSuffix}>Years</span>
+                  <p className={styles.inputContextLabel}>Membership Term (Years)</p>
+                </div>
+              </div>
+              <div className={styles.fieldRow}>
+                <button
+                  type="button"
+                  className={styles.planResetBtn}
+                  onClick={resetMembershipPlan}
+                  disabled={!form.monthlyValidity && !form.membershipValidity}
+                >
+                  Reset Plan Selection
+                </button>
+              </div>
             </div>
 
             {/* Gender */}

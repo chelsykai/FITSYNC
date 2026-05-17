@@ -96,16 +96,30 @@
 
 .table th {
   text-align: left;
-  color: #888;
-  font-weight: 600;
-  padding: 6px 10px;
-  border-bottom: 1px solid #eee;
+  color: #555;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-bottom: 1px solid #c8e0b0;
 }
 
 .table td {
-  padding: 8px 10px;
+  padding: 10px 14px;
   color: #444;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid #d8edca;
+}
+
+.membershipPlanCol {
+  text-align: left;
+}
+
+.membershipPlanTerm {
+  font-weight: 700;
+  color: #2f3d28;
+}
+
+.membershipPlanFrequency {
+  font-weight: 500;
+  color: #6b7564;
 }
 
 .table tr:last-child td {
@@ -149,6 +163,8 @@
   flex: 1;
   min-width: 280px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
 }
 
 .chartHeader {
@@ -156,13 +172,24 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  min-height: 30px;
 }
 
 .chartTitle {
   font-size: 14px;
   font-weight: 700;
   color: #333;
-  margin: 0 0 16px 0;
+  margin: 0;
+}
+
+.chartHeaderSpacer {
+  width: 84px;
+}
+
+.chartBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
 }
 
 .yearSelect {

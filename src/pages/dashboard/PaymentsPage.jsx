@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styles from "./PaymentsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
+import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
 
 /**
  * Fetch total count of members from the database
@@ -73,19 +74,30 @@ const fetchPayments = async () => {
       memberMap[member.member_id] = member;
     });
 
-    // Combine payment and member data
-    return paymentData.map((record) => {
+    console.log("Payment data length:", paymentData.length); // Debug
+    console.log("Member map keys:", Object.keys(memberMap)); // Debug
+
+    // Map all payment records (no deduplication - each record.id should be unique)
+    const result = paymentData.map((record) => {
       const memberInfo = memberMap[record.member_id] || {};
+      // Handle both possible field names for amount
+      const amount = record.amount_paid || record.amount || 0;
       return {
-        id: record.member_id,
+        id: record.id, // Payment record ID (for React keys)
+        memberId: record.member_id, // Member ID to display
         name: memberInfo.full_name || "Unknown",
-        date: new Date(record.date).toLocaleDateString("en-US"),
-        rawDate: new Date(record.date),
+        date: formatMMDDYYYY(record.date),
+        rawDate: parseLocalISODate(record.date),
         type: memberInfo.membership_type || "Unknown",
-        total: record.amount_paid || 0,
-        status: record.status,
+        total: amount,
+        status: record.status || "Paid",
+        mod: record.payment_method || record.mod || "CASH",
+        promoCode: record.promo_code || record.promoCode,
       };
     });
+
+    console.log("Transformed payments:", result); // Debug
+    return result;
   } catch (err) {
     console.error("Error fetching payments:", err);
     return [];
@@ -107,19 +119,21 @@ const calculateStats = (payments, activeMemberships = 0) => {
   let pendingRevenue = 0;
 
   payments.forEach((p) => {
+    if (!p.rawDate) return;
     const paymentDate = new Date(p.rawDate);
     paymentDate.setHours(0, 0, 0, 0); // Set to start of payment date
-    const paymentAmount = p.total || 0;
+    const paymentAmount = Number(p.total) || 0;
+    const normalizedStatus = String(p.status || "").trim().toLowerCase();
 
-    if (paymentDate.getTime() === today.getTime() && p.status === "Paid") {
+    if (paymentDate.getTime() === today.getTime() && normalizedStatus === "paid") {
       todayRevenue += paymentAmount;
     }
 
-    if (paymentDate >= monthStart && p.status === "Paid") {
+    if (paymentDate >= monthStart && normalizedStatus === "paid") {
       monthRevenue += paymentAmount;
     }
 
-    if (p.status === "Pending") {
+    if (normalizedStatus === "pending" || normalizedStatus === "unpaid") {
       pendingRevenue += paymentAmount;
     }
   });
@@ -152,81 +166,89 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
   const [showViewAll, setShowViewAll] = useState(false);
   const [members, setMembers] = useState([]);
 
-  // Fetch members on component mount
-  useEffect(() => {
-    const loadMembers = async () => {
-      try {
-        setLoadingMembers(true);
-        const data = await fetchMembers();
-        setMembers(data);
-      } catch (err) {
-        console.error("Error fetching members:", err);
-        setMembers([]);
-      } finally {
-        setLoadingMembers(false);
-      }
-    };
+  const loadMembers = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoadingMembers(true);
+      const data = await fetchMembers();
+      setMembers(data);
+    } catch (err) {
+      console.error("Error fetching members:", err);
+      setMembers([]);
+    } finally {
+      if (showLoader) setLoadingMembers(false);
+    }
+  }, []);
 
-    loadMembers();
+  const loadPayments = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoadingPayments(true);
+      setError("");
+
+      const [paymentData, memberCount] = await Promise.all([
+        fetchPayments(),
+        fetchMemberCount(),
+      ]);
+
+      setPayments(paymentData);
+
+      const calculatedStats = calculateStats(paymentData, memberCount);
+      setStats({
+        totalTransactions: calculatedStats.totalTransactions,
+        activeMemberships: calculatedStats.activeMemberships,
+      });
+      setRevenue({
+        today: calculatedStats.today,
+        thisMonth: calculatedStats.thisMonth,
+        pending: calculatedStats.pending,
+      });
+    } catch (err) {
+      console.error("Error loading payments:", err);
+      setError("Unable to load payment records right now. Please try again.");
+      setPayments([]);
+      setStats({ totalTransactions: 0, activeMemberships: 0 });
+      setRevenue({ today: 0, thisMonth: 0, pending: 0 });
+    } finally {
+      if (showLoader) setLoadingPayments(false);
+    }
   }, []);
 
   useEffect(() => {
-    const loadPayments = async () => {
-      try {
-        setLoadingPayments(true);
-        setError("");
+    loadMembers(true);
+    loadPayments(true);
 
-        const [paymentData, memberCount] = await Promise.all([
-          fetchPayments(),
-          fetchMemberCount(),
-        ]);
-
-        setPayments(paymentData);
-
-        const calculatedStats = calculateStats(paymentData, memberCount);
-        setStats({
-          totalTransactions: calculatedStats.totalTransactions,
-          activeMemberships: calculatedStats.activeMemberships,
-        });
-        setRevenue({
-          today: calculatedStats.today,
-          thisMonth: calculatedStats.thisMonth,
-          pending: calculatedStats.pending,
-        });
-      } catch (err) {
-        console.error("Error loading payments:", err);
-        setError("Unable to load payment records right now. Please try again.");
-        setPayments([]);
-        setStats({ totalTransactions: 0, activeMemberships: 0 });
-        setRevenue({ today: 0, thisMonth: 0, pending: 0 });
-      } finally {
-        setLoadingPayments(false);
-      }
-    };
-
-    loadPayments();
-
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel("record_payment_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "record_payment" },
-        (payload) => {
-          console.log("Real-time update received:", payload);
-          loadPayments();
-        }
-      )
+    const paymentsChannel = supabase
+      .channel("payments-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "record_payment" }, () => {
+        loadPayments();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
+        loadMembers();
+        loadPayments();
+      })
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(paymentsChannel);
     };
-  }, []);
+  }, [loadMembers, loadPayments]);
+
+  // Fallback auto-refresh when user returns to the page
+  useEffect(() => {
+    const handleFocus = () => {
+      loadMembers();
+      loadPayments();
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadMembers, loadPayments]);
 
   const filtered = payments.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.id.includes(search) ||
+    p.memberId.toString().includes(search) ||
     p.type.toLowerCase().includes(search.toLowerCase()) ||
     p.status.toLowerCase().includes(search.toLowerCase())
   );
@@ -235,7 +257,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     return (
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Payments</h1>
           <div style={{ textAlign: "center", padding: "40px", fontSize: "16px", color: "#666" }}>
             Loading payment records...
@@ -249,7 +271,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={styles.content}>
+        <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Payments</h1>
 
           {/* Stat Cards */}
@@ -275,7 +297,6 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
               <span className={styles.statIcon}>🖨️</span>
               <div>
                 <p className={styles.statLabel}>Export</p>
-                <p className={styles.statLabel}>Transactions</p>
               </div>
             </div>
           </div>
@@ -332,17 +353,17 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
               </thead>
               <tbody>
                 {payments.length === 0 ? (
-                  <tr><td colSpan={6} className={styles.noResults}>
+                  <tr key="no-payments"><td colSpan={6} className={styles.noResults}>
                     No payment records yet. Click "Add / Record Payment" to create one.
                   </td></tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={6} className={styles.noResults}>
+                  <tr key="no-match"><td colSpan={6} className={styles.noResults}>
                     No records match your search.
                   </td></tr>
                 ) : (
-                  filtered.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.id}</td>
+                  filtered.map((p, index) => (
+                    <tr key={`${p.memberId}-${p.date}-${index}`}>
+                      <td>{p.memberId}</td>
                       <td>{p.name}</td>
                       <td>{p.date}</td>
                       <td>{p.type}</td>

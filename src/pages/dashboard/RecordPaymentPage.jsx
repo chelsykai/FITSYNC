@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import styles from "./RecordPaymentPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
+import ReAuthModal from "../../components/ReAuthModal";
 import { supabase } from "../../lib/supabaseClient";
+import { getAuditActorRole } from "../../services/auditService";
+
+const getTodayDateString = () => new Date().toISOString().split("T")[0];
 
 const defaultForm = {
   memberName: "",
   memberId: "",
-  date: "",
+  date: getTodayDateString(),
   description: "",
   promoCode: "",
   modeOfPayment: "Cash",
@@ -48,13 +52,18 @@ const add_record = async (formData) => {
       throw new Error("Please select a valid member");
     }
 
+    const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(formData.modeOfPayment);
+    const referenceNumber = requiresReference && String(formData.referenceNumber || "").trim()
+      ? String(formData.referenceNumber).trim()
+      : null;
+
     const { error } = await supabase.from("record_payment").insert([
       {
         member_id: formData.memberId,
         date: formData.date,
         promo_id: formData.promoCode || null,
         mop: formData.modeOfPayment,
-        ref_number: formData.referenceNumber,
+        ref_number: referenceNumber,
         status: formData.status,
         amount_paid: parseInt(formData.total) || 0,
       },
@@ -62,6 +71,33 @@ const add_record = async (formData) => {
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    // Log audit trail for payment record
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const actorName = currentUser?.username || currentUser?.name || 'system';
+      const actorRole = await getAuditActorRole();
+      await supabase.from('audit_trail').insert([{
+        user_name: actorName,
+        user_role: actorRole,
+        action_performed: 'Recorded payment',
+        affected_module: 'Payments',
+        affected_data: {
+          memberId: formData.memberId,
+          memberName: formData.memberName,
+          amount: parseInt(formData.total) || 0,
+          date: formData.date,
+          mop: formData.modeOfPayment,
+          ref_number: referenceNumber,
+          status: formData.status,
+        },
+        created_at: new Date().toISOString(),
+      }]);
+    } catch (logErr) {
+      // Audit logging failing should not break the main flow
+      // eslint-disable-next-line no-console
+      console.warn('Failed to write audit log for payment:', logErr);
     }
 
     return { success: true };
@@ -76,6 +112,7 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showReAuth, setShowReAuth] = useState(false);
   const [membersLoading, setMembersLoading] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -110,6 +147,15 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
 
   const set = (field) => (e) => {
     const value = e.target.value;
+    if (field === "modeOfPayment") {
+      const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
+      setForm({
+        ...form,
+        modeOfPayment: value,
+        referenceNumber: requiresReference ? form.referenceNumber : "",
+      });
+      return;
+    }
     setForm({ ...form, [field]: value });
   };
 
@@ -142,12 +188,18 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
       return;
     }
 
+    const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment);
+    if (requiresReference && !form.referenceNumber.trim()) {
+      setError("Reference Number is required for selected mode of payment");
+      return;
+    }
+
     setLoading(true);
     const result = await add_record(form);
 
     if (result.success) {
       setSuccessMessage("Payment record added successfully!");
-      setForm(defaultForm);
+      setForm({ ...defaultForm, date: getTodayDateString() });
       setTimeout(() => {
         onNavigate("payments");
       }, 1500);
@@ -161,9 +213,7 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
   return (
     <div className={styles.layout}>
       <Sidebar activePage={activePage} onNavigate={onNavigate} />
-      <div className={styles.content}>
-
-        {/* Page Title */}
+        <div className={`${styles.content} tab-slide-animation`}>
         <div className={styles.titleRow}>
           <span className={styles.titleIcon}>🗂️</span>
           <h1 className={styles.title}>Record Payment</h1>
@@ -289,7 +339,7 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>Date</label>
               <input className={styles.formInput} type="date" placeholder="MM/DD/YYYY"
-                value={form.date} onChange={set("date")} />
+                value={form.date} onChange={set("date")} disabled />
             </div>
           </div>
 
@@ -299,11 +349,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
               <label className={styles.formLabel}>Payment Details</label>
               <input className={styles.formInput} placeholder="Description"
                 value={form.description} onChange={set("description")} />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>&nbsp;</label>
-              <input className={styles.formInput} placeholder="Promo Code"
-                value={form.promoCode} onChange={set("promoCode")} />
             </div>
           </div>
 
@@ -317,11 +362,13 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                 ))}
               </select>
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Reference Number</label>
-              <input className={styles.formInput} placeholder="Enter Reference Number"
-                value={form.referenceNumber} onChange={set("referenceNumber")} />
-            </div>
+            { ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment) && (
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Reference Number</label>
+                <input className={styles.formInput} placeholder="Enter Reference Number"
+                  value={form.referenceNumber} onChange={set("referenceNumber")} />
+              </div>
+            )}
           </div>
 
           {/* Row 3.5 — Total */}
@@ -353,7 +400,17 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
               </div>
             </div>
             <div className={styles.actionBtns}>
-              <button className={styles.addRecordBtn} onClick={handleSubmit} disabled={loading}>
+              <button className={styles.addRecordBtn} onClick={() => {
+                // Validate first, then show ReAuth
+                setError("");
+                if (!form.memberName.trim()) { setError("Member Info is required"); return; }
+                if (!form.memberId) { setError("Please select a valid member from the list"); return; }
+                if (!form.date) { setError("Date is required"); return; }
+                if (!form.total) { setError("Total is required"); return; }
+                const requiresRef = ["GCash","Bank Transfer","Credit Card"].includes(form.modeOfPayment);
+                if (requiresRef && !form.referenceNumber.trim()) { setError("Reference Number is required"); return; }
+                setShowReAuth(true);
+              }} disabled={loading}>
                 {loading ? "Adding..." : "Add Record"}
               </button>
               <button className={styles.cancelBtn} onClick={() => onNavigate("payments")} disabled={loading}>
@@ -370,6 +427,13 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
         </div>
 
       </div>
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel="record this payment"
+          onSuccess={() => { setShowReAuth(false); handleSubmit(); }}
+          onClose={() => setShowReAuth(false)}
+        />
+      )}
     </div>
   );
 }

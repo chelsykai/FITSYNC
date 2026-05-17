@@ -1,7 +1,9 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
+import { normalizeDateKey, normalizeDateRange } from "../../../utils/exportDateRange";
+import { fetchAllAttendanceRecords, fetchAttendanceRecordsBetweenDates, fetchTodayAttendanceRecords } from "../../../services/attendanceService";
 
-const exportOptions = ["Select All", "Today's Checkin", "Today's Walkins", "Active Memberships"];
+const exportOptions = ["Select All", "Today's Checkin", "Active Memberships"];
 
 const toCsv = (rows) => {
   if (rows.length === 0) return "";
@@ -11,6 +13,14 @@ const toCsv = (rows) => {
   const lines = rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(","));
 
   return [headers.join(","), ...lines].join("\n");
+};
+
+const formatCsvDate = (value) => {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
 };
 
 const triggerDownload = (blob, fileName) => {
@@ -83,31 +93,15 @@ const toPdf = async (rows, title) => {
   return doc;
 };
 
-export default function ExportModal({ members = [], onClose }) {
+export default function ExportModal({ members = [], attendanceRecords = [], onClose }) {
   const [exportFormat, setExportFormat] = useState("CSV");
   const [exportTypes, setExportTypes] = useState([]);
   const [exportSearch, setExportSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const todayDate = new Date().toISOString().split('T')[0];
 
-  // Helper function to check if a date is today
-  const isToday = (date) => {
-    if (!date) return false;
-    const checkDate = new Date(date);
-    const today = new Date();
-    return (
-      checkDate.getDate() === today.getDate() &&
-      checkDate.getMonth() === today.getMonth() &&
-      checkDate.getFullYear() === today.getFullYear()
-    );
-  };
-
-  // Filter members for today's checkins
-  const todaysCheckins = members.filter((m) => isToday(m.last_visit));
-
-  // Filter members for today's walkins
-  const todaysWalkins = members.filter((m) => isToday(m.last_visit));
-
-  // Get all active memberships
   const activeMemberships = members;
 
   const toggleExportType = (opt) => {
@@ -124,6 +118,89 @@ export default function ExportModal({ members = [], onClose }) {
     o.toLowerCase().includes(exportSearch.toLowerCase())
   );
 
+  const filteredMemberships = activeMemberships;
+
+  const buildExportRows = async (type) => {
+    const { start, end } = normalizeDateRange(dateFrom, dateTo);
+    const hasSelectedRange = Boolean(start || end);
+
+    const buildDateSeries = (startDate, endDate) => {
+      const days = [];
+      const cursor = new Date(`${startDate}T00:00:00`);
+      const last = new Date(`${endDate}T00:00:00`);
+
+      while (!Number.isNaN(cursor.getTime()) && cursor <= last) {
+        days.push(normalizeDateKey(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      return days.filter(Boolean);
+    };
+
+    const selectedDates = hasSelectedRange
+      ? buildDateSeries(start || end, end || start)
+      : [];
+
+    if (type === "Today's Checkin") {
+      const attendanceSource = !hasSelectedRange
+        ? await fetchAllAttendanceRecords()
+        : selectedDates.length === 1 && selectedDates[0] === todayDate && attendanceRecords.length > 0
+          ? attendanceRecords
+          : selectedDates.length === 1 && selectedDates[0] === todayDate
+            ? await fetchTodayAttendanceRecords()
+            : await fetchAttendanceRecordsBetweenDates(start || end, end || start);
+
+      const attendanceLookup = new Map();
+      attendanceSource.forEach((record) => {
+        const key = `${String(record.member_id || "")}:${String(record.attendance_date || "")}`;
+        attendanceLookup.set(key, 1);
+      });
+
+      const dateColumns = hasSelectedRange
+        ? selectedDates
+        : Array.from(
+            new Set(
+              attendanceSource
+                .map((record) => normalizeDateKey(record.attendance_date))
+                .filter(Boolean)
+            )
+          ).sort();
+
+      const rows = members.map((member) => {
+        const memberId = String(member.member_id || "");
+        const row = {
+          "Member ID": member.member_id || "",
+          "Name": member.full_name || "",
+        };
+
+        dateColumns.forEach((date) => {
+          row[formatCsvDate(date)] = attendanceLookup.has(`${memberId}:${date}`) ? 1 : 0;
+        });
+
+        return row;
+      });
+
+      return { title: "Today's Checkin", rows };
+    }
+
+    if (type === "Active Memberships") {
+      const rows = filteredMemberships.map((member) => ({
+        "Member ID": member.member_id || "",
+        "Name": member.full_name || "",
+        "Email": member.email || "",
+        "Address": member.address || "",
+        "Membership Type": member.membership_type || "",
+        "Join Date": formatCsvDate(member.join_date),
+        "Monthly Validity": member.monthly_validity || "",
+        "Membership Validity": member.membership_validity || "",
+      }));
+
+      return { title: "Active Memberships", rows };
+    }
+
+    return { title: type, rows: [] };
+  };
+
   const handleExport = async () => {
     try {
       setLoading(true);
@@ -134,69 +211,34 @@ export default function ExportModal({ members = [], onClose }) {
         return;
       }
 
-      // Prepare export data based on selection
-      const exportData = [];
-      const exportTitle = [];
+      const selectedTypes = exportTypes.filter((type) => type !== "Select All");
+      const exportSets = [];
 
-      if (exportTypes.includes("Today's Checkin")) {
-        const checkinData = todaysCheckins.map((m) => ({
-          "Member ID": m.member_id || "",
-          "Name": m.full_name || "",
-          "Email": m.email || "",
-          "Phone": m.phone || "",
-          "Address": m.address || "",
-          "Membership Type": m.membership_type || "",
-          "Join Date": m.join_date || "",
-          "Monthly Validity": m.monthly_validity || "",
-          "Membership Validity": m.membership_validity || "",
-        }));
-        exportData.push(...checkinData);
-        exportTitle.push("Today's Checkin");
+      for (const type of selectedTypes) {
+        const exportSet = await buildExportRows(type);
+        if (exportSet.rows.length > 0) {
+          exportSets.push(exportSet);
+        }
       }
 
-      if (exportTypes.includes("Today's Walkins")) {
-        const walkinData = todaysWalkins.map((m) => ({
-          "Member ID": m.member_id || "",
-          "Name": m.full_name || "",
-          "Email": m.email || "",
-          "Phone": m.phone || "",
-          "Address": m.address || "",
-          "Membership Type": m.membership_type || "",
-          "Join Date": m.join_date || "",
-          "Monthly Validity": m.monthly_validity || "",
-          "Membership Validity": m.membership_validity || "",
-        }));
-        exportData.push(...walkinData);
-        exportTitle.push("Today's Walkins");
-      }
-
-      if (exportTypes.includes("Active Memberships")) {
-        const membershipData = activeMemberships.map((m) => ({
-          "Member ID": m.member_id || "",
-          "Name": m.full_name || "",
-          "Email": m.email || "",
-          "Phone": m.phone || "",
-          "Address": m.address || "",
-          "Membership Type": m.membership_type || "",
-          "Join Date": m.join_date || "",
-          "Monthly Validity": m.monthly_validity || "",
-          "Membership Validity": m.membership_validity || "",
-        }));
-        exportData.push(...membershipData);
-        exportTitle.push("Active Memberships");
-      }
-
-      if (exportData.length === 0) {
+      if (exportSets.length === 0) {
         alert("No data available for the selected export types.");
         setLoading(false);
         return;
       }
 
-      const fileName = `overview_export_${exportTitle.join("_")}_${new Date().getTime()}`;
-
       if (exportFormat === "CSV") {
-        const csv = toCsv(exportData);
-        triggerDownload(new Blob([csv], { type: "text/csv;charset=utf-8;" }), fileName + ".csv");
+        if (exportSets.length === 1) {
+          const fileName = `overview_export_${exportSets[0].title.replace(/\s+/g, "_")}_${new Date().getTime()}`;
+          const csv = toCsv(exportSets[0].rows);
+          triggerDownload(new Blob([csv], { type: "text/csv;charset=utf-8;" }), fileName + ".csv");
+        } else {
+          exportSets.forEach((exportSet) => {
+            const fileName = `overview_export_${exportSet.title.replace(/\s+/g, "_")}_${new Date().getTime()}`;
+            const csv = toCsv(exportSet.rows);
+            triggerDownload(new Blob([csv], { type: "text/csv;charset=utf-8;" }), fileName + ".csv");
+          });
+        }
       } else if (exportFormat === "Excel") {
         const excelLib = await import("exceljs");
         const Workbook = excelLib.Workbook || excelLib.default?.Workbook;
@@ -207,11 +249,13 @@ export default function ExportModal({ members = [], onClose }) {
         const workbook = new Workbook();
         const worksheet = workbook.addWorksheet("Overview");
 
+        const exportData = exportSets.flatMap((exportSet) => exportSet.rows);
+        const fileName = `overview_export_${exportSets.map((item) => item.title).join("_")}_${new Date().getTime()}`;
+
         worksheet.columns = [
           { header: "Member ID", key: "Member ID", width: 15 },
           { header: "Name", key: "Name", width: 25 },
           { header: "Email", key: "Email", width: 25 },
-          { header: "Phone", key: "Phone", width: 15 },
           { header: "Address", key: "Address", width: 30 },
           { header: "Membership Type", key: "Membership Type", width: 18 },
           { header: "Join Date", key: "Join Date", width: 15 },
@@ -228,11 +272,17 @@ export default function ExportModal({ members = [], onClose }) {
           fileName + ".xlsx"
         );
       } else if (exportFormat === "PDF") {
-        const doc = await toPdf(exportData, `Overview Export - ${exportTitle.join(", ")}`);
+        const exportData = exportSets.flatMap((exportSet) => exportSet.rows);
+        const doc = await toPdf(exportData, `Overview Export - ${exportSets.map((item) => item.title).join(", ")}`);
+        const fileName = `overview_export_${exportSets.map((item) => item.title).join("_")}_${new Date().getTime()}`;
         doc.save(fileName + ".pdf");
       }
 
-      alert(`Successfully exported ${exportData.length} record(s)!`);
+      alert(
+        exportFormat === "CSV" && exportSets.length > 1
+          ? `Successfully exported ${exportSets.length} CSV file(s)!`
+          : `Successfully exported ${exportSets.reduce((sum, item) => sum + item.rows.length, 0)} record(s)!`
+      );
       onClose();
     } catch (err) {
       console.error("Error exporting overview:", err);
@@ -248,7 +298,7 @@ export default function ExportModal({ members = [], onClose }) {
         <h2 className={styles.modalTitle}>Export Data</h2>
 
         <p className={styles.exportSectionLabel}>File Format</p>
-        {["CSV", "Excel", "PDF"].map((fmt) => (
+        {["CSV"].map((fmt) => (
           <label key={fmt} className={styles.exportRadioRow}>
             <input
               type="radio"
@@ -262,6 +312,32 @@ export default function ExportModal({ members = [], onClose }) {
             {fmt}
           </label>
         ))}
+
+        {/* Date Range */}
+        <p className={styles.sectionLabel}>Date Range</p>
+        <div className={styles.dateRow}>
+          <div className={styles.dateGroup}>
+            <label className={styles.dateLabel}>From</label>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              max={todayDate}
+            />
+          </div>
+          <span className={styles.dateSep}>—</span>
+          <div className={styles.dateGroup}>
+            <label className={styles.dateLabel}>To</label>
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              max={todayDate}
+            />
+          </div>
+        </div>
 
         <p className={styles.exportSectionLabel}>Select Type of Data to Export</p>
         <div className={styles.exportSearch}>
