@@ -395,13 +395,13 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                               if (action.includes('Deleted')) {
                                 return (
                                   <span style={{ color: '#dc3545', fontWeight: '500' }}>
-                                    deleted {accountName}
+                                    deleted {subjectName || accountName}
                                   </span>
                                 );
                               } else if (action.includes('Created')) {
                                 return (
                                   <span style={{ color: '#28a745', fontWeight: '500' }}>
-                                    created {accountName}
+                                    created {subjectName || accountName}
                                   </span>
                                 );
                               } else if (action.includes('Updated')) {
@@ -441,7 +441,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                                 const amount = changes.amount || changes.amount_paid || '';
                                 return (
                                   <span style={{ color: '#007bff', fontWeight: '500' }}>
-                                    recorded payment{memberId ? ` for ${memberId}` : ''}{amount ? ` — ${amount}` : ''}
+                                    recorded payment{memberId ? ` for ${memberId}` : ''}{amount ? ` — ₱${amount}` : ''}
                                   </span>
                                 );
                               }

@@ -52,13 +52,18 @@ const add_record = async (formData) => {
       throw new Error("Please select a valid member");
     }
 
+    const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(formData.modeOfPayment);
+    const referenceNumber = requiresReference && String(formData.referenceNumber || "").trim()
+      ? String(formData.referenceNumber).trim()
+      : null;
+
     const { error } = await supabase.from("record_payment").insert([
       {
         member_id: formData.memberId,
         date: formData.date,
         promo_id: formData.promoCode || null,
         mop: formData.modeOfPayment,
-        ref_number: formData.referenceNumber,
+        ref_number: referenceNumber,
         status: formData.status,
         amount_paid: parseInt(formData.total) || 0,
       },
@@ -84,7 +89,7 @@ const add_record = async (formData) => {
           amount: parseInt(formData.total) || 0,
           date: formData.date,
           mop: formData.modeOfPayment,
-          ref_number: formData.referenceNumber || null,
+          ref_number: referenceNumber,
           status: formData.status,
         },
         created_at: new Date().toISOString(),

@@ -204,6 +204,12 @@ export const addMember = async (memberData) => {
 
   const photoAccessUrl = await getPhotoAccessUrl(data.photo_url);
 
+  await logAuditTrail('Created member', data.member_id, data.full_name || '', {
+    memberName: data.full_name || '',
+    membership_type: data.membership_type || '',
+    email: data.email || '',
+  });
+
   return {
     ...data,
     photo_url: photoAccessUrl,
@@ -269,6 +275,7 @@ export const deleteMember = async (memberId, memberData = {}) => {
   if (error) throw error;
 
   await logAuditTrail('Deleted member', memberId, memberData.full_name || '', {
+    memberName: memberData.full_name || '',
     membership_type: memberData.membership_type || '',
   });
 };
@@ -341,6 +348,14 @@ export const updateMember = async (memberId, updates) => {
 };
 
 export const updateMemberMembership = async (memberId, updates) => {
+  const { data: oldData, error: fetchError } = await supabase
+    .from("member")
+    .select('full_name, monthly_validity, membership_validity, expiration_date, join_date')
+    .eq("member_id", memberId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
   const currentJoinDate = updates.joinDate || new Date().toISOString().split("T")[0];
   const payload = {
     monthly_validity: updates.monthlyValidity || null,
@@ -358,5 +373,24 @@ export const updateMemberMembership = async (memberId, updates) => {
     .single();
 
   if (error) throw error;
+
+  const newExpirationDate = data?.expiration_date || null;
+  const changes = {
+    monthly_validity: {
+      old: oldData.monthly_validity || null,
+      new: payload.monthly_validity,
+    },
+    membership_validity: {
+      old: oldData.membership_validity || null,
+      new: payload.membership_validity,
+    },
+    expiration_date: {
+      old: oldData.expiration_date || null,
+      new: newExpirationDate,
+    },
+  };
+
+  await logAuditTrail('Updated member membership', memberId, oldData.full_name || '', changes);
+
   return data || null;
 };
