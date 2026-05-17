@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import styles from "../Modal.module.css";
 import { fetchAttendanceForMembersMonth } from "../../../services/attendanceService";
-import ReAuthModal from "../../ReAuthModal";
+// ReAuthModal removed: export runs directly from the button click
 
 const MONTH_NAMES = [
   "January","February","March","April","May","June",
@@ -22,7 +22,11 @@ export default function AttendanceModal({ members = [], onClose }) {
   const [search,        setSearch]        = useState("");
   const [statusFilter,  setStatusFilter]  = useState("All");
   const [dropYear,      setDropYear]      = useState(false);
-  const [showReAuth,    setShowReAuth]    = useState(false);
+
+  const exportAttendance = () => {
+    // TODO: replace with real CSV export implementation
+    alert("Attendance export triggered.");
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -154,12 +158,12 @@ export default function AttendanceModal({ members = [], onClose }) {
               className={styles.attendanceSearchInput}
             />
           </div>
-          <select className={styles.filterSelect} value={statusFilter}
+          {/* <select className={styles.filterSelect} value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}>
             {["All","Present","Absent"].map((s) => (
               <option key={s} value={s}>Status: {s}</option>
             ))}
-          </select>
+          </select> */}
         </div>
 
         {error && (
@@ -256,25 +260,7 @@ export default function AttendanceModal({ members = [], onClose }) {
             </tbody>
           </table>
         </div>
-
-        {/* ── Footer ── */}
-        <div className={styles.attendanceFooter}>
-          <button className={styles.exportAttendanceBtn} onClick={() => setShowReAuth(true)}>Export attendance</button>
-        </div>
-
       </div>
-
-      {showReAuth && (
-        <ReAuthModal
-          actionLabel="export attendance data"
-          onSuccess={() => {
-            setShowReAuth(false);
-            // TODO: wire your CSV export logic here
-            alert("Attendance export triggered.");
-          }}
-          onClose={() => setShowReAuth(false)}
-        />
-      )}
     </div>
   );
-}
+} 
