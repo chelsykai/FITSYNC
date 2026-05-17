@@ -65,8 +65,8 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
       if (updateErr) throw new Error(updateErr.message);
 
       // 3. Update localStorage
-      const stored = JSON.parse(localStorage.getItem("currentUser") || "{}");
-      localStorage.setItem("currentUser", JSON.stringify({
+      const stored = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+      sessionStorage.setItem("currentUser", JSON.stringify({
         ...stored,
         password:                 form.newPassword.trim(),
         password_change_required: false,

@@ -265,7 +265,7 @@ export default function AttendanceModal({ members = [], onClose }) {
       </div>
 
       {showReAuth && (
-        <ReAuthModal
+       <ReAuthModal
           actionLabel="export attendance data"
           onSuccess={() => {
             setShowReAuth(false);
@@ -277,4 +277,4 @@ export default function AttendanceModal({ members = [], onClose }) {
       )}
     </div>
   );
-}
+} 

@@ -8,7 +8,6 @@ const navItems = [
   { label: "PAYMENTS", route: "payments" },
   { label: "NOTIFICATIONS", route: "notifications" },
   { label: "ACCOUNTS", route: "accounts" },
-  { label: "SCANNER", route: "scanner" },
 ];
 
 export default function Sidebar({ activePage, onNavigate }) {

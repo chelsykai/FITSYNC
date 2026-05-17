@@ -4,6 +4,8 @@ import logo from "../../assets/logo.png";
 import { supabase } from "../../lib/supabaseClient";
 import { getWorkingDaysLeft } from "../../utils/dateUtils";
 
+const POST_LOGIN_REDIRECT_KEY = "postLoginRedirect";
+
 export default function LogInPage({ onNavigate }) {
   const [username,     setUsername]     = useState("");
   const [password,     setPassword]     = useState("");
@@ -35,8 +37,15 @@ export default function LogInPage({ onNavigate }) {
 
       const user = data[0];
 
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      sessionStorage.setItem("currentUser", JSON.stringify(user));
       setLoading(false);
+
+      const postLoginRedirect = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
+      if (postLoginRedirect) {
+        sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+        window.location.replace(postLoginRedirect);
+        return;
+      }
 
       if (user.password_change_required === true) {
         const daysLeft = getWorkingDaysLeft(user.password_change_deadline);

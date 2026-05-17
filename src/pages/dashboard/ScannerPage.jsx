@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./ScannerPage.module.css";
-import Sidebar from "../../components/sidebar/sidebar";
 import { fetchMembers } from "../../services/memberService";
 import { recordMemberAttendance } from "../../services/attendanceService";
 
-export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
+export default function ScannerPage() {
   const membersRef = useRef([]);
   const scanInputRef = useRef(null);
   const lastScanRef = useRef({ id: "", at: 0 });
@@ -163,9 +162,17 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
 
   return (
     <div className={styles.layout}>
-      <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={`${styles.content} tab-slide-animation`}>
-        <h1 className={styles.title}>Scanner</h1>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Standalone route</p>
+          <h1 className={styles.title}>Scanner</h1>
+        </div>
+        {/* <p className={styles.lead}>
+          Open this page directly at /scannerpage to record attendance without the main sidebar shell.
+        </p> */}
+      </header>
+
+      <div className={`${styles.content} tab-slide-animation`}>
 
         <div
           className={`${styles.scannerCard} ${
