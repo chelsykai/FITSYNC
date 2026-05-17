@@ -15,7 +15,7 @@ export default function DeleteMemberModal({ member, onClose, onConfirm }) {
     try {
       setLoading(true);
       setError(null);
-      await deleteMember(member.member_id);
+      await deleteMember(member.member_id, member);
       onConfirm?.(member);
       onClose();
     } catch (err) {

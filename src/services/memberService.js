@@ -1,7 +1,48 @@
 import { supabase } from "../lib/supabaseClient";
+import { getAuditActorRole } from "./auditService";
 
 const MEMBER_PHOTO_BUCKET = "member_photo";
 const MEMBER_PHOTO_PREFIX = "member_photos";
+
+const logAuditTrail = async (action, memberId, memberName, changes = {}) => {
+  try {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const actorName = currentUser?.name || currentUser?.username || 'system';
+    const actorRole = await getAuditActorRole();
+
+    // Try new schema first
+    let result = await supabase.from('audit_trail').insert([{
+      user_name: actorName,
+      user_role: actorRole,
+      action_performed: action,
+      affected_module: 'Members',
+      affected_data: {
+        memberId,
+        memberName,
+        ...changes,
+      },
+      created_at: new Date().toISOString(),
+    }]);
+
+    // If new schema fails, fallback to legacy schema
+    if (result.error) {
+      console.log('New schema failed, trying legacy schema...', result.error);
+      result = await supabase.from('audit_trail').insert([{
+        user_id: actorName,
+        action: action,
+        detail: JSON.stringify({ memberId, memberName, ...changes, user_role: actorRole }),
+        time: new Date().toISOString(),
+        status: 'success',
+      }]);
+    }
+
+    if (result.error) {
+      throw result.error;
+    }
+  } catch (err) {
+    console.error('Failed to write audit log:', err);
+  }
+};
 
 const sanitizeFileName = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
@@ -163,6 +204,12 @@ export const addMember = async (memberData) => {
 
   const photoAccessUrl = await getPhotoAccessUrl(data.photo_url);
 
+  await logAuditTrail('Created member', data.member_id, data.full_name || '', {
+    memberName: data.full_name || '',
+    membership_type: data.membership_type || '',
+    email: data.email || '',
+  });
+
   return {
     ...data,
     photo_url: photoAccessUrl,
@@ -219,19 +266,33 @@ export const fetchMembers = async () => {
 /**
  * Delete a member
  */
-export const deleteMember = async (memberId) => {
+export const deleteMember = async (memberId, memberData = {}) => {
   const { error } = await supabase
     .from("member")
     .delete()
     .eq("member_id", memberId);
 
   if (error) throw error;
+
+  await logAuditTrail('Deleted member', memberId, memberData.full_name || '', {
+    memberName: memberData.full_name || '',
+    membership_type: memberData.membership_type || '',
+  });
 };
 
 /**
  * Update member details
  */
 export const updateMember = async (memberId, updates) => {
+  // Fetch old data first to capture changes
+  const { data: oldData, error: fetchError } = await supabase
+    .from("member")
+    .select('full_name, membership_type, email, phone, address, birthday, photo_url')
+    .eq("member_id", memberId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
   const { data, error } = await supabase
     .from("member")
     .update(updates)
@@ -239,10 +300,62 @@ export const updateMember = async (memberId, updates) => {
     .select();
 
   if (error) throw error;
-  return data?.[0] || null;
+
+  // Capture what changed
+  const newRecord = data?.[0];
+  const changes = {};
+
+  if (oldData.full_name !== updates.full_name) {
+    changes.full_name = { old: oldData.full_name, new: updates.full_name };
+  }
+  if (oldData.membership_type !== updates.membership_type) {
+    changes.membership_type = { old: oldData.membership_type, new: updates.membership_type };
+  }
+  if (oldData.email !== updates.email) {
+    changes.email = { old: oldData.email, new: updates.email };
+  }
+  if (oldData.phone !== updates.phone) {
+    changes.phone = { old: oldData.phone, new: updates.phone };
+  }
+  if (oldData.address !== updates.address) {
+    changes.address = { old: oldData.address, new: updates.address };
+  }
+  if (oldData.birthday !== updates.birthday) {
+    changes.birthday = { old: oldData.birthday, new: updates.birthday };
+  }
+  if ('photo_url' in updates && oldData.photo_url !== updates.photo_url) {
+    if (updates.photo_url) {
+      changes.photo = { old: 'Previous photo', new: 'Updated photo' };
+    } else {
+      changes.photo = { old: 'Had photo', new: 'Photo removed' };
+    }
+  }
+
+  await logAuditTrail('Updated member', memberId, newRecord?.full_name || '', changes);
+  // Ensure returned record contains a usable photo URL (signed or public)
+  if (newRecord && newRecord.photo_url) {
+    try {
+      const accessUrl = await getPhotoAccessUrl(newRecord.photo_url);
+      newRecord.photo_url = accessUrl || newRecord.photo_url;
+    } catch (err) {
+      // If conversion fails, leave the stored value so caller can handle it
+      // eslint-disable-next-line no-console
+      console.warn('Failed to convert photo_url to access URL', err);
+    }
+  }
+
+  return newRecord || null;
 };
 
 export const updateMemberMembership = async (memberId, updates) => {
+  const { data: oldData, error: fetchError } = await supabase
+    .from("member")
+    .select('full_name, monthly_validity, membership_validity, expiration_date, join_date')
+    .eq("member_id", memberId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
   const currentJoinDate = updates.joinDate || new Date().toISOString().split("T")[0];
   const payload = {
     monthly_validity: updates.monthlyValidity || null,
@@ -260,5 +373,24 @@ export const updateMemberMembership = async (memberId, updates) => {
     .single();
 
   if (error) throw error;
+
+  const newExpirationDate = data?.expiration_date || null;
+  const changes = {
+    monthly_validity: {
+      old: oldData.monthly_validity || null,
+      new: payload.monthly_validity,
+    },
+    membership_validity: {
+      old: oldData.membership_validity || null,
+      new: payload.membership_validity,
+    },
+    expiration_date: {
+      old: oldData.expiration_date || null,
+      new: newExpirationDate,
+    },
+  };
+
+  await logAuditTrail('Updated member membership', memberId, oldData.full_name || '', changes);
+
   return data || null;
 };

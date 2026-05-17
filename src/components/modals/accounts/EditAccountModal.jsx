@@ -33,12 +33,15 @@ export default function EditAccountModal({ account, onClose, onSave }) {
   const handleSave = () => {
     onSave?.({
       ...account,
+      firstName: form.firstName,
+      lastName: form.lastName,
       name: `${form.firstName} ${form.initial ? form.initial + ". " : ""}${form.lastName}`.trim(),
       firstName: form.firstName,
       lastName: form.lastName,
       role: form.role,
+      email: form.email,
       username: form.username,
-      email: form.username,
+      password: form.password || undefined,
     });
     onClose();
   };

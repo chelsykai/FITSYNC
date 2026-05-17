@@ -19,9 +19,11 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const [auditLogs, setAuditLogs]     = useState([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError]   = useState(null);
-  const [admins, setAdmins]           = useState(["all admins"]);
+  const [admins, setAdmins]           = useState(["all users"]);
   const [showAudit, setShowAudit]     = useState(false);
-  const [filterAdmin, setFilterAdmin] = useState("all admins");
+  const [filterAdmin, setFilterAdmin] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [page, setPage]               = useState(1);
   const [showCreate, setShowCreate]   = useState(false);
   const [editTarget, setEditTarget]   = useState(null);
@@ -87,8 +89,8 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
       ]);
       setAuditLogs(logs);
       setAdmins(users);
-      // Reset filter to "all admins" when loading new data
-      setFilterAdmin("all admins");
+      // Reset filter to empty when loading new data
+      setFilterAdmin("");
     } catch (err) {
       setAuditError(err.message || "Failed to load audit logs");
       console.error("Error loading audit data:", err);
@@ -118,9 +120,27 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
   const paginated  = accounts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const filteredLogs = filterAdmin === "all admins"
-    ? auditLogs
-    : auditLogs.filter((l) => l.user === filterAdmin);
+  const filteredLogs = (() => {
+    const val = (filterAdmin || '').trim().toLowerCase();
+    if (!val || val === 'all users' || val === 'all admins') return auditLogs;
+    return auditLogs.filter((l) => (l.user || '').toLowerCase().includes(val));
+  })();
+
+  // Apply date range filter on top of admin filter
+  const filteredLogsByDate = (() => {
+    const s = startDate ? new Date(startDate + 'T00:00:00') : null;
+    const e = endDate ? new Date(endDate + 'T23:59:59.999') : null;
+
+    return filteredLogs.filter((l) => {
+      const timeStr = l.timeISO || l.time || null;
+      if (!timeStr) return true; // keep logs without parseable time
+      const t = new Date(timeStr);
+      if (Number.isNaN(t.getTime())) return true;
+      if (s && t < s) return false;
+      if (e && t > e) return false;
+      return true;
+    });
+  })();
 
   const handleCreate = async (newAccount) => {
     try {
@@ -137,6 +157,8 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
       const updatedAccount = await updateAccount(updated.id, updated);
       const updatedId = String(updated.id);
       setAccounts((prev) => prev.map((a) => String(a.id) === updatedId ? updatedAccount : a));
+      setEditTarget(null); // Close the modal
+      loadAccounts(); // Refresh the table
     } catch (err) {
       setError("Failed to update account: " + err.message);
     }
@@ -144,7 +166,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
 
   const handleDelete = async (target) => {
     try {
-      await deleteAccount(target.id);
+      await deleteAccount(target.id, target);
       const deletedId = String(target.id);
       setAccounts((prev) => prev.filter((a) => String(a.id) !== deletedId));
       loadAccounts();
@@ -311,11 +333,21 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                 </p>
 
                 <div className={styles.filterRow}>
-                  <span className={styles.filterLabel}>Filter by admin</span>
-                  <select className={styles.filterSelect} value={filterAdmin}
-                    onChange={(e) => setFilterAdmin(e.target.value)}>
-                    {admins.map((a) => <option key={a} value={a}>{a}</option>)}
-                  </select>
+                  <span className={styles.filterLabel}>Search user</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input
+                      className={styles.filterSelect}
+                      placeholder="Type username..."
+                      value={filterAdmin}
+                      onChange={(e) => setFilterAdmin(e.target.value)}
+                    />
+                  </div>
+
+                  <span className={styles.filterLabel} style={{ marginLeft: '16px' }}>Date range</span>
+                  <input type="date" className={styles.filterDate} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  <span style={{ margin: '0 8px' }}>to</span>
+                  <input type="date" className={styles.filterDate} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <button className={styles.clearBtn} onClick={() => { setStartDate(''); setEndDate(''); }}>Clear Dates</button>
                 </div>
 
                 {auditLoading ? (
@@ -333,30 +365,89 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                     <tr>
                       <th>Time</th>
                       <th>User</th>
+                      <th>Role</th>
                       <th>Action</th>
                       <th>Changes</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredLogs.map((log, i) => (
+                    {filteredLogsByDate.map((log, i) => (
                       <tr key={i}>
                         <td className={styles.timeCell}>{log.time}</td>
                         <td><strong>{log.user}</strong></td>
+                        <td>{log.role || 'N/A'}</td>
                         <td>{log.action}</td>
                         <td>
                           <div className={styles.changes}>
-                            {Object.entries(log.changes).map(([k, v]) => (
-                              <div key={k}>
-                                <span className={styles.changeKey}>{k}:</span>{" "}
-                                <span className={
-                                  v === "record added" || v === "member added" || v === "notification sent"
-                                    ? styles.statusSuccess
-                                    : v === "failed to add record"
-                                    ? styles.statusError
-                                    : ""
-                                }>{v}</span>
-                              </div>
-                            ))}
+                            {(() => {
+                              const action = log.action || '';
+                              const accountName = log.changes?.accountName || '';
+                              const subjectName =
+                                log.changes?.accountName ||
+                                log.changes?.memberName ||
+                                log.changes?.fullName ||
+                                log.changes?.name ||
+                                log.changes?.member ||
+                                log.changes?.member_id ||
+                                '';
+                              const changes = log.changes || {};
+
+                              if (action.includes('Deleted')) {
+                                return (
+                                  <span style={{ color: '#dc3545', fontWeight: '500' }}>
+                                    deleted {subjectName || accountName}
+                                  </span>
+                                );
+                              } else if (action.includes('Created')) {
+                                return (
+                                  <span style={{ color: '#28a745', fontWeight: '500' }}>
+                                    created {subjectName || accountName}
+                                  </span>
+                                );
+                              } else if (action.includes('Updated')) {
+                                // Show field changes: name: old -> new
+                                const changeEntries = Object.entries(changes).filter(
+                                  ([k]) => k !== 'accountId' && k !== 'accountName'
+                                );
+
+                                if (changeEntries.length === 0) {
+                                  return <span>No changes recorded</span>;
+                                }
+
+                                return (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {subjectName && (
+                                      <div>
+                                        <span style={{ fontWeight: '500' }}>Updated:</span> {subjectName}
+                                      </div>
+                                    )}
+                                    {changeEntries.map(([k, v]) => {
+                                      if (typeof v === 'object' && v.old !== undefined && v.new !== undefined) {
+                                        return (
+                                          <div key={k}>
+                                            <span style={{ fontWeight: '500' }}>{k}:</span> {v.old} → {v.new}
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </div>
+                                );
+                              }
+
+                              // Recorded payment actions
+                              if (action.toLowerCase().includes('record')) {
+                                const memberId = changes.memberId || changes.member_id || changes.member || '';
+                                const amount = changes.amount || changes.amount_paid || '';
+                                return (
+                                  <span style={{ color: '#007bff', fontWeight: '500' }}>
+                                    recorded payment{memberId ? ` for ${memberId}` : ''}{amount ? ` — ₱${amount}` : ''}
+                                  </span>
+                                );
+                              }
+
+                              return <span>Unknown action</span>;
+                            })()}
                           </div>
                         </td>
                       </tr>
