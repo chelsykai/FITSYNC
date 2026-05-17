@@ -13,6 +13,22 @@ import ChangePasswordPage from "./pages/dashboard/ChangePasswordPage";
 import ForcePasswordChangeModal from "./components/modals/accounts/ForcePasswordChangeModal";
 import { getWorkingDaysLeft } from "./utils/dateUtils";
 
+const ROUTE_TO_PATH = {
+  scanner: "/scannerpage",
+};
+
+const PATH_TO_ROUTE = {
+  "/scannerpage": "scanner",
+};
+
+const AUTH_ROUTES = new Set(["login", "create", "forgot"]);
+
+const normalizePathname = (pathname = "/") => {
+  if (!pathname) return "/";
+  const trimmed = pathname.replace(/\/+$/, "");
+  return trimmed || "/";
+};
+
 function App() {
   const [route,         setRoute]         = useState("login");
   const [isLoading,     setIsLoading]     = useState(true);
@@ -22,6 +38,8 @@ function App() {
   // Check for existing session on app load
   useEffect(() => {
     const stored = localStorage.getItem("currentUser");
+    const pathRoute = PATH_TO_ROUTE[normalizePathname(window.location.pathname)];
+
     if (stored) {
       const user = JSON.parse(stored);
       const lastRoute = localStorage.getItem("lastRoute");
@@ -30,17 +48,29 @@ function App() {
         const daysLeft = getWorkingDaysLeft(user.password_change_deadline);
         setForcePassData({ user, daysLeft });
       }
-      setRoute(lastRoute || "overview");
+      setRoute(pathRoute || lastRoute || "overview");
     }
     setIsLoading(false);
   }, []);
 
   // Save current route
   useEffect(() => {
-    if (!["login","create","forgot"].includes(route)) {
+    if (!AUTH_ROUTES.has(route)) {
       localStorage.setItem("lastRoute", route);
     }
   }, [route]);
+
+  // Keep scanner page as a dedicated URL path
+  useEffect(() => {
+    if (isLoading) return;
+
+    const targetPath = AUTH_ROUTES.has(route) ? "/" : (ROUTE_TO_PATH[route] || "/");
+    const currentPath = normalizePathname(window.location.pathname);
+
+    if (currentPath !== targetPath) {
+      window.history.replaceState({}, "", targetPath);
+    }
+  }, [route, isLoading]);
 
   const navigate = (to, meta = {}) => {
     if (to === "logout") {
