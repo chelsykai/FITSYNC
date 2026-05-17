@@ -26,9 +26,13 @@ export default function EditAccountModal({ account, onClose, onSave }) {
     setShowReAuth(false);
     onSave?.({
       ...account,
+      firstName: form.firstName,
+      lastName: form.lastName,
       name: `${form.firstName} ${form.initial ? form.initial + ". " : ""}${form.lastName}`.trim(),
       role: form.role,
       email: form.email,
+      username: form.username,
+      password: form.password || undefined,
     });
     onClose();
   };

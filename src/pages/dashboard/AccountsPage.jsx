@@ -120,7 +120,11 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
 
   const filteredLogs = filterAdmin === "all admins"
     ? auditLogs
-    : auditLogs.filter((l) => l.user === filterAdmin);
+    : auditLogs.filter((l) => {
+        const logUser = (l.user || '').trim().toLowerCase();
+        const filterVal = (filterAdmin || '').trim().toLowerCase();
+        return logUser === filterVal;
+      });
 
   const handleCreate = async (newAccount) => {
     try {
@@ -137,6 +141,8 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
       const updatedAccount = await updateAccount(updated.id, updated);
       const updatedId = String(updated.id);
       setAccounts((prev) => prev.map((a) => String(a.id) === updatedId ? updatedAccount : a));
+      setEditTarget(null); // Close the modal
+      loadAccounts(); // Refresh the table
     } catch (err) {
       setError("Failed to update account: " + err.message);
     }
@@ -144,7 +150,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
 
   const handleDelete = async (target) => {
     try {
-      await deleteAccount(target.id);
+      await deleteAccount(target.id, target);
       const deletedId = String(target.id);
       setAccounts((prev) => prev.filter((a) => String(a.id) !== deletedId));
       loadAccounts();
@@ -345,18 +351,51 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                         <td>{log.action}</td>
                         <td>
                           <div className={styles.changes}>
-                            {Object.entries(log.changes).map(([k, v]) => (
-                              <div key={k}>
-                                <span className={styles.changeKey}>{k}:</span>{" "}
-                                <span className={
-                                  v === "record added" || v === "member added" || v === "notification sent"
-                                    ? styles.statusSuccess
-                                    : v === "failed to add record"
-                                    ? styles.statusError
-                                    : ""
-                                }>{v}</span>
-                              </div>
-                            ))}
+                            {(() => {
+                              const action = log.action || '';
+                              const accountName = log.changes?.accountName || '';
+                              const changes = log.changes || {};
+
+                              if (action.includes('Deleted')) {
+                                return (
+                                  <span style={{ color: '#dc3545', fontWeight: '500' }}>
+                                    deleted {accountName}
+                                  </span>
+                                );
+                              } else if (action.includes('Created')) {
+                                return (
+                                  <span style={{ color: '#28a745', fontWeight: '500' }}>
+                                    created {accountName}
+                                  </span>
+                                );
+                              } else if (action.includes('Updated')) {
+                                // Show field changes: name: old -> new
+                                const changeEntries = Object.entries(changes).filter(
+                                  ([k]) => k !== 'accountId' && k !== 'accountName'
+                                );
+
+                                if (changeEntries.length === 0) {
+                                  return <span>No changes recorded</span>;
+                                }
+
+                                return (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {changeEntries.map(([k, v]) => {
+                                      if (typeof v === 'object' && v.old !== undefined && v.new !== undefined) {
+                                        return (
+                                          <div key={k}>
+                                            <span style={{ fontWeight: '500' }}>{k}:</span> {v.old} → {v.new}
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                  </div>
+                                );
+                              }
+
+                              return <span>Unknown action</span>;
+                            })()}
                           </div>
                         </td>
                       </tr>
