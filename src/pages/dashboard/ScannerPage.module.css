@@ -167,6 +167,42 @@
   margin-bottom: 14px;
 }
 
+.scannerInputWrap {
+  margin-bottom: 14px;
+}
+
+.scannerInputLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4d6440;
+  margin-bottom: 8px;
+}
+
+.scannerInput {
+  width: 100%;
+  border: 1px solid #c9d8bb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #23331f;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scannerInput:focus {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.15);
+}
+
+.scannerInputHint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #5f7651;
+}
+
 .scannerStartBtn,
 .scannerStopBtn {
   border: none;
