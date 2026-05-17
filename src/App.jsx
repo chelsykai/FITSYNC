@@ -22,6 +22,15 @@ const PATH_TO_ROUTE = {
 };
 
 const AUTH_ROUTES = new Set(["login", "create", "forgot"]);
+const NON_SCANNER_ROUTES = new Set([
+  "overview",
+  "members",
+  "payments",
+  "notifications",
+  "accounts",
+  "recordPayment",
+  "changePassword",
+]);
 
 const normalizePathname = (pathname = "/") => {
   if (!pathname) return "/";
@@ -43,19 +52,21 @@ function App() {
     if (stored) {
       const user = JSON.parse(stored);
       const lastRoute = localStorage.getItem("lastRoute");
+      const fallbackRoute = NON_SCANNER_ROUTES.has(lastRoute) ? lastRoute : "overview";
       // Check if password change is still required
       if (user.password_change_required === true) {
         const daysLeft = getWorkingDaysLeft(user.password_change_deadline);
         setForcePassData({ user, daysLeft });
       }
-      setRoute(pathRoute || lastRoute || "overview");
+      // Scanner only opens from explicit /scannerpage path.
+      setRoute(pathRoute || fallbackRoute);
     }
     setIsLoading(false);
   }, []);
 
   // Save current route
   useEffect(() => {
-    if (!AUTH_ROUTES.has(route)) {
+    if (!AUTH_ROUTES.has(route) && route !== "scanner") {
       localStorage.setItem("lastRoute", route);
     }
   }, [route]);
