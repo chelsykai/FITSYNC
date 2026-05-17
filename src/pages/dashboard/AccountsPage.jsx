@@ -22,6 +22,8 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const [admins, setAdmins]           = useState(["all admins"]);
   const [showAudit, setShowAudit]     = useState(false);
   const [filterAdmin, setFilterAdmin] = useState("all admins");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [page, setPage]               = useState(1);
   const [showCreate, setShowCreate]   = useState(false);
   const [editTarget, setEditTarget]   = useState(null);
@@ -125,6 +127,22 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
         const filterVal = (filterAdmin || '').trim().toLowerCase();
         return logUser === filterVal;
       });
+
+  // Apply date range filter on top of admin filter
+  const filteredLogsByDate = (() => {
+    const s = startDate ? new Date(startDate + 'T00:00:00') : null;
+    const e = endDate ? new Date(endDate + 'T23:59:59.999') : null;
+
+    return filteredLogs.filter((l) => {
+      const timeStr = l.timeISO || l.time || null;
+      if (!timeStr) return true; // keep logs without parseable time
+      const t = new Date(timeStr);
+      if (Number.isNaN(t.getTime())) return true;
+      if (s && t < s) return false;
+      if (e && t > e) return false;
+      return true;
+    });
+  })();
 
   const handleCreate = async (newAccount) => {
     try {
@@ -322,6 +340,12 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                     onChange={(e) => setFilterAdmin(e.target.value)}>
                     {admins.map((a) => <option key={a} value={a}>{a}</option>)}
                   </select>
+
+                  <span className={styles.filterLabel} style={{ marginLeft: '16px' }}>Date range</span>
+                  <input type="date" className={styles.filterDate} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  <span style={{ margin: '0 8px' }}>to</span>
+                  <input type="date" className={styles.filterDate} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <button className={styles.clearBtn} onClick={() => { setStartDate(''); setEndDate(''); }}>Clear Dates</button>
                 </div>
 
                 {auditLoading ? (
@@ -344,7 +368,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredLogs.map((log, i) => (
+                    {filteredLogsByDate.map((log, i) => (
                       <tr key={i}>
                         <td className={styles.timeCell}>{log.time}</td>
                         <td><strong>{log.user}</strong></td>

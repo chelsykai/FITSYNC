@@ -45,9 +45,11 @@ export const fetchAuditLogs = async () => {
           }
         }
 
+        const timeISO = log.created_at ? new Date(log.created_at).toISOString() : null;
         return {
           id: log.log_id,
-          time: log.created_at ? new Date(log.created_at).toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : '',
+          time: timeISO ? new Date(timeISO).toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : '',
+          timeISO,
           user: log.user_name || 'system',
           user_id: log.user_name,
           action: log.action_performed || 'unknown_action',
@@ -73,9 +75,20 @@ export const fetchAuditLogs = async () => {
           }
         }
 
+        // For legacy rows, attempt to preserve an ISO timestamp if available in `time`.
+        let timeISO = null;
+        if (log.time) {
+          try {
+            timeISO = new Date(log.time).toISOString();
+          } catch (e) {
+            timeISO = null;
+          }
+        }
+
         return {
           id: log.log_id,
           time: log.time || '',
+          timeISO,
           user: log.user_id?.toString() || 'system',
           user_id: log.user_id?.toString() || 'system',
           action: log.action || 'unknown_action',
@@ -98,7 +111,7 @@ export const getAuditUsers = async () => {
   try {
     const uniqueUsers = new Set();
 
-    // Fetch audit logs to get actors who have performed actions
+    // Fetch audit logs to get actor usernames or ids
     const auditResult = await supabase
       .from('audit_trail')
       .select('user_name, user_id')
@@ -107,26 +120,24 @@ export const getAuditUsers = async () => {
     if (auditResult.data) {
       (auditResult.data || []).forEach(log => {
         const userName = (log.user_name || log.user_id || '').trim();
-        if (userName) uniqueUsers.add(userName);
+        if (userName && userName.toLowerCase() !== 'system') uniqueUsers.add(userName);
       });
     }
 
-    // Fetch all admin accounts from system_user
+    // Also include admin usernames from system_user
     const adminsResult = await supabase
       .from('system_user')
-      .select('first_name, last_name, username')
+      .select('username')
       .eq('role', 'Admin')
-      .order('first_name', { ascending: true });
+      .order('username', { ascending: true });
 
     if (adminsResult.data) {
       (adminsResult.data || []).forEach(admin => {
-        // Construct full name the same way as in accountService logAuditTrail
-        const adminName = `${admin.first_name || ''} ${admin.last_name || ''}`.trim() || admin.username;
-        if (adminName) uniqueUsers.add(adminName);
+        if (admin.username) uniqueUsers.add(admin.username);
       });
     }
 
-    return ['all admins', ...Array.from(uniqueUsers)];
+    return ['all admins', ...Array.from(uniqueUsers).sort((a, b) => a.localeCompare(b))];
   } catch (error) {
     console.error('Error fetching audit users:', error);
     return ['all admins'];
