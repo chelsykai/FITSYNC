@@ -20,16 +20,24 @@ function assertEmailConfig() {
 }
 
 function buildMessage(notification) {
+  const safeDays = Number.isFinite(notification?.daysRemaining)
+    ? Math.abs(notification.daysRemaining)
+    : 0;
+
   if (notification.type === "OVERDUE BALANCE") {
     return `Your account has an overdue balance of ${notification.overdueAmountText}. Please settle your balance as soon as possible to keep your membership active.`;
   }
 
-  if (notification.type === "MEMBERSHIP EXPIRED") {
-    return `Your membership expired on ${notification.expiryText}. Please renew to continue accessing gym services.`;
+  if (notification.type === "MEMBERSHIP OVERDUE") {
+    return `Your membership is overdue by ${safeDays} day(s). Expiry date: ${notification.expiryText}. Please renew as soon as possible to continue accessing gym services.`;
   }
 
-  return `Your membership will expire in ${notification.daysRemaining} day(s) on ${notification.expiryText}. Please renew before the expiry date.`;
-}
+  if (notification.type === "MEMBERSHIP EXPIRED") {
+    return `Your membership has expired${notification.expiryText ? ` on ${notification.expiryText}` : ""}. Please renew to continue accessing gym services.`;
+  }
+
+  return `Your membership will expire in ${safeDays} day(s)${notification.expiryText ? ` on ${notification.expiryText}` : ""}. Please renew before the expiry date.`;
+ } 
 
 export async function sendMemberNotificationEmail(member, notification) {
   if (!member?.email) {
@@ -47,7 +55,7 @@ export async function sendMemberNotificationEmail(member, notification) {
     overdue_amount: notification.overdueAmountText || "",
     days_remaining:
       typeof notification.daysRemaining === "number"
-        ? String(notification.daysRemaining)
+        ? String(Math.abs(notification.daysRemaining))
         : "",
     expiry_date: notification.expiryText || "",
     message: buildMessage(notification),
