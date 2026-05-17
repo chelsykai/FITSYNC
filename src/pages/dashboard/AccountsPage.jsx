@@ -19,9 +19,9 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const [auditLogs, setAuditLogs]     = useState([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError]   = useState(null);
-  const [admins, setAdmins]           = useState(["all admins"]);
+  const [admins, setAdmins]           = useState(["all users"]);
   const [showAudit, setShowAudit]     = useState(false);
-  const [filterAdmin, setFilterAdmin] = useState("all admins");
+  const [filterAdmin, setFilterAdmin] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage]               = useState(1);
@@ -89,8 +89,8 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
       ]);
       setAuditLogs(logs);
       setAdmins(users);
-      // Reset filter to "all admins" when loading new data
-      setFilterAdmin("all admins");
+      // Reset filter to empty when loading new data
+      setFilterAdmin("");
     } catch (err) {
       setAuditError(err.message || "Failed to load audit logs");
       console.error("Error loading audit data:", err);
@@ -120,13 +120,11 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
   const paginated  = accounts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const filteredLogs = filterAdmin === "all admins"
-    ? auditLogs
-    : auditLogs.filter((l) => {
-        const logUser = (l.user || '').trim().toLowerCase();
-        const filterVal = (filterAdmin || '').trim().toLowerCase();
-        return logUser === filterVal;
-      });
+  const filteredLogs = (() => {
+    const val = (filterAdmin || '').trim().toLowerCase();
+    if (!val || val === 'all users' || val === 'all admins') return auditLogs;
+    return auditLogs.filter((l) => (l.user || '').toLowerCase().includes(val));
+  })();
 
   // Apply date range filter on top of admin filter
   const filteredLogsByDate = (() => {
@@ -335,11 +333,15 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                 </p>
 
                 <div className={styles.filterRow}>
-                  <span className={styles.filterLabel}>Filter by admin</span>
-                  <select className={styles.filterSelect} value={filterAdmin}
-                    onChange={(e) => setFilterAdmin(e.target.value)}>
-                    {admins.map((a) => <option key={a} value={a}>{a}</option>)}
-                  </select>
+                  <span className={styles.filterLabel}>Search user</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input
+                      className={styles.filterSelect}
+                      placeholder="Type username..."
+                      value={filterAdmin}
+                      onChange={(e) => setFilterAdmin(e.target.value)}
+                    />
+                  </div>
 
                   <span className={styles.filterLabel} style={{ marginLeft: '16px' }}>Date range</span>
                   <input type="date" className={styles.filterDate} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -363,6 +365,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                     <tr>
                       <th>Time</th>
                       <th>User</th>
+                      <th>Role</th>
                       <th>Action</th>
                       <th>Changes</th>
                     </tr>
@@ -372,12 +375,21 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                       <tr key={i}>
                         <td className={styles.timeCell}>{log.time}</td>
                         <td><strong>{log.user}</strong></td>
+                        <td>{log.role || 'N/A'}</td>
                         <td>{log.action}</td>
                         <td>
                           <div className={styles.changes}>
                             {(() => {
                               const action = log.action || '';
                               const accountName = log.changes?.accountName || '';
+                              const subjectName =
+                                log.changes?.accountName ||
+                                log.changes?.memberName ||
+                                log.changes?.fullName ||
+                                log.changes?.name ||
+                                log.changes?.member ||
+                                log.changes?.member_id ||
+                                '';
                               const changes = log.changes || {};
 
                               if (action.includes('Deleted')) {
@@ -404,6 +416,11 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
 
                                 return (
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {subjectName && (
+                                      <div>
+                                        <span style={{ fontWeight: '500' }}>Updated:</span> {subjectName}
+                                      </div>
+                                    )}
                                     {changeEntries.map(([k, v]) => {
                                       if (typeof v === 'object' && v.old !== undefined && v.new !== undefined) {
                                         return (
@@ -415,6 +432,17 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                                       return null;
                                     })}
                                   </div>
+                                );
+                              }
+
+                              // Recorded payment actions
+                              if (action.toLowerCase().includes('record')) {
+                                const memberId = changes.memberId || changes.member_id || changes.member || '';
+                                const amount = changes.amount || changes.amount_paid || '';
+                                return (
+                                  <span style={{ color: '#007bff', fontWeight: '500' }}>
+                                    recorded payment{memberId ? ` for ${memberId}` : ''}{amount ? ` — ${amount}` : ''}
+                                  </span>
                                 );
                               }
 

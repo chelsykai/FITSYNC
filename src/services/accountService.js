@@ -1,9 +1,11 @@
 import { supabase } from '../lib/supabaseClient';
+import { getAuditActorRole } from './auditService';
 
 const logAuditTrail = async (action, userId, accountName, details = {}) => {
   try {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const actorName = currentUser?.name || currentUser?.username || 'system';
+    const actorRole = await getAuditActorRole();
 
     // Format the affected_data more precisely
     const affectedData = {
@@ -15,6 +17,7 @@ const logAuditTrail = async (action, userId, accountName, details = {}) => {
     // Try new schema first
     let result = await supabase.from('audit_trail').insert([{
       user_name: actorName,
+      user_role: actorRole,
       action_performed: action,
       affected_module: 'Accounts',
       affected_data: affectedData,
@@ -24,10 +27,11 @@ const logAuditTrail = async (action, userId, accountName, details = {}) => {
     // If new schema fails, fallback to legacy schema
     if (result.error) {
       console.log('New schema failed, trying legacy schema...', result.error);
+      // Legacy fallback: embed role into detail JSON so legacy schema still records role information
       result = await supabase.from('audit_trail').insert([{
         user_id: actorName,
         action: action,
-        detail: JSON.stringify(affectedData),
+        detail: JSON.stringify({ ...affectedData, user_role: actorRole }),
         time: new Date().toISOString(),
         status: 'success',
       }]);

@@ -3,6 +3,7 @@ import styles from "./RecordPaymentPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ReAuthModal from "../../components/ReAuthModal";
 import { supabase } from "../../lib/supabaseClient";
+import { getAuditActorRole } from "../../services/auditService";
 
 const getTodayDateString = () => new Date().toISOString().split("T")[0];
 
@@ -65,6 +66,33 @@ const add_record = async (formData) => {
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    // Log audit trail for payment record
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const actorName = currentUser?.username || currentUser?.name || 'system';
+      const actorRole = await getAuditActorRole();
+      await supabase.from('audit_trail').insert([{
+        user_name: actorName,
+        user_role: actorRole,
+        action_performed: 'Recorded payment',
+        affected_module: 'Payments',
+        affected_data: {
+          memberId: formData.memberId,
+          memberName: formData.memberName,
+          amount: parseInt(formData.total) || 0,
+          date: formData.date,
+          mop: formData.modeOfPayment,
+          ref_number: formData.referenceNumber || null,
+          status: formData.status,
+        },
+        created_at: new Date().toISOString(),
+      }]);
+    } catch (logErr) {
+      // Audit logging failing should not break the main flow
+      // eslint-disable-next-line no-console
+      console.warn('Failed to write audit log for payment:', logErr);
     }
 
     return { success: true };

@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
+import { getAuditActorRole } from "./auditService";
 
 const MEMBER_PHOTO_BUCKET = "member_photo";
 const MEMBER_PHOTO_PREFIX = "member_photos";
@@ -7,10 +8,12 @@ const logAuditTrail = async (action, memberId, memberName, changes = {}) => {
   try {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const actorName = currentUser?.name || currentUser?.username || 'system';
+    const actorRole = await getAuditActorRole();
 
     // Try new schema first
     let result = await supabase.from('audit_trail').insert([{
       user_name: actorName,
+      user_role: actorRole,
       action_performed: action,
       affected_module: 'Members',
       affected_data: {
@@ -27,11 +30,7 @@ const logAuditTrail = async (action, memberId, memberName, changes = {}) => {
       result = await supabase.from('audit_trail').insert([{
         user_id: actorName,
         action: action,
-        detail: JSON.stringify({
-          memberId,
-          memberName,
-          ...changes,
-        }),
+        detail: JSON.stringify({ memberId, memberName, ...changes, user_role: actorRole }),
         time: new Date().toISOString(),
         status: 'success',
       }]);
