@@ -210,7 +210,7 @@ export default function AttendanceModal({ members = [], onClose }) {
                     </td>
                     <td className={styles.attendanceStatusTd}>
                       <span className={styles.statusSummaryBadge}>
-                        [{stat.pct ?? 0}% P | {stat.absentCt ?? 0} A]
+                        [{stat.pct ?? 0} P | {stat.absentCt ?? 0} A]
                       </span>
                     </td>
                     {days.map((d) => {

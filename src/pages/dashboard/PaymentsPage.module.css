@@ -49,9 +49,7 @@
   text-align: center;
 }
 
-.statIcon {
-  font-size: 26px;
-}
+.statIcon { font-size: 26px; }
 
 .statLabel {
   font-size: 14px;
@@ -71,7 +69,7 @@
 .searchWrapper {
   display: flex;
   align-items: center;
-  background:  #c9c9c9;
+  background: #c9c9c9;
   border: 1px solid #ddd;
   border-radius: 12px;
   padding: 10px 16px;
@@ -80,10 +78,7 @@
   width: 340px;
 }
 
-.searchIcon {
-  font-size: 14px;
-  color: #242424;
-}
+.searchIcon { font-size: 14px; color: #242424; }
 
 .searchInput {
   border: none;
@@ -95,15 +90,13 @@
   background: transparent;
 }
 
-.searchInput::placeholder {
-  color: #242424;
-}
+.searchInput::placeholder { color: #242424; }
 
 .clearBtn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #242424; 
+  color: #242424;
   font-size: 14px;
   padding: 0;
 }
@@ -144,16 +137,12 @@
   color: #7eba56;
 }
 
-.addBtn:hover {
-  background: #f0f0f0;
-}
+.addBtn:hover { background: #f0f0f0; }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .table th {
@@ -162,23 +151,18 @@
   font-weight: 700;
   padding: 10px 14px;
   border-bottom: 1px solid #c8e0b0;
-  background: transparent; 
+  background: transparent;
 }
 
 .table td {
   padding: 10px 14px;
   color: #444;
   border-bottom: 1px solid #d8edca;
-  background: transparent; 
+  background: transparent;
 }
 
-.table tr:last-child td {
-  border-bottom: none;
-}
-
-.table tbody tr:hover td {
-  background-color: rgba(255,255,255,0.4); 
-}
+.table tr:last-child td { border-bottom: none; }
+.table tbody tr:hover td { background-color: rgba(255,255,255,0.4); }
 
 /* STATUS BADGES */
 .badge {
@@ -189,13 +173,8 @@
   color: white;
 }
 
-.paid {
-  background-color: #7eba56;
-}
-
-.pending {
-  background-color: #f0a500;
-}
+.paid    { background-color: #7eba56; }
+.pending { background-color: #f0a500; }
 
 .noResults {
   text-align: center;
@@ -222,9 +201,7 @@
   transition: background 0.2s;
 }
 
-.viewAllBtn:hover {
-  background-color: #555;
-}
+.viewAllBtn:hover { background-color: #555; }
 
 /* REVENUE CARDS */
 .revenueRow {
@@ -245,9 +222,11 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-.revenueIcon {
-  font-size: 28px;
+.pendingCard {
+  border: 2px solid #f0a500;
 }
+
+.revenueIcon { font-size: 28px; }
 
 .revenueLabel {
   font-size: 11px;
@@ -261,4 +240,34 @@
   font-weight: 700;
   color: #222;
   margin: 0;
+}
+
+.pendingValue { color: #f0a500; }
+
+/* ── Tablet ── */
+@media (max-width: 1024px) {
+  .content { padding: 28px 24px; margin-left: 180px; }
+  .statValue { font-size: 22px; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .content { margin-left: 0 !important; padding: 80px 16px 24px; }
+  .statRow { flex-direction: column; gap: 10px; }
+  .statCard { min-width: unset; width: 100%; }
+  .revenueRow { flex-direction: column; }
+  .searchWrapper { width: 100%; }
+  .tableCard { padding: 14px 12px; overflow-x: auto; }
+  .table { min-width: 500px; }
+  .tableHeader { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .title { font-size: 22px; }
+}
+
+/* ── Small mobile ── */
+@media (max-width: 480px) {
+  .content { padding: 72px 12px 20px; }
+  .statValue { font-size: 20px; }
+  .title { font-size: 20px; }
+  .viewAllBtn { width: 100%; padding: 10px 24px; }
+  .revenueValue { font-size: 18px; }
 }
