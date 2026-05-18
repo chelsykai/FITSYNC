@@ -2295,3 +2295,58 @@
 }
 
 .accountCreateBtn:hover { background: #6aa947; }
+
+/* ── Modal responsive ── */
+@media (max-width: 768px) {
+  .overlay { align-items: flex-end; }
+  .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px 20px;
+  }
+  .viewAllModal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+  }
+  .attendanceModal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+  }
+  .deleteModal {
+    width: 90% !important;
+    max-width: 360px;
+    border-radius: 16px;
+  }
+  .profileModal {
+    width: 95% !important;
+    border-radius: 20px 20px 0 0;
+  }
+  .createAccountModal {
+    width: 95% !important;
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .formGrid { grid-template-columns: 1fr; }
+  .profileGrid { grid-template-columns: 1fr; }
+  .nameRow { flex-direction: column; }
+  .accountTwoCol { flex-direction: column; }
+  .passwordRow { flex-direction: column; }
+  .dateRow { flex-direction: column; gap: 8px; }
+  .dateSep { display: none; }
+  .attendanceHeader { flex-wrap: wrap; gap: 8px; }
+  .attendanceLegend { font-size: 11px; gap: 6px; }
+}
+
+@media (max-width: 480px) {
+  .modal { padding: 20px 14px; }
+  .modalTitle { font-size: 14px; }
+  .submitBtn, .closeBtn { font-size: 12px; padding: 10px; }
+}

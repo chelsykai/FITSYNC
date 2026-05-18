@@ -165,3 +165,41 @@
 }
  
 .closePageBtn:hover { background: #444; }
+
+/* ── Tablet ── */
+@media (max-width: 1024px) {
+  .content { padding: 28px 24px; margin-left: 180px; }
+  .statRow { gap: 12px; }
+  .statValue { font-size: 22px; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .content { margin-left: 0 !important; padding: 80px 16px 24px; }
+  .statRow { flex-direction: column; gap: 10px; }
+  .statCard { min-width: unset; width: 100%; }
+  .chartsRow { flex-direction: column; }
+  .chartCard { min-width: unset; }
+  .searchWrapper { width: 100%; }
+  .tableCard { padding: 14px 12px; }
+  .actionRow { flex-wrap: wrap; gap: 8px; }
+  .revenueRow { flex-direction: column; }
+  .grid { grid-template-columns: 1fr; }
+  .filterBar { gap: 6px; }
+  .title { font-size: 22px; }
+  .formRow { flex-direction: column; gap: 12px; }
+  .formCard { padding: 24px 16px; }
+  .formRowStatus { flex-direction: column; align-items: flex-start; }
+  .actionBtns { width: 100%; }
+}
+
+/* ── Small mobile ── */
+@media (max-width: 480px) {
+  .content { padding: 72px 12px 20px; }
+  .statValue { font-size: 20px; }
+  .title { font-size: 20px; }
+  .viewAllBtn { padding: 10px 24px; width: 100%; }
+  .pageHeader { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .tableHeader { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .btnRow { flex-direction: column; }
+}
