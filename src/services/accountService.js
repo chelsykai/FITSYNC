@@ -1,4 +1,49 @@
 import { supabase } from '../lib/supabaseClient';
+import { getAuditActorRole } from './auditService';
+
+const logAuditTrail = async (action, userId, accountName, details = {}) => {
+  try {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const actorName = currentUser?.name || currentUser?.username || 'system';
+    const actorRole = await getAuditActorRole();
+
+    // Format the affected_data more precisely
+    const affectedData = {
+      accountId: userId,
+      accountName: accountName,
+      ...details,
+    };
+
+    // Try new schema first
+    let result = await supabase.from('audit_trail').insert([{
+      user_name: actorName,
+      user_role: actorRole,
+      action_performed: action,
+      affected_module: 'Accounts',
+      affected_data: affectedData,
+      created_at: new Date().toISOString(),
+    }]);
+
+    // If new schema fails, fallback to legacy schema
+    if (result.error) {
+      console.log('New schema failed, trying legacy schema...', result.error);
+      // Legacy fallback: embed role into detail JSON so legacy schema still records role information
+      result = await supabase.from('audit_trail').insert([{
+        user_id: actorName,
+        action: action,
+        detail: JSON.stringify({ ...affectedData, user_role: actorRole }),
+        time: new Date().toISOString(),
+        status: 'success',
+      }]);
+    }
+
+    if (result.error) {
+      throw result.error;
+    }
+  } catch (err) {
+    console.error('Failed to write audit log:', err);
+  }
+};
 
 const normalizeAccountInput = (accountData) => {
   const firstName = (accountData.firstName || '').trim();
@@ -116,7 +161,7 @@ export const addAccount = async (accountData) => {
 
     // Transform the returned data
     const user = data[0];
-    return {
+    const result = {
       id: user.user_id,
       name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || 'N/A',
       email: user.username,
@@ -126,6 +171,13 @@ export const addAccount = async (accountData) => {
       username: user.username || '',
       status: user.status || 'active'
     };
+
+    await logAuditTrail('Created account', user.user_id, result.name, {
+      username: user.username,
+      role: user.role,
+    });
+
+    return result;
   } catch (error) {
     console.error('Error adding account:', error);
     throw error;
@@ -137,6 +189,15 @@ export const addAccount = async (accountData) => {
  */
 export const updateAccount = async (accountId, accountData) => {
   try {
+    // Fetch old data first to capture changes
+    const { data: oldData, error: fetchError } = await supabase
+      .from('system_user')
+      .select('first_name, last_name, username, role, status')
+      .eq('user_id', accountId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
     const normalized = normalizeAccountInput(accountData);
     const updateData = {
       first_name: normalized.firstName,
@@ -161,7 +222,7 @@ export const updateAccount = async (accountId, accountData) => {
 
     // Transform the returned data
     const user = data[0];
-    return {
+    const result = {
       id: user.user_id,
       name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || 'N/A',
       email: user.username,
@@ -171,6 +232,25 @@ export const updateAccount = async (accountId, accountData) => {
       username: user.username || '',
       status: user.status || 'active'
     };
+
+    // Capture what changed
+    const changes = {};
+    const oldFullName = `${oldData.first_name || ''} ${oldData.last_name || ''}`.trim();
+    const newFullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    
+    if (oldFullName !== newFullName) {
+      changes.name = { old: oldFullName, new: newFullName };
+    }
+    if (oldData.username !== normalized.username) {
+      changes.username = { old: oldData.username, new: normalized.username };
+    }
+    if (oldData.role !== normalized.role) {
+      changes.role = { old: oldData.role, new: normalized.role };
+    }
+
+    await logAuditTrail('Updated account', user.user_id, result.name, changes);
+
+    return result;
   } catch (error) {
     console.error('Error updating account:', error);
     throw error;
@@ -180,7 +260,7 @@ export const updateAccount = async (accountId, accountData) => {
 /**
  * Delete a user account from the system_user table
  */
-export const deleteAccount = async (accountId) => {
+export const deleteAccount = async (accountId, accountData = {}) => {
   try {
     const { error } = await supabase
       .from('system_user')
@@ -188,7 +268,10 @@ export const deleteAccount = async (accountId) => {
       .eq('user_id', accountId);
 
     if (error) throw error;
-  } catch (error) {
+    await logAuditTrail('Deleted account', accountId, accountData.name || '', {
+      username: accountData.email || accountData.username || '',
+      role: accountData.role || '',
+    });  } catch (error) {
     console.error('Error deleting account:', error);
     throw error;
   }

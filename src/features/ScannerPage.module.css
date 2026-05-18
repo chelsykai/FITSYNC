@@ -1,52 +1,22 @@
 .layout {
-  display: block;
+  display: flex;
   min-height: 100vh;
   font-family: "Montserrat", sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(126, 186, 86, 0.14), transparent 34%),
-    radial-gradient(circle at top right, rgba(217, 236, 204, 0.9), transparent 28%),
-    linear-gradient(180deg, #f8fbf5 0%, #eef4e8 100%);
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: end;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 40px 40px 16px;
-}
-
-.eyebrow {
-  margin: 0 0 10px;
-  color: #5c7a4a;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  background-color: #f5f5f5;
 }
 
 .content {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 0 40px 44px;
+  flex: 1;
+  padding: 36px 40px;
+  overflow-y: auto;
+  margin-left: 180px;
 }
 
 .title {
   color: #7eba56;
-  font-size: 38px;
+  font-size: 28px;
   font-weight: 700;
-  margin: 0;
-}
-
-.lead {
-  max-width: 520px;
-  color: #5f7651;
-  font-size: 14px;
-  line-height: 1.6;
-  margin: 0;
+  margin: 0 0 20px 0;
 }
 
 .scannerCard {
@@ -195,42 +165,6 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 14px;
-}
-
-.scannerInputWrap {
-  margin-bottom: 14px;
-}
-
-.scannerInputLabel {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  color: #4d6440;
-  margin-bottom: 8px;
-}
-
-.scannerInput {
-  width: 100%;
-  border: 1px solid #c9d8bb;
-  border-radius: 12px;
-  padding: 14px 16px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #23331f;
-  background: #fff;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.scannerInput:focus {
-  border-color: #7eba56;
-  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.15);
-}
-
-.scannerInputHint {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #5f7651;
 }
 
 .scannerStartBtn,

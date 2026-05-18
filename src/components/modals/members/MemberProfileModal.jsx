@@ -3,6 +3,7 @@ import styles from "../Modal.module.css";
 import ConfirmModal from "../ConfirmModal";
 import { generateMemberIDPDF } from "../../../utils/generateMemberIDPDF";
 import EditMembershipModal from "./EditMembershipModal";
+import EditMemberModal from "./EditMemberModal";
 import { formatMMDDYYYY } from "../../../utils/dateFormat";
 
 export default function MemberProfileModal({ member, onClose, onDelete, onMembershipUpdated }) {
@@ -10,6 +11,7 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
   const [showEditMembership, setShowEditMembership] = useState(false);
+  const [showEditMember, setShowEditMember] = useState(false);
   const qrContainerRef = useRef();
 
   useEffect(() => {
@@ -83,7 +85,13 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
           <div className={styles.profileTopRow}>
             <div className={styles.profileAvatar}>
               {member.photo_url ? (
-                <img src={member.photo_url} alt={displayName} className={styles.photoPreview} />
+                <img
+                  key={member.photo_url || member.member_id}
+                  src={member.photo_url}
+                  alt={displayName}
+                  className={styles.photoPreview}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
               ) : (
                 "👤"
               )}
@@ -146,6 +154,12 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
           </button>
           <button
             className={styles.profileEmailBtn}
+            onClick={() => setShowEditMember(true)}
+          >
+            Edit Member
+          </button>
+          <button
+            className={styles.profileEmailBtn}
             onClick={() => setShowEditMembership(true)}
           >
             Edit Membership
@@ -192,6 +206,16 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
           member={member}
           onClose={() => setShowEditMembership(false)}
           onSaved={(updatedMember) => onMembershipUpdated?.(updatedMember)}
+        />
+      )}
+      {showEditMember && (
+        <EditMemberModal
+          member={member}
+          onClose={() => setShowEditMember(false)}
+          onSave={(updatedMember) => {
+            setShowEditMember(false);
+            onMembershipUpdated?.(updatedMember);
+          }}
         />
       )}
     </>

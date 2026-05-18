@@ -218,7 +218,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
     try {
       const memberId = member?.member_id || member?.memberId || member?.id;
       if (!memberId) throw new Error('Missing member ID');
-      await deleteMember(memberId);
+      await deleteMember(memberId, member);
       setMembers(prevMembers => prevMembers.filter(m => m.member_id !== memberId));
     } catch (err) {
       console.error('Failed to delete member from profile modal:', err);

@@ -90,8 +90,8 @@ export default function AddMemberModal({ onClose, onSuccess }) {
       const hasMonthlyPlan = Number.isInteger(monthlyValidityMonths) && monthlyValidityMonths > 0;
       const hasYearlyMembership = Number.isInteger(membershipValidityYears) && membershipValidityYears > 0;
 
-      if (hasMonthlyPlan === hasYearlyMembership) {
-        setError("Select exactly one plan: either Months or Years.");
+      if (!hasMonthlyPlan && !hasYearlyMembership) {
+        setError("Please enter at least one plan: Months or Years.");
         setLoading(false);
         return;
       }
@@ -173,7 +173,6 @@ export default function AddMemberModal({ onClose, onSuccess }) {
 
             <div className={styles.membershipSettings}>
               <p className={styles.membershipSettingsTitle}>Membership Settings</p>
-              <p className={styles.membershipSettingsHint}>Choose only one: monthly plan or yearly membership.</p>
 
               <div className={styles.fieldRow}>
                 <div className={styles.labeledField}>

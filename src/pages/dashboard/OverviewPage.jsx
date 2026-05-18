@@ -8,6 +8,7 @@ import { fetchMembers } from "../../services/memberService";
 import {
   fetchTodayAttendanceByTimeBins,
   fetchTodayAttendanceCount,
+  fetchTodayAttendanceRecords,
   fetchCurrentMonthAttendanceByDay,
   fetchCurrentYearAttendanceByMonth,
 } from "../../services/attendanceService";
@@ -239,6 +240,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   const [error, setError] = useState(null);
   const [populationData, setPopulationData] = useState([]);
   const [todayCheckIns, setTodayCheckIns] = useState(0);
+  const [todayAttendanceRecords, setTodayAttendanceRecords] = useState([]);
   const [gymActivity, setGymActivity] = useState(EMPTY_DAILY_ACTIVITY);
   const [activityRange, setActivityRange] = useState("today");
 
@@ -261,11 +263,13 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
       try {
         walkInCount = await fetchTodayAttendanceCount();
         setTodayCheckIns(walkInCount);
+        setTodayAttendanceRecords(await fetchTodayAttendanceRecords());
       } catch (err) {
         console.error("Error fetching today attendance count:", err);
         // If members already failed, keep that error; otherwise show attendance error.
         setError((prev) => prev ? prev : `Failed to load attendance: ${err?.message || err}`);
         setTodayCheckIns(0);
+        setTodayAttendanceRecords([]);
       }
 
       // Clear error if both succeeded
@@ -507,7 +511,11 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
         <ViewAllModal members={expiringSoonMembers} onClose={() => setShowAll(false)} />
       )}
       {showExport && (
-        <ExportModal members={members} onClose={() => setShowExport(false)} />
+        <ExportModal
+          members={members}
+          attendanceRecords={todayAttendanceRecords}
+          onClose={() => setShowExport(false)}
+        />
       )}
     </>
   );

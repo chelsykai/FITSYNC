@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./ScannerPage.module.css";
-import Sidebar from "../../components/sidebar/sidebar";
 import { fetchMembers } from "../../services/memberService";
 import { recordMemberAttendance } from "../../services/attendanceService";
-import { Html5Qrcode } from "html5-qrcode";
 
-export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
-  const scannerRef = useRef(null);
+export default function ScannerPage() {
   const membersRef = useRef([]);
-  const scannerInstanceRef = useRef(null);
-  const audioContextRef = useRef(null);
+  const scanInputRef = useRef(null);
   const lastScanRef = useRef({ id: "", at: 0 });
   const fadeTimerRef = useRef(null);
   const clearTimerRef = useRef(null);
@@ -18,88 +14,24 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [scannerState, setScannerState] = useState("idle");
   const [scannerMessage, setScannerMessage] = useState(
-    "Click Start Camera to begin scanning a member QR code."
+    "Focus the scan field and scan a member QR code."
   );
+  const [scanValue, setScanValue] = useState("");
   const [scanHighlightMember, setScanHighlightMember] = useState(null);
   const [scanHighlightVisible, setScanHighlightVisible] = useState(false);
 
-  const formatCameraError = (err) => {
-    const name = err?.name || "CameraError";
-    const message = err?.message || "Unknown camera error";
-
-    if (typeof window !== "undefined" && !window.isSecureContext) {
-      return "This page is not running in a secure context. Use localhost (http://localhost) or HTTPS.";
-    }
-
-    if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-      return "Camera permission was denied. Allow camera access in the browser and reload the page.";
-    }
-
-    if (name === "NotFoundError") {
-      return "No camera was found on this device.";
-    }
-
-    if (name === "NotReadableError") {
-      return "The camera is already in use by another app or browser tab.";
-    }
-
-    if (name === "SecurityError") {
-      return "Camera access is blocked by the browser or operating system security settings.";
-    }
-
-    if (name === "OverconstrainedError") {
-      return "The requested camera could not be started. Try a different browser or device.";
-    }
-
-    if (!navigator?.mediaDevices?.getUserMedia) {
-      return "This browser does not support camera access.";
-    }
-
-    return `${message} (${name})`;
-  };
-
-  const playScanSound = async () => {
-    try {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return;
-
-      if (!audioContextRef.current || audioContextRef.current.state === "closed") {
-        audioContextRef.current = new AudioContextClass();
-      }
-
-      const audioContext = audioContextRef.current;
-      if (audioContext.state === "suspended") {
-        await audioContext.resume();
-      }
-
-      const now = audioContext.currentTime;
-      const notes = [523.25, 659.25];
-
-      notes.forEach((frequency, index) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        const startTime = now + index * 0.14;
-        const endTime = startTime + 0.16;
-
-        oscillator.type = "triangle";
-        oscillator.frequency.setValueAtTime(frequency, startTime);
-        gainNode.gain.setValueAtTime(0.0001, startTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.14, startTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, endTime);
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.start(startTime);
-        oscillator.stop(endTime);
-      });
-    } catch (err) {
-      console.error("Error playing scan sound:", err);
-    }
-  };
-
   useEffect(() => {
+    if (scanInputRef.current) {
+      scanInputRef.current.focus();
+    }
     membersRef.current = members;
   }, [members]);
+
+  useEffect(() => {
+    if (scanInputRef.current) {
+      scanInputRef.current.focus();
+    }
+  }, [scannerState]);
 
   useEffect(() => {
     const loadMembers = async () => {
@@ -130,180 +62,117 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
       if (duplicateTimerRef.current) {
         clearTimeout(duplicateTimerRef.current);
       }
-
-      const stopScanner = async () => {
-        if (scannerInstanceRef.current) {
-          try {
-            await scannerInstanceRef.current.stop();
-          } catch (err) {
-            console.error("Error stopping scanner:", err);
-          }
-          scannerInstanceRef.current = null;
-        }
-        if (scannerRef.current) {
-          scannerRef.current.innerHTML = "";
-        }
-
-        if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-          try {
-            await audioContextRef.current.close();
-          } catch (err) {
-            console.error("Error closing audio context:", err);
-          }
-          audioContextRef.current = null;
-        }
-      };
-
-      stopScanner();
     };
   }, []);
 
-  const startScanner = async () => {
-    if (!scannerRef.current || scannerInstanceRef.current) return;
+  const processScannedId = async (scannedId) => {
+    const normalizedId = String(scannedId || "").trim();
+    if (!normalizedId) return;
+
+    const now = Date.now();
+    if (lastScanRef.current.id === normalizedId && now - lastScanRef.current.at < 2500) {
+      return;
+    }
+
+    lastScanRef.current = { id: normalizedId, at: now };
+
+    let duplicateScan = false;
 
     try {
-      if (typeof window !== "undefined" && !window.isSecureContext) {
-        throw new Error("This page is not running in a secure context.");
-      }
+      setScannerState("processing");
+      setScannerMessage(`Scanned ${normalizedId}. Recording attendance...`);
 
-      if (!navigator?.mediaDevices?.getUserMedia) {
-        throw new Error("This browser does not support camera access.");
-      }
-
-      scannerInstanceRef.current = new Html5Qrcode("scanner-camera");
-      setScannerState("starting");
-      setScannerMessage("Starting camera...");
-
-      await scannerInstanceRef.current.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 240, height: 240 }, disableFlip: true },
-        async (decodedText) => {
-          const scannedId = String(decodedText || "").trim();
-          if (!scannedId) return;
-
-          const now = Date.now();
-          if (lastScanRef.current.id === scannedId && now - lastScanRef.current.at < 2500) {
-            return;
-          }
-          lastScanRef.current = { id: scannedId, at: now };
-
-          await playScanSound();
-
-          let duplicateScan = false;
-
-          try {
-            setScannerState("processing");
-            setScannerMessage(`Scanned ${scannedId}. Recording attendance...`);
-
-            const matchedMember = membersRef.current.find(
-              (member) =>
-                String(member.member_id) === scannedId ||
-                String(member.memberId) === scannedId
-            );
-
-            if (!matchedMember) {
-              throw new Error(`No member found for ID: ${scannedId}`);
-            }
-
-            const attendanceRecord = await recordMemberAttendance(matchedMember);
-
-            setScannerState("success");
-            setScannerMessage(
-              `${attendanceRecord.member_name} attendance recorded at ${attendanceRecord.attendance_date} ${attendanceRecord.attendance_time}`
-            );
-
-            const highlightData = {
-              name: matchedMember.full_name || attendanceRecord.member_name,
-              memberId: matchedMember.member_id || matchedMember.memberId,
-              photoUrl: matchedMember.photo_url || "",
-            };
-            setScanHighlightMember(highlightData);
-            setScanHighlightVisible(true);
-
-            if (fadeTimerRef.current) {
-              clearTimeout(fadeTimerRef.current);
-            }
-            if (clearTimerRef.current) {
-              clearTimeout(clearTimerRef.current);
-            }
-            if (duplicateTimerRef.current) {
-              clearTimeout(duplicateTimerRef.current);
-            }
-
-            fadeTimerRef.current = setTimeout(() => {
-              setScanHighlightVisible(false);
-            }, 9000);
-
-            clearTimerRef.current = setTimeout(() => {
-              setScanHighlightMember(null);
-            }, 10000);
-          } catch (err) {
-            console.error("Attendance scan error:", err);
-            duplicateScan = err?.code === "ATTENDANCE_ALREADY_RECORDED";
-            setScannerState(duplicateScan ? "duplicate" : "error");
-            setScannerMessage(err.message || "Failed to record attendance.");
-
-            if (duplicateScan) {
-              if (duplicateTimerRef.current) {
-                clearTimeout(duplicateTimerRef.current);
-              }
-
-              duplicateTimerRef.current = setTimeout(() => {
-                setScannerState("ready");
-                setScannerMessage("Camera ready. Point it at a member QR code.");
-              }, 5000);
-            }
-          } finally {
-            if (!duplicateScan) {
-              setTimeout(() => {
-                setScannerState("ready");
-                setScannerMessage("Camera ready. Point it at a member QR code.");
-              }, 400);
-            }
-          }
-        }
+      const matchedMember = membersRef.current.find(
+        (member) =>
+          String(member.member_id) === normalizedId ||
+          String(member.memberId) === normalizedId
       );
 
-      setScannerState("ready");
-      setScannerMessage("Camera ready. Point it at a member QR code.");
+      if (!matchedMember) {
+        throw new Error(`No member found for ID: ${normalizedId}`);
+      }
+
+      const attendanceRecord = await recordMemberAttendance(matchedMember);
+
+      setScannerState("success");
+      setScannerMessage(
+        `${attendanceRecord.member_name} attendance recorded at ${attendanceRecord.attendance_date} ${attendanceRecord.attendance_time}`
+      );
+
+      setScanHighlightMember({
+        name: matchedMember.full_name || attendanceRecord.member_name,
+        memberId: matchedMember.member_id || matchedMember.memberId,
+        photoUrl: matchedMember.photo_url || "",
+      });
+      setScanHighlightVisible(true);
+
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+      if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+      if (duplicateTimerRef.current) clearTimeout(duplicateTimerRef.current);
+
+      fadeTimerRef.current = setTimeout(() => {
+        setScanHighlightVisible(false);
+      }, 9000);
+
+      clearTimerRef.current = setTimeout(() => {
+        setScanHighlightMember(null);
+      }, 10000);
     } catch (err) {
-      console.error("Scanner start error:", err);
-      scannerInstanceRef.current = null;
-      setScannerState("error");
-      setScannerMessage(formatCameraError(err));
+      console.error("Attendance scan error:", err);
+      duplicateScan = err?.code === "ATTENDANCE_ALREADY_RECORDED";
+      setScannerState(duplicateScan ? "duplicate" : "error");
+      setScannerMessage(err.message || "Failed to record attendance.");
+
+      if (duplicateScan) {
+        if (duplicateTimerRef.current) clearTimeout(duplicateTimerRef.current);
+
+        duplicateTimerRef.current = setTimeout(() => {
+          setScannerState("ready");
+          setScannerMessage("Scan the next member QR code.");
+        }, 5000);
+      }
+    } finally {
+      if (!duplicateScan) {
+        setTimeout(() => {
+          setScannerState("ready");
+          setScannerMessage("Scan the next member QR code.");
+        }, 400);
+      }
     }
   };
 
-  const stopScanner = async () => {
-    if (scannerInstanceRef.current) {
-      try {
-        await scannerInstanceRef.current.stop();
-      } catch (err) {
-        console.error("Error stopping scanner:", err);
-      }
-      scannerInstanceRef.current = null;
-    }
-    if (scannerRef.current) {
-      scannerRef.current.innerHTML = "";
-    }
+  const handleScanChange = (e) => {
+    const value = e.target.value;
+    setScanValue(value);
 
-    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-      try {
-        await audioContextRef.current.close();
-      } catch (err) {
-        console.error("Error closing audio context:", err);
-      }
-      audioContextRef.current = null;
+    if (value.trim()) {
+      setScannerState("ready");
+      setScannerMessage("Scanner ready. Press Enter when the QR code finishes.");
     }
-    setScannerState("idle");
-    setScannerMessage("Click Start Camera to begin scanning a member QR code.");
+  };
+
+  const handleScanKeyDown = async (e) => {
+    if (e.key !== "Enter") return;
+
+    e.preventDefault();
+    const scannedId = scanValue.trim();
+    setScanValue("");
+    await processScannedId(scannedId);
   };
 
   return (
     <div className={styles.layout}>
-      <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={`${styles.content} tab-slide-animation`}>
-        <h1 className={styles.title}>Scanner</h1>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Standalone route</p>
+          <h1 className={styles.title}>Scanner</h1>
+        </div>
+        {/* <p className={styles.lead}>
+          Open this page directly at /scannerpage to record attendance without the main sidebar shell.
+        </p> */}
+      </header>
+
+      <div className={`${styles.content} tab-slide-animation`}>
 
         <div
           className={`${styles.scannerCard} ${
@@ -313,7 +182,7 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
           <div className={styles.scannerHeader}>
             <h2 className={styles.scannerTitle}>Attendance Scanner</h2>
             <p className={styles.scannerSubtitle}>
-              Scan a member QR code to record attendance date and time in Supabase.
+              Focus the field below, scan a member QR code, then press Enter to record attendance.
             </p>
           </div>
 
@@ -340,21 +209,24 @@ export default function ScannerPage({ onNavigate, activePage = "scanner" }) {
             </div>
           )}
 
-          <div
-            className={`${styles.scannerViewport} ${
-              scannerState === "duplicate" ? styles.scannerViewportDuplicate : ""
-            }`}
-          >
-            <div id="scanner-camera" ref={scannerRef} className={`${styles.scannerFrame} ${styles.scannerFrameMirrored}`} />
-          </div>
-
-          <div className={styles.scannerActions}>
-            <button className={styles.scannerStartBtn} onClick={startScanner} disabled={loadingMembers}>
-              Start Camera
-            </button>
-            <button className={styles.scannerStopBtn} onClick={stopScanner}>
-              Stop Camera
-            </button>
+          <div className={styles.scannerInputWrap}>
+            <label className={styles.scannerInputLabel} htmlFor="scanner-input">
+              Scanned QR Text
+            </label>
+            <input
+              id="scanner-input"
+              ref={scanInputRef}
+              className={styles.scannerInput}
+              value={scanValue}
+              onChange={handleScanChange}
+              onKeyDown={handleScanKeyDown}
+              placeholder="Scan member ID here"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <div className={styles.scannerInputHint}>
+              The scanner should type the member ID here automatically.
+            </div>
           </div>
 
           <div className={`${styles.scannerStatus} ${styles[`scannerStatus_${scannerState}`] || ""}`}>
