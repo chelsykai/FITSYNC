@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import LogInPage from "../pages/auth/LogInPage";
-import CreatePage from "../pages/auth/CreatePage";
-import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import OverviewPage from "../pages/dashboard/OverviewPage";
 import MembersPage from "../pages/dashboard/MembersPage";
 import PaymentsPage from "../pages/dashboard/PaymentsPage";
@@ -108,10 +106,6 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
     switch (route) {
       case "login":
         return <LogInPage key="login" {...pageProps} />;
-      case "create":
-        return <CreatePage key="create" {...pageProps} />;
-      case "forgot":
-        return <ForgotPasswordPage key="forgot" {...pageProps} />;
       case "overview":
         return <OverviewPage key="overview" activePage="overview" {...pageProps} />;
       case "members":
