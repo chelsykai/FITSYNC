@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
 import { sendMemberWelcomeEmail, uploadQRAndGetUrl } from "../../../services/notificationEmailService";
-import { generateQRCodeDataUrl } from "../../../utils/generateMemberIDPDF";
+import { generateMemberQRCardDataUrl } from "../../../utils/generateMemberIDPDF";
 
 export default function MemberRegisteredModal({ member, onClose }) {
   const [emailStatus, setEmailStatus] = useState("idle"); // idle | sending | sent | error
@@ -17,8 +17,8 @@ export default function MemberRegisteredModal({ member, onClose }) {
     setEmailStatus("sending");
     try {
       const memberId = member.memberId || member.member_id;
-      const qrDataUrl = await generateQRCodeDataUrl(memberId);
-      const qrPublicUrl = await uploadQRAndGetUrl(memberId, qrDataUrl);
+      const qrCardDataUrl = await generateMemberQRCardDataUrl(member);
+      const qrPublicUrl = await uploadQRAndGetUrl(memberId, qrCardDataUrl);
       await sendMemberWelcomeEmail(member, qrPublicUrl);
       setEmailStatus("sent");
     } catch (err) {
