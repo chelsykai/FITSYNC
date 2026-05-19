@@ -1,4 +1,5 @@
 import emailjs from "@emailjs/browser";
+import { supabase } from "../lib/supabaseClient";
 
 const requiredEnv = [
   "VITE_EMAILJS_PUBLIC_KEY",
@@ -17,6 +18,47 @@ function assertEmailConfig() {
     serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
     templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID_NOTIFICATION,
   };
+}
+
+/**
+ * Uploads a QR PNG data URL to Supabase Storage and returns the public HTTPS URL.
+ * Requires a public bucket named "member-qr-codes" in your Supabase project.
+ */
+export async function uploadQRAndGetUrl(memberId, qrDataUrl) {
+  const blob = await (await fetch(qrDataUrl)).blob();
+  const path = `${memberId}.png`;
+
+  const { error } = await supabase.storage
+    .from("member-qr-codes")
+    .upload(path, blob, { contentType: "image/png", upsert: true });
+
+  if (error) throw new Error(`QR upload failed: ${error.message}`);
+
+  const { data } = supabase.storage.from("member-qr-codes").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function sendMemberWelcomeEmail(member, qrPublicUrl) {
+  if (!member?.email) {
+    throw new Error("Member has no email address.");
+  }
+
+  const welcomeTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_WELCOME;
+  if (!welcomeTemplateId) {
+    throw new Error("Missing EmailJS config: VITE_EMAILJS_TEMPLATE_ID_WELCOME");
+  }
+
+  const { publicKey, serviceId } = assertEmailConfig();
+
+  const templateParams = {
+    to_name:   member.fullName  || member.full_name  || "Member",
+    to_email:  member.email,
+    member_id: member.memberId  || member.member_id  || "",
+    qr_url:    qrPublicUrl,
+    app_name:  "FitSync",
+  };
+
+  return emailjs.send(serviceId, welcomeTemplateId, templateParams, { publicKey });
 }
 
 function buildMessage(notification) {
