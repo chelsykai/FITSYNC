@@ -65,21 +65,26 @@ function buildMessage(notification) {
   const safeDays = Number.isFinite(notification?.daysRemaining)
     ? Math.abs(notification.daysRemaining)
     : 0;
+  const dayWord = safeDays === 1 ? "day" : "days";
 
   if (notification.type === "OVERDUE BALANCE") {
     return `Your account has an overdue balance of ${notification.overdueAmountText}. Please settle your balance as soon as possible to keep your membership active.`;
   }
 
   if (notification.type === "MEMBERSHIP OVERDUE") {
-    return `Your membership is overdue by ${safeDays} day(s). Expiry date: ${notification.expiryText}. Please renew as soon as possible to continue accessing gym services.`;
+    return `Your membership is overdue by ${safeDays} ${dayWord}. Expiry date: ${notification.expiryText}. Please renew as soon as possible to continue accessing gym services.`;
   }
 
   if (notification.type === "MEMBERSHIP EXPIRED") {
     return `Your membership has expired${notification.expiryText ? ` on ${notification.expiryText}` : ""}. Please renew to continue accessing gym services.`;
   }
 
-  return `Your membership will expire in ${safeDays} day(s)${notification.expiryText ? ` on ${notification.expiryText}` : ""}. Please renew before the expiry date.`;
- } 
+  return `Your membership will expire in ${safeDays} ${dayWord}${notification.expiryText ? ` on ${notification.expiryText}` : ""}. Please renew before the expiry date.`;
+}
+
+function toTitleCase(str) {
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export async function sendMemberNotificationEmail(member, notification) {
   if (!member?.email) {
@@ -87,18 +92,20 @@ export async function sendMemberNotificationEmail(member, notification) {
   }
 
   const config = assertEmailConfig();
+  const isOverdueBalance = notification.type === "OVERDUE BALANCE";
+  const isExpiring = notification.type === "MEMBERSHIP EXPIRING";
+  const safeDays = Number.isFinite(notification?.daysRemaining)
+    ? Math.abs(notification.daysRemaining)
+    : 0;
 
   const templateParams = {
     to_name: member.full_name || "Member",
     to_email: member.email,
     member_id: member.member_id || "",
-    notification_type: notification.type,
+    notification_type: toTitleCase(notification.type),
     detail: notification.detail,
-    overdue_amount: notification.overdueAmountText || "",
-    days_remaining:
-      typeof notification.daysRemaining === "number"
-        ? String(Math.abs(notification.daysRemaining))
-        : "",
+    overdue_amount: isOverdueBalance ? (notification.overdueAmountText || "") : "N/A",
+    days_remaining: isExpiring ? String(safeDays) : "N/A",
     expiry_date: notification.expiryText || "",
     message: buildMessage(notification),
     app_name: "FitSync",
