@@ -126,7 +126,7 @@ export default function EditAccountModal({ account, onClose, onSave }) {
                 <input className={styles.accountInput} placeholder="Enter New Password"
                   type={showPass ? "text" : "password"}
                   value={form.password} onChange={set("password")} />
-                <button className={styles.eyeBtn} tabIndex={-1}
+                <button type="button" className={styles.eyeBtn} tabIndex={-1}
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowPass(!showPass); }}>
                   {showPass ? <EyeOff /> : <EyeOn />}
                 </button>
@@ -135,7 +135,7 @@ export default function EditAccountModal({ account, onClose, onSave }) {
                 <input className={styles.accountInput} placeholder="Enter Password Again"
                   type={showConfirm ? "text" : "password"}
                   value={form.confirmPassword} onChange={set("confirmPassword")} />
-                <button className={styles.eyeBtn} tabIndex={-1}
+                <button type="button" className={styles.eyeBtn} tabIndex={-1}
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowConfirm(!showConfirm); }}>
                   {showConfirm ? <EyeOff /> : <EyeOn />}
                 </button>
