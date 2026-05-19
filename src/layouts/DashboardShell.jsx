@@ -100,8 +100,37 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
     );
   }
 
+  const [newMembersCount, setNewMembersCount] = useState(0);
+  const [newNotifsCount, setNewNotifsCount] = useState(0);
+
+  const navigate = (to, meta = {}) => {
+    if (to === "logout") {
+      sessionStorage.removeItem("currentUser");
+      localStorage.removeItem("lastRoute");
+      setForcePassData(null);
+      setRoute("login");
+      return;
+    }
+
+    if (meta?.passwordChangeDaysLeft !== undefined) {
+      setForcePassData({ user: meta.user, daysLeft: meta.passwordChangeDaysLeft });
+    }
+
+    // Clear badge counts when navigating to the page
+    if (to === "members") setNewMembersCount(0);
+    if (to === "notifications") setNewNotifsCount(0);
+
+    setRoute(to);
+  };
+
   const renderPage = () => {
-    const pageProps = { onNavigate: navigate };
+    const pageProps = {
+      onNavigate: navigate,
+      newMembersCount,
+      newNotifsCount,
+      onNewMember: () => setNewMembersCount((n) => n + 1),
+      onNewNotif: (count) => setNewNotifsCount(count),
+    };
 
     switch (route) {
       case "login":
