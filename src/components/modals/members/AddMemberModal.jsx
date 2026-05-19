@@ -16,6 +16,8 @@ const defaultForm = {
   joinDate: getTodayDateString(),
   gender: "Male",
   photo: null,
+  emergencyContactName: "",
+  emergencyContactNumber: "",
 };
 
 export default function AddMemberModal({ onClose, onSuccess }) {
@@ -105,6 +107,8 @@ export default function AddMemberModal({ onClose, onSuccess }) {
           ? `${membershipValidityYears} Year${membershipValidityYears === 1 ? "" : "s"}`
           : "",
         joinDate: form.joinDate || getTodayDateString(),
+        emergencyContactName: form.emergencyContactName || "",
+        emergencyContactNumber: form.emergencyContactNumber || "",
       };
 
       const newMember = await addMember(payload);
@@ -224,6 +228,20 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                 >
                   Reset Plan Selection
                 </button>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className={styles.fieldRow}>
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Emergency Contact Name</label>
+                <input className={styles.formInput} placeholder="Contact person name"
+                  value={form.emergencyContactName} onChange={set("emergencyContactName")} />
+              </div>
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Emergency Contact Number</label>
+                <input className={styles.formInput} placeholder="09XXXXXXXXX"
+                  value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} />
               </div>
             </div>
 

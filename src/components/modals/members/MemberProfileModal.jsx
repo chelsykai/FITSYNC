@@ -68,13 +68,18 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
   const phone = member.phone || "N/A";
   const email = member.email || "N/A";
 
+  const emergencyName   = member.emergency_contact_name   || "N/A";
+  const emergencyNumber = member.emergency_contact_number || "N/A";
+
   const details = [
-    { label: "Join Date", value: joinDate },
-    { label: "Birthday", value: birthday },
-    { label: "Expiry", value: expiry },
-    { label: "Phone Number", value: phone },
-    { label: "Email", value: email },
-    { label: "Address", value: address },
+    { label: "Join Date",                value: joinDate       },
+    { label: "Birthday",                 value: birthday       },
+    { label: "Expiry",                   value: expiry         },
+    { label: "Phone Number",             value: phone          },
+    { label: "Email",                    value: email          },
+    { label: "Address",                  value: address        },
+    { label: "Emergency Contact",        value: emergencyName  },
+    { label: "Emergency Contact Number", value: emergencyNumber},
   ];
 
   return (
@@ -221,4 +226,3 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
     </>
   );
 }
-
