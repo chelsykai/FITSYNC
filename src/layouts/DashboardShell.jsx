@@ -69,25 +69,6 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
     }
   }, [route, isLoading, syncPathToRoot]);
 
-  const navigate = (to, meta = {}) => {
-    if (to === "logout") {
-      sessionStorage.removeItem("currentUser");
-      localStorage.removeItem("lastRoute");
-      setForcePassData(null);
-      setRoute("login");
-      return;
-    }
-
-    if (meta?.passwordChangeDaysLeft !== undefined) {
-      setForcePassData({ user: meta.user, daysLeft: meta.passwordChangeDaysLeft });
-    }
-
-    if (to === "members") setNewMembersCount(0);
-    if (to === "notifications") setNewNotifsCount(0);
-
-    setRoute(to);
-  };
-
   if (isLoading) {
     return (
       <div
@@ -104,6 +85,26 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       </div>
     );
   }
+
+  const navigate = (to, meta = {}) => {
+    if (to === "logout") {
+      sessionStorage.removeItem("currentUser");
+      localStorage.removeItem("lastRoute");
+      setForcePassData(null);
+      setRoute("login");
+      return;
+    }
+
+    if (meta?.passwordChangeDaysLeft !== undefined) {
+      setForcePassData({ user: meta.user, daysLeft: meta.passwordChangeDaysLeft });
+    }
+
+    // Clear badge counts when navigating to the page
+    if (to === "members") setNewMembersCount(0);
+    if (to === "notifications") setNewNotifsCount(0);
+
+    setRoute(to);
+  };
 
   const renderPage = () => {
     const pageProps = {
