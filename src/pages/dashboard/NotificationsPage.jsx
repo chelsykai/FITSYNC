@@ -132,7 +132,7 @@ function buildNotificationsFromMembers(members) {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export default function NotificationsPage({ onNavigate, activePage = "notifications" }) {
+export default function NotificationsPage({ onNavigate, activePage = "notifications", onNewNotif }) {
   const [search, setSearch]             = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [selected, setSelected]         = useState([]);
@@ -146,6 +146,11 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const filtersDDRef   = useRef();
+
+  const pendingCount = notifications.filter(
+  (n) => !statusMap[n.key] || statusMap[n.key] === "Pending").length;
+
+   useEffect(() => { onNewNotif?.(pendingCount);}, [pendingCount]);
 
   const loadNotifications = useCallback(async (showLoader = false) => {
     try {

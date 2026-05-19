@@ -3,14 +3,14 @@ import styles from "./sidebar.module.css";
 import logo from "../../assets/logo_2.png";
 
 const navItems = [
-  { label: "OVERVIEW",      route: "overview",       icon: "ti-layout-dashboard", badge: null },
-  { label: "MEMBERS",       route: "members",        icon: "ti-users",            badge: 12   },
-  { label: "PAYMENTS",      route: "payments",       icon: "ti-credit-card",      badge: null },
-  { label: "NOTIFICATIONS", route: "notifications",  icon: "ti-bell",             badge: 3    },
-  { label: "ACCOUNTS",      route: "accounts",       icon: "ti-user-circle",      badge: null },
+  { label: "OVERVIEW",      route: "overview",      icon: "ti-layout-dashboard" },
+  { label: "MEMBERS",       route: "members",       icon: "ti-users"            },
+  { label: "PAYMENTS",      route: "payments",      icon: "ti-credit-card"      },
+  { label: "NOTIFICATIONS", route: "notifications", icon: "ti-bell"             },
+  { label: "ACCOUNTS",      route: "accounts",      icon: "ti-user-circle"      },
 ];
 
-export default function Sidebar({ activePage, onNavigate }) {
+export default function Sidebar({ activePage, onNavigate, newMembersCount = 0, newNotifsCount = 0 }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [menuOpen,    setMenuOpen]    = useState(false);
 
@@ -53,19 +53,25 @@ export default function Sidebar({ activePage, onNavigate }) {
 
           {/* Nav Links */}
           <nav className={styles.nav}>
-            {navItems.map((item) => (
-              <button
-                key={item.route}
-                className={`${styles.navItem} ${activePage === item.route ? styles.active : ""}`}
-                onClick={() => handleNav(item.route)}
-              >
-                <i className={`ti ${item.icon} ${styles.navIcon}`} aria-hidden="true" />
-                <span className={styles.navLabel}>{item.label}</span>
-                {item.badge !== null && (
-                  <span className={styles.badge}>{item.badge}</span>
-                )}
-              </button>
-            ))}
+            {navItems.map((item) => {
+              const count =
+                item.route === "members"       ? newMembersCount :
+                item.route === "notifications" ? newNotifsCount  : 0;
+
+              return (
+                <button
+                  key={item.route}
+                  className={`${styles.navItem} ${activePage === item.route ? styles.active : ""}`}
+                  onClick={() => handleNav(item.route)}
+                >
+                  <i className={`ti ${item.icon} ${styles.navIcon}`} aria-hidden="true" />
+                  <span className={styles.navLabel}>{item.label}</span>
+                  {count > 0 && (
+                    <span className={styles.badge}>{count}</span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
 
           {/* Logout */}
