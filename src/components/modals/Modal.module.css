@@ -14,25 +14,25 @@
 
 /* ── Modal shell (used by ViewAll, MembersExport, AddMember) ── */
 .modal {
-  background: #E5F0DE;
+  background: #ffffff;
   border-radius: 16px;
   padding: 28px 32px;
   width: 420px;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
 }
 
 /* Wide variant for ViewAllModal table */
 .wideModal {
-  background: #E5F0DE;
+  background: #ffffff;
   border-radius: 16px;
   padding: 32px 40px;
   width: 90vw;
   max-width: 1100px;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
 }
 
 .modalTitle {
@@ -54,10 +54,14 @@
 
 .modalTable th {
   text-align: left;
-  color: #555;
-  font-weight: 600;
-  padding: 8px 10px;
-  border-bottom: 1px solid #ddd;
+  color: #3d6b27;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 10px;
+  border-bottom: 2px solid #d0e8c0;
+  background: #f5faf2;
 }
 
 .modalTable td {
@@ -109,13 +113,13 @@
 
 /* ── Export modal (OverviewPage) ── */
 .exportModal {
-  background: #E5F0DE;
+  background: #ffffff;
   border-radius: 16px;
   padding: 28px 32px;
   width: 420px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
 }
 
 .exportSectionLabel {
@@ -140,8 +144,8 @@
 .exportSearch {
   display: flex;
   align-items: center;
-  background: #c9c9c9;
-  border: 1px solid #ddd;
+  background: #ffffff;
+  border: 1.5px solid #d4e8c0;
   border-radius: 12px;
   padding: 10px 16px;
   margin-bottom: 16px;
@@ -249,8 +253,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #c9c9c9;
-  border: 1px solid #ddd;
+  background: #ffffff;
+  border: 1.5px solid #d4e8c0;
   border-radius: 12px;
   padding: 10px 16px;
   margin-bottom: 8px;
@@ -701,11 +705,11 @@
 
 /* ── Delete confirmation modal ── */
 .deleteModal {
-  background: #E5F0DE;
+  background: #ffffff;
   border-radius: 16px;
   padding: 36px 32px;
   width: 380px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
   text-align: center;
 }
 
@@ -746,13 +750,13 @@
 
 /* ── Add Member Modal ── */
 .addMemberModal {
-  background: #E5F0DE;
+  background: #ffffff;
   border-radius: 16px;
   padding: 32px 36px;
   width: 680px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
 }
 
 .addMemberTitle {
@@ -1325,8 +1329,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #c9c9c9;
-  border: 1px solid #ddd;
+  background: #ffffff;
+  border: 1.5px solid #d4e8c0;
   border-radius: 10px;
   padding: 8px 14px;
   min-width: 200px;
@@ -1735,14 +1739,14 @@
 
 /* ── View All Payments Modal ── */
 .viewAllPaymentsModal {
-  background: #E5F0DE;
+  background: #ffffff;
   border-radius: 16px;
   padding: 28px 32px;
   width: 92vw;
   max-width: 1000px;
   max-height: 88vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1750,14 +1754,14 @@
 
 /* ── Receipt Modal ── */
 .receiptModal {
-  background: #E5F0DE;
+  background: #ffffff;
   border-radius: 16px;
   padding: 28px 32px;
   width: 88vw;
   max-width: 900px;
   max-height: 88vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1800,8 +1804,8 @@
 .paymentModalSearch {
   display: flex;
   align-items: center;
-  background: #c9c9c9;
-  border: 1px solid #ddd;
+  background: #ffffff;
+  border: 1.5px solid #d4e8c0;
   border-radius: 12px;
   padding: 10px 16px;
   margin-bottom: 16px;
@@ -1971,11 +1975,11 @@
 
 /* ── View Log Modal (notifications) ── */
 .viewLogModal {
-  background: #E5F0DE;
+  background: #ffffff;
   border-radius: 20px;
   padding: 32px 36px 32px 36px;
   width: 380px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2086,7 +2090,7 @@
 
 /* ── Create / Edit Account Modal ── */
 .createAccountModal {
-  background: #f0f8e8;
+  background: #ffffff;
   border-radius: 16px;
   padding: 32px 36px;
   width: 680px;

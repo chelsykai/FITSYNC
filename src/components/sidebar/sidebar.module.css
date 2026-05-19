@@ -14,7 +14,7 @@
   left: 0;
   bottom: 0;
   height: 100vh;
-  background-color: #7eba56;
+  background: linear-gradient(180deg, #1d4110 0%, #2d6118 28%, #4a8e2c 65%, #7eba56 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -58,7 +58,7 @@
   right: -60px;
   width: 180px;
   height: 180px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.10);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -69,7 +69,7 @@
   left: -50px;
   width: 150px;
   height: 150px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -159,7 +159,7 @@
 
 .navItem.active {
   background-color: white;
-  color: #7eba56;
+  color: #4a8e2c;
   width: 85%;
   border-radius: 999px;        
   padding-left: 18px;

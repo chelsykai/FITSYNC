@@ -31,6 +31,8 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
   const [route, setRoute] = useState(initialRoute);
   const [isLoading, setIsLoading] = useState(true);
   const [forcePassData, setForcePassData] = useState(null);
+  const [newMembersCount, setNewMembersCount] = useState(0);
+  const [newNotifsCount, setNewNotifsCount] = useState(0);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("currentUser");
@@ -80,6 +82,9 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       setForcePassData({ user: meta.user, daysLeft: meta.passwordChangeDaysLeft });
     }
 
+    if (to === "members") setNewMembersCount(0);
+    if (to === "notifications") setNewNotifsCount(0);
+
     setRoute(to);
   };
 
@@ -99,29 +104,6 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       </div>
     );
   }
-
-  const [newMembersCount, setNewMembersCount] = useState(0);
-  const [newNotifsCount, setNewNotifsCount] = useState(0);
-
-  const navigate = (to, meta = {}) => {
-    if (to === "logout") {
-      sessionStorage.removeItem("currentUser");
-      localStorage.removeItem("lastRoute");
-      setForcePassData(null);
-      setRoute("login");
-      return;
-    }
-
-    if (meta?.passwordChangeDaysLeft !== undefined) {
-      setForcePassData({ user: meta.user, daysLeft: meta.passwordChangeDaysLeft });
-    }
-
-    // Clear badge counts when navigating to the page
-    if (to === "members") setNewMembersCount(0);
-    if (to === "notifications") setNewNotifsCount(0);
-
-    setRoute(to);
-  };
 
   const renderPage = () => {
     const pageProps = {
