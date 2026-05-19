@@ -157,10 +157,29 @@ export default function MembersExportModal({ members, onClose }) {
       setLoading(true);
 
       // Filter members based on selection
-      const selectedMembers = members.filter((m) => exportSelected.includes(m.full_name));
+      let selectedMembers = members.filter((m) => exportSelected.includes(m.full_name));
 
       if (selectedMembers.length === 0) {
         alert("Please select at least one member to export.");
+        setLoading(false);
+        return;
+      }
+
+      // Apply date range filter on join_date
+      if (dateFrom || dateTo) {
+        const from = dateFrom ? new Date(dateFrom + "T00:00:00") : null;
+        const to   = dateTo   ? new Date(dateTo   + "T23:59:59") : null;
+        selectedMembers = selectedMembers.filter((m) => {
+          if (!m.join_date) return false;
+          const joined = new Date(m.join_date + "T00:00:00");
+          if (from && joined < from) return false;
+          if (to   && joined > to)   return false;
+          return true;
+        });
+      }
+
+      if (selectedMembers.length === 0) {
+        alert("No members found within the selected date range.");
         setLoading(false);
         return;
       }
