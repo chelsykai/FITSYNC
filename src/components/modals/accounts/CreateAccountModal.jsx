@@ -135,7 +135,7 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
               <input className={styles.accountInput} placeholder="Enter New Password"
                 type={showPass ? "text" : "password"}
                 value={form.password} onChange={set("password")} />
-              <button className={styles.eyeBtn} onClick={() => setShowPass(!showPass)} tabIndex={-1}>
+              <button type="button" className={styles.eyeBtn} onClick={() => setShowPass(!showPass)} tabIndex={-1}>
                 {showPass ? (
                   /* Eye-off icon */
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -156,7 +156,7 @@ export default function CreateAccountModal({ accounts, onClose, onCreate }) {
               <input className={styles.accountInput} placeholder="Enter Password Again"
                 type={showConfirm ? "text" : "password"}
                 value={form.confirmPassword} onChange={set("confirmPassword")} />
-              <button className={styles.eyeBtn} onClick={() => setShowConfirm(!showConfirm)} tabIndex={-1}>
+              <button type="button" className={styles.eyeBtn} onClick={() => setShowConfirm(!showConfirm)} tabIndex={-1}>
                 {showConfirm ? (
                   /* Eye-off icon */
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
