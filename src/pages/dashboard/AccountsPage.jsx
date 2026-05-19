@@ -12,7 +12,7 @@ import { fetchAuditLogs, getAuditUsers } from "../../services/auditService";
 
 const ITEMS_PER_PAGE = 5;
 
-export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
+export default function AccountsPage({ onNavigate, activePage = "accounts", isAdmin = false }) {
   const [accounts, setAccounts]       = useState([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState(null);
@@ -209,7 +209,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
   return (
     <>
       <div className={styles.layout}>
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar activePage={activePage} onNavigate={onNavigate} isAdmin={isAdmin} />
         <div className={`${styles.content} tab-slide-animation`}>
 
           {/* ACCOUNTS PAGE */}
@@ -217,9 +217,11 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
             <>
               <div className={styles.pageHeader}>
                 <h1 className={styles.title}>Accounts</h1>
-                <button className={styles.auditBtn} onClick={() => requestAction("audit")}>
-                  Audit Trail &nbsp;›
-                </button>
+                {isAdmin && (
+                  <button className={styles.auditBtn} onClick={() => requestAction("audit")}>
+                    Audit Trail &nbsp;›
+                  </button>
+                )}
               </div>
 
               <div className={styles.tableCard}>
@@ -240,11 +242,13 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                   </div>
                 )}
 
-                <div className={styles.actionRow}>
-                  <button className={styles.addBtn} onClick={() => requestAction("create")}>
-                    ＋ Add Account
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className={styles.actionRow}>
+                    <button className={styles.addBtn} onClick={() => requestAction("create")}>
+                      ＋ Add Account
+                    </button>
+                  </div>
+                )}
 
                 {loading ? (
                   <div style={{ padding: "40px", textAlign: "center", color: "#666" }}>
@@ -274,9 +278,15 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
                             <td>{a.role}</td>
                             <td>{a.email}</td>
                             <td>
-                              <button className={styles.editBtn} onClick={() => requestAction("edit", a)}>Edit</button>
-                              <button className={styles.deleteBtn} onClick={() => requestAction("delete", a)}>Delete</button>
-                              <button className={styles.changePassBtn} onClick={() => requestAction("reqChange", a)}>Req. Change</button>
+                              {isAdmin ? (
+                                <>
+                                  <button className={styles.editBtn} onClick={() => requestAction("edit", a)}>Edit</button>
+                                  <button className={styles.deleteBtn} onClick={() => requestAction("delete", a)}>Delete</button>
+                                  <button className={styles.changePassBtn} onClick={() => requestAction("reqChange", a)}>Req. Change</button>
+                                </>
+                              ) : (
+                                <span style={{ color: '#777', fontSize: 13 }}>Read only</span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -467,21 +477,21 @@ export default function AccountsPage({ onNavigate, activePage = "accounts" }) {
       </div>
 
       {/* Modals */}
-      {showCreate && (
+      {showCreate && isAdmin && (
         <CreateAccountModal
           accounts={accounts}
           onClose={() => setShowCreate(false)}
           onCreate={handleCreate}
         />
       )}
-      {editTarget && (
+      {editTarget && isAdmin && (
         <EditAccountModal
           account={editTarget}
           onClose={() => setEditTarget(null)}
           onSave={handleSave}
         />
       )}
-      {deleteTarget && (
+      {deleteTarget && isAdmin && (
         <DeleteAccountModal
           account={deleteTarget}
           onClose={() => setDeleteTarget(null)}

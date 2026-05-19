@@ -232,7 +232,7 @@ function BarChart({ data, labels }) {
   );
 }
 
-export default function OverviewPage({ onNavigate, activePage = "overview" }) {
+export default function OverviewPage({ onNavigate, activePage = "overview", isAdmin = false }) {
   const [showAll, setShowAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [members, setMembers] = useState([]);
@@ -372,7 +372,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
   return (
     <>
       <div className={styles.layout}>
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar activePage={activePage} onNavigate={onNavigate} isAdmin={isAdmin} />
         <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.welcome}>Welcome, User!</h1>
 
@@ -399,12 +399,14 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
                 <p className={styles.statValue}>{stats.walkIns}</p>
               </div>
             </div>
-            <div
-              className={`${styles.statCard} ${styles.printCard}`}
-              onClick={() => setShowExport(true)}
-            >
-              <span className={styles.statIcon}>🖨️</span>
-            </div>
+            {isAdmin && (
+              <div
+                className={`${styles.statCard} ${styles.printCard}`}
+                onClick={() => setShowExport(true)}
+              >
+                <span className={styles.statIcon}>🖨️</span>
+              </div>
+            )}
           </div>
 
           {/* Expiring Members Table */}
@@ -510,7 +512,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview" }) {
       {showAll && (
         <ViewAllModal members={expiringSoonMembers} onClose={() => setShowAll(false)} />
       )}
-      {showExport && (
+      {showExport && isAdmin && (
         <ExportModal
           members={members}
           attendanceRecords={todayAttendanceRecords}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import styles from "./sidebar.module.css";
 import logo from "../../assets/logo_2.png";
 
-const navItems = [
+const ADMIN_NAV_ITEMS = [
   { label: "OVERVIEW",      route: "overview",      icon: "ti-layout-dashboard" },
   { label: "MEMBERS",       route: "members",       icon: "ti-users"            },
   { label: "PAYMENTS",      route: "payments",      icon: "ti-credit-card"      },
@@ -10,9 +10,30 @@ const navItems = [
   { label: "ACCOUNTS",      route: "accounts",      icon: "ti-user-circle"      },
 ];
 
-export default function Sidebar({ activePage, onNavigate, newMembersCount = 0, newNotifsCount = 0 }) {
+const STAFF_NAV_ITEMS = [
+  { label: "OVERVIEW", route: "overview", icon: "ti-layout-dashboard" },
+  { label: "MEMBERS",  route: "members",  icon: "ti-users"            },
+];
+
+const getStoredRole = () => {
+  try {
+    const currentUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+    return String(currentUser?.role || "staff").toLowerCase() === "admin";
+  } catch {
+    return false;
+  }
+};
+
+export default function Sidebar({
+  activePage,
+  onNavigate,
+  newMembersCount = 0,
+  newNotifsCount = 0,
+  isAdmin = getStoredRole(),
+}) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [menuOpen,    setMenuOpen]    = useState(false);
+  const navItems = isAdmin ? ADMIN_NAV_ITEMS : STAFF_NAV_ITEMS;
 
   const handleNav = (route) => {
     onNavigate(route);

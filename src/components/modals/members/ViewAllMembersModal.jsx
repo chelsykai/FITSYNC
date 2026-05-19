@@ -5,7 +5,7 @@ import DeleteMemberModal from "./DeleteMemberModal";
 import MemberProfileModal from "./MemberProfileModal";
 import { formatMMDDYYYY } from "../../../utils/dateFormat";
 
-export default function ViewAllMembersModal({ members, onClose, onMemberDeleted }) {
+export default function ViewAllMembersModal({ members, onClose, onMemberDeleted, isAdmin = false }) {
   const [displayMembers, setDisplayMembers] = useState(members);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -38,7 +38,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
                 <th>Membership Type</th>
                 <th className={styles.membershipPlanCol}>Membership Validity</th>
                 <th>Monthly Expiry</th>
-                <th>Action</th>
+                {isAdmin && <th>Action</th>}
               </tr>
             </thead>
             <tbody>
@@ -90,27 +90,29 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
                       <span className={styles.membershipPlanTerm}>{membershipTerm}</span>
                     </td>
                     <td>{expiryDate ? formatMMDDYYYY(expiryDate) : "N/A"}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <div className={styles.actionBtns}>
-                        <button
-                          className={styles.editBtn}
-                          onClick={(e) => { e.stopPropagation(); setEditTarget(m); }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className={styles.deleteBtn}
-                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(m); }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+                    {isAdmin && (
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.actionBtns}>
+                          <button
+                            className={styles.editBtn}
+                            onClick={(e) => { e.stopPropagation(); setEditTarget(m); }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className={styles.deleteBtn}
+                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(m); }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
               {displayMembers.length === 0 && (
-                <tr><td colSpan={7} style={{ textAlign: "center", padding: "20px", color: "#999" }}>No members found.</td></tr>
+                <tr><td colSpan={isAdmin ? 7 : 6} style={{ textAlign: "center", padding: "20px", color: "#999" }}>No members found.</td></tr>
               )}
             </tbody>
           </table>
@@ -120,7 +122,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
         </div>
       </div>
 
-      {editTarget && (
+      {editTarget && isAdmin && (
         <EditMemberModal
           member={editTarget}
           onClose={() => setEditTarget(null)}
@@ -131,7 +133,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
         />
       )}
 
-      {deleteTarget && (
+      {deleteTarget && isAdmin && (
         <DeleteMemberModal
           member={deleteTarget}
           onClose={() => setDeleteTarget(null)}
@@ -143,6 +145,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted 
         <MemberProfileModal
           member={selectedMember}
           onClose={() => setSelectedMember(null)}
+          isAdmin={isAdmin}
         />
       )}
     </>

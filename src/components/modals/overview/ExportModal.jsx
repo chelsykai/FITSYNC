@@ -93,7 +93,7 @@ const toPdf = async (rows, title) => {
   return doc;
 };
 
-export default function ExportModal({ members = [], attendanceRecords = [], onClose }) {
+export default function ExportModal({ members = [], attendanceRecords = [], onClose, isAdmin = false }) {
   const [exportFormat, setExportFormat] = useState("CSV");
   const [exportTypes, setExportTypes] = useState([]);
   const [exportSearch, setExportSearch] = useState("");

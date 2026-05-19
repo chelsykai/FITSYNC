@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import LogInPage from "../pages/auth/LogInPage";
 import OverviewPage from "../pages/dashboard/OverviewPage";
+import StaffDashboardPage from "../pages/dashboard/StaffDashboardPage";
 import MembersPage from "../pages/dashboard/MembersPage";
 import PaymentsPage from "../pages/dashboard/PaymentsPage";
 import NotificationsPage from "../pages/dashboard/NotificationsPage";
@@ -21,6 +22,15 @@ const NON_SCANNER_ROUTES = new Set([
   "changePassword",
 ]);
 
+const ADMIN_ONLY_ROUTES = new Set([
+  "payments",
+  "notifications",
+  "accounts",
+  "recordPayment",
+]);
+
+const STAFF_ALLOWED_ROUTES = new Set(["staffDashboard", "overview", "members", "changePassword"]);
+
 const normalizePathname = (pathname = "/") => {
   if (!pathname) return "/";
   const trimmed = pathname.replace(/\/+$/, "");
@@ -33,14 +43,20 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
   const [forcePassData, setForcePassData] = useState(null);
   const [newMembersCount, setNewMembersCount] = useState(0);
   const [newNotifsCount, setNewNotifsCount] = useState(0);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const userRole = String(currentUser?.role || "staff").toLowerCase();
+  const isAdmin = userRole === "admin";
+  const allowedRoutes = isAdmin ? NON_SCANNER_ROUTES : STAFF_ALLOWED_ROUTES;
 
   useEffect(() => {
     const stored = sessionStorage.getItem("currentUser");
 
     if (stored) {
       const user = JSON.parse(stored);
+      setCurrentUser(user);
       const lastRoute = localStorage.getItem("lastRoute");
-      const fallbackRoute = NON_SCANNER_ROUTES.has(lastRoute) ? lastRoute : "overview";
+      const fallbackRoute = allowedRoutes.has(lastRoute) ? lastRoute : "overview";
 
       if (user.password_change_required === true) {
         const daysLeft = getWorkingDaysLeft(user.password_change_deadline);
@@ -51,7 +67,7 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
     }
 
     setIsLoading(false);
-  }, []);
+  }, [allowedRoutes]);
 
   useEffect(() => {
     if (!AUTH_ROUTES.has(route)) {
@@ -68,6 +84,14 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       window.history.replaceState({}, "", "/");
     }
   }, [route, isLoading, syncPathToRoot]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (route === "login") return;
+    if (allowedRoutes.has(route)) return;
+
+    setRoute("overview");
+  }, [allowedRoutes, isLoading, route]);
 
   if (isLoading) {
     return (
@@ -91,7 +115,13 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       sessionStorage.removeItem("currentUser");
       localStorage.removeItem("lastRoute");
       setForcePassData(null);
+      setCurrentUser(null);
       setRoute("login");
+      return;
+    }
+
+    if (ADMIN_ONLY_ROUTES.has(to) && !isAdmin) {
+      setRoute("overview");
       return;
     }
 
@@ -113,6 +143,8 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       newNotifsCount,
       onNewMember: () => setNewMembersCount((n) => n + 1),
       onNewNotif: (count) => setNewNotifsCount(count),
+      userRole,
+      isAdmin,
     };
 
     switch (route) {
@@ -120,15 +152,21 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
         return <LogInPage key="login" {...pageProps} />;
       case "overview":
         return <OverviewPage key="overview" activePage="overview" {...pageProps} />;
+      case "staffDashboard":
+        return <StaffDashboardPage key="staffDashboard" {...pageProps} />;
       case "members":
         return <MembersPage key="members" activePage="members" {...pageProps} />;
       case "payments":
+        if (!isAdmin) return <OverviewPage key="overview-staff" activePage="overview" {...pageProps} />;
         return <PaymentsPage key="payments" activePage="payments" {...pageProps} />;
       case "notifications":
+        if (!isAdmin) return <OverviewPage key="overview-staff-2" activePage="overview" {...pageProps} />;
         return <NotificationsPage key="notifications" activePage="notifications" {...pageProps} />;
       case "accounts":
+        if (!isAdmin) return <OverviewPage key="overview-staff-3" activePage="overview" {...pageProps} />;
         return <AccountsPage key="accounts" activePage="accounts" {...pageProps} />;
       case "recordPayment":
+        if (!isAdmin) return <OverviewPage key="overview-staff-4" activePage="overview" {...pageProps} />;
         return <RecordPaymentPage key="recordPayment" activePage="payments" {...pageProps} />;
       case "changePassword":
         return <ChangePasswordPage key="changePassword" activePage="accounts" {...pageProps} />;

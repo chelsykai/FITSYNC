@@ -1,9 +1,10 @@
 import { supabase } from '../lib/supabaseClient';
 import { getAuditActorRole } from './auditService';
+import { requireAdminRole } from '../utils/permissions';
 
 const logAuditTrail = async (action, userId, accountName, details = {}) => {
   try {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     const actorName = currentUser?.name || currentUser?.username || 'system';
     const actorRole = await getAuditActorRole();
 
@@ -133,6 +134,8 @@ export const fetchAccounts = async () => {
  * Add a new user account to the system_user table
  */
 export const addAccount = async (accountData) => {
+  requireAdminRole('add an account');
+
   try {
     const normalized = normalizeAccountInput(accountData);
     const userId = await resolveUniqueUserId(normalized.userId);
@@ -188,6 +191,8 @@ export const addAccount = async (accountData) => {
  * Update an existing user account in the system_user table
  */
 export const updateAccount = async (accountId, accountData) => {
+  requireAdminRole('update an account');
+
   try {
     // Fetch old data first to capture changes
     const { data: oldData, error: fetchError } = await supabase
@@ -261,6 +266,8 @@ export const updateAccount = async (accountId, accountData) => {
  * Delete a user account from the system_user table
  */
 export const deleteAccount = async (accountId, accountData = {}) => {
+  requireAdminRole('delete an account');
+
   try {
     const { error } = await supabase
       .from('system_user')

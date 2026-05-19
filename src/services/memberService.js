@@ -1,12 +1,13 @@
 import { supabase } from "../lib/supabaseClient";
 import { getAuditActorRole } from "./auditService";
+import { requireAdminRole } from "../utils/permissions";
 
 const MEMBER_PHOTO_BUCKET = "member_photo";
 const MEMBER_PHOTO_PREFIX = "member_photos";
 
 const logAuditTrail = async (action, memberId, memberName, changes = {}) => {
   try {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     const actorName = currentUser?.name || currentUser?.username || 'system';
     const actorRole = await getAuditActorRole();
 
@@ -140,6 +141,8 @@ export const uploadMemberPhoto = async (file, memberId) => {
  * Add a new member to the database
  */
 export const addMember = async (memberData) => {
+  requireAdminRole("add a member");
+
   const {
     fullName,
     email,
@@ -271,6 +274,8 @@ export const fetchMembers = async () => {
  * Delete a member
  */
 export const deleteMember = async (memberId, memberData = {}) => {
+  requireAdminRole("delete a member");
+
   const { error } = await supabase
     .from("member")
     .delete()
@@ -288,6 +293,8 @@ export const deleteMember = async (memberId, memberData = {}) => {
  * Update member details
  */
 export const updateMember = async (memberId, updates) => {
+  requireAdminRole("update a member");
+
   // Fetch old data first to capture changes
   const { data: oldData, error: fetchError } = await supabase
     .from("member")
@@ -358,6 +365,8 @@ export const updateMember = async (memberId, updates) => {
 };
 
 export const updateMemberMembership = async (memberId, updates) => {
+  requireAdminRole("update a member membership");
+
   const { data: oldData, error: fetchError } = await supabase
     .from("member")
     .select('full_name, monthly_validity, membership_validity, expiration_date, join_date')
