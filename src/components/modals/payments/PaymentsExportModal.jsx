@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
 import ReAuthModal from "../../ReAuthModal";
+import { isDateWithinRange } from "../../../utils/exportDateRange";
 const dataTypes = ["Select All", "Monthly", "Yearly", "Quarterly"];
 
 const toCsv = (rows) => {
@@ -108,6 +109,10 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
 
   const filtered = dataTypes.filter((o) =>
     o.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredPayments = payments.filter((payment) =>
+    isDateWithinRange(payment.rawDate || payment.date, dateFrom, dateTo)
   );
 
   const handleExport = async () => {

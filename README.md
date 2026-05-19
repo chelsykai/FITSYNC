@@ -1,53 +1,82 @@
-# FITSYNC: QR-Based Membership Tracking (Capstone)
+=======
+FITSYNC: QR-Based Membership Tracking (Capstone)
 
-A web-based gym management system for tracking memberships, payments, attendance via QR scanning, and staff accounts.
-
----
+A modern fitness gym management system with QR-based attendance tracking, membership management, and payment tracking.
 
 ## Tech Stack
 
 ### Frontend
-| Technology | Version | Purpose |
-|---|---|---|
-| [React](https://react.dev/) | 19 | UI framework |
-| [Vite](https://vite.dev/) | 7 | Build tool & dev server |
-| CSS Modules | — | Component-scoped styling |
+
+- **React** (v19.2.0) - UI library
+- **Vite** (v7.2.4) - Build tool and dev server
+- **React DOM** (v19.2.0) - React rendering for web
 
 ### Backend & Database
-| Technology | Version | Purpose |
-|---|---|---|
-| [Supabase](https://supabase.com/) | 2 | PostgreSQL database, real-time subscriptions, authentication |
 
-### Libraries
-| Library | Version | Purpose |
-|---|---|---|
-| [html5-qrcode](https://github.com/mebjas/html5-qrcode) | 2.3.8 | QR code scanning |
-| [Recharts](https://recharts.org/) | 3 | Charts and data visualization |
-| [jsPDF](https://github.com/parallax/jsPDF) | 4 | PDF export |
-| [ExcelJS](https://github.com/exceljs/exceljs) | 3 | Excel (.xlsx) export |
-| [EmailJS](https://www.emailjs.com/) | 4 | Client-side email sending |
+- **Supabase** (v2.101.1) - Backend-as-a-Service (PostgreSQL, Auth, Real-time)
 
-### Dev Tools
-| Tool | Purpose |
-|---|---|
-| ESLint | Linting |
-| @vitejs/plugin-react-swc | Fast React refresh via SWC compiler |
+### Libraries & Tools
 
----
+- **html5-qrcode** (v2.3.8) - QR code scanning
+- **jsPDF** (v4.2.1) - PDF generation (Member ID cards)
+- **ExcelJS** (v4.4.0) - Excel file export
+- **Recharts** (v3.8.1) - Data visualization/charting
+- **EmailJS** (v4.4.1) - Email notifications
 
-## Getting Started
+### Development Tools
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create a `.env` file in the project root with your Supabase credentials:
-   ```
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-4. Start the dev server:
-   ```bash
-   npm run dev
-   ```
+- **ESLint** (v9.39.1) - Code linting
+- **Vite React SWC Plugin** (v4.2.2) - Fast React compilation
+- **TypeScript Support** - Type definitions for React and React DOM
+
+## Features
+
+-  QR-based member attendance tracking
+-  Member management (create, edit, delete)
+-  Payment recording and tracking
+-  Dashboard with analytics
+-  Data export (PDF, Excel)
+-  Email notifications
+-  Membership plans (monthly and yearly)
+-  Member profiles and history
+
+## Project Structure
+
+```
+src/
+├── components/     # React components
+│   ├── modals/     # Modal dialogs
+│   └── sidebar/    # Navigation sidebar
+├── pages/          # Page components
+├── services/       # API and business logic
+├── lib/            # Utilities (Supabase client)
+├── utils/          # Helper functions
+└── assets/         # Static assets
+```
+
+## Setup
+///
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Start development server:
+
+```bash
+npm run dev
+```
+
+3. Build for production:
+
+```bash
+npm build
+```
+
+4. Lint code:
+
+```bash
+npm run lint
+```
+>>>>>>> 876fb500ba91de9b783324f5f0e174ae1be699ca

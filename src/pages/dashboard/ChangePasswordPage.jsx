@@ -4,7 +4,7 @@ import Sidebar from "../../components/sidebar/sidebar";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function ChangePasswordPage({ onNavigate, activePage = "accounts" }) {
-  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+  const currentUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
 
   const [form, setForm] = useState({
     currentPassword: "",
@@ -70,7 +70,7 @@ export default function ChangePasswordPage({ onNavigate, activePage = "accounts"
       if (updateErr) throw new Error(updateErr.message);
 
       // 3. Update localStorage
-      localStorage.setItem("currentUser", JSON.stringify({
+      sessionStorage.setItem("currentUser", JSON.stringify({
         ...currentUser,
         password:                 form.newPassword.trim(),
         password_change_required: false,

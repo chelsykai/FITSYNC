@@ -2,6 +2,7 @@ import { useState } from "react";
 import styles from "../Modal.module.css";
 import { formatMMDDYYYY } from "../../../utils/dateFormat";
 import ReAuthModal from "../../ReAuthModal";
+import { isDateWithinRange } from "../../../utils/exportDateRange";
 
 const exportMemberOptions = (members) => ["Select All", ...members.map((m) => m.full_name)];
 
@@ -142,6 +143,10 @@ export default function MembersExportModal({ members, onClose }) {
     o.toLowerCase().includes(exportSearch.toLowerCase())
   );
 
+  const filteredMembers = members.filter((member) =>
+    isDateWithinRange(member.join_date, dateFrom, dateTo)
+  );
+
   const toggleExport = (name) => {
     if (name === "Select All") {
       setExportSelected(exportSelected.length === members.length ? [] : members.map((m) => m.full_name));
@@ -242,7 +247,7 @@ export default function MembersExportModal({ members, onClose }) {
         doc.save(fileName + ".pdf");
       }
 
-      alert(`Successfully exported ${selectedMembers.length} member(s)!`);
+      alert(`Successfully exported ${exportData.length} member(s)!`);
       onClose();
     } catch (err) {
       console.error("Error exporting members:", err);

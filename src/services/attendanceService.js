@@ -97,6 +97,43 @@ export const fetchTodayAttendanceCount = async () => {
   return count || 0;
 };
 
+export const fetchTodayAttendanceRecords = async () => {
+  const today = formatDate(new Date());
+
+  const { data, error } = await supabase
+    .from("member_attendance")
+    .select("member_id, member_name, attendance_date, attendance_time")
+    .eq("attendance_date", today)
+    .order("attendance_time", { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const fetchAttendanceRecordsBetweenDates = async (startDate, endDate) => {
+  const { data, error } = await supabase
+    .from("member_attendance")
+    .select("member_id, member_name, attendance_date, attendance_time")
+    .gte("attendance_date", startDate)
+    .lte("attendance_date", endDate)
+    .order("attendance_date", { ascending: true })
+    .order("attendance_time", { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const fetchAllAttendanceRecords = async () => {
+  const { data, error } = await supabase
+    .from("member_attendance")
+    .select("member_id, member_name, attendance_date, attendance_time")
+    .order("attendance_date", { ascending: true })
+    .order("attendance_time", { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+};
+
 export const fetchMonthlyAttendanceCounts = async (year) => {
   const startDate = `${year}-01-01`;
   const endDate = `${year}-12-31`;
