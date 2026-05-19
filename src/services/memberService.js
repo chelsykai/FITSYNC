@@ -1,12 +1,13 @@
 import { supabase } from "../lib/supabaseClient";
 import { getAuditActorRole } from "./auditService";
+import { requireAdminRole } from "../utils/permissions";
 
 const MEMBER_PHOTO_BUCKET = "member_photo";
 const MEMBER_PHOTO_PREFIX = "member_photos";
 
 const logAuditTrail = async (action, memberId, memberName, changes = {}) => {
   try {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     const actorName = currentUser?.name || currentUser?.username || 'system';
     const actorRole = await getAuditActorRole();
 
@@ -140,6 +141,8 @@ export const uploadMemberPhoto = async (file, memberId) => {
  * Add a new member to the database
  */
 export const addMember = async (memberData) => {
+  requireAdminRole("add a member");
+
   const {
     fullName,
     email,
@@ -152,6 +155,8 @@ export const addMember = async (memberData) => {
     joinDate,
     gender,
     photo,
+    emergencyContactName,
+    emergencyContactNumber,
   } = memberData;
 
   // Generate member ID
@@ -185,6 +190,8 @@ export const addMember = async (memberData) => {
     gender: gender,
     photo_url: photoUrl,
     join_date: resolvedJoinDate,
+    emergency_contact_name:   emergencyContactName   || null,
+    emergency_contact_number: emergencyContactNumber || null,
     created_at: new Date().toISOString(),
   };
 
@@ -228,7 +235,7 @@ export const fetchMembers = async () => {
     const resp = await supabase
       .from("member")
       .select(
-        "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, expiration_date, created_at"
+        "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, expiration_date, emergency_contact_name, emergency_contact_number, created_at"
       )
       .order("created_at", { ascending: false });
 
@@ -267,6 +274,8 @@ export const fetchMembers = async () => {
  * Delete a member
  */
 export const deleteMember = async (memberId, memberData = {}) => {
+  requireAdminRole("delete a member");
+
   const { error } = await supabase
     .from("member")
     .delete()
@@ -284,10 +293,12 @@ export const deleteMember = async (memberId, memberData = {}) => {
  * Update member details
  */
 export const updateMember = async (memberId, updates) => {
+  requireAdminRole("update a member");
+
   // Fetch old data first to capture changes
   const { data: oldData, error: fetchError } = await supabase
     .from("member")
-    .select('full_name, membership_type, email, phone, address, birthday, photo_url')
+    .select('full_name, membership_type, email, phone, address, birthday, photo_url, emergency_contact_name, emergency_contact_number')
     .eq("member_id", memberId)
     .single();
 
@@ -323,6 +334,12 @@ export const updateMember = async (memberId, updates) => {
   if (oldData.birthday !== updates.birthday) {
     changes.birthday = { old: oldData.birthday, new: updates.birthday };
   }
+  if (oldData.emergency_contact_name !== updates.emergency_contact_name) {
+    changes.emergency_contact_name = { old: oldData.emergency_contact_name, new: updates.emergency_contact_name };
+  }
+  if (oldData.emergency_contact_number !== updates.emergency_contact_number) {
+    changes.emergency_contact_number = { old: oldData.emergency_contact_number, new: updates.emergency_contact_number };
+  }
   if ('photo_url' in updates && oldData.photo_url !== updates.photo_url) {
     if (updates.photo_url) {
       changes.photo = { old: 'Previous photo', new: 'Updated photo' };
@@ -348,6 +365,8 @@ export const updateMember = async (memberId, updates) => {
 };
 
 export const updateMemberMembership = async (memberId, updates) => {
+  requireAdminRole("update a member membership");
+
   const { data: oldData, error: fetchError } = await supabase
     .from("member")
     .select('full_name, monthly_validity, membership_validity, expiration_date, join_date')

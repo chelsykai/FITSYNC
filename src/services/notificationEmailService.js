@@ -1,4 +1,5 @@
 import emailjs from "@emailjs/browser";
+import { supabase } from "../lib/supabaseClient";
 
 const requiredEnv = [
   "VITE_EMAILJS_PUBLIC_KEY",
@@ -19,25 +20,71 @@ function assertEmailConfig() {
   };
 }
 
+/**
+ * Uploads a QR PNG data URL to Supabase Storage and returns the public HTTPS URL.
+ * Requires a public bucket named "member-qr-codes" in your Supabase project.
+ */
+export async function uploadQRAndGetUrl(memberId, qrDataUrl) {
+  const blob = await (await fetch(qrDataUrl)).blob();
+  const path = `${memberId}.png`;
+
+  const { error } = await supabase.storage
+    .from("member-qr-codes")
+    .upload(path, blob, { contentType: "image/png", upsert: true });
+
+  if (error) throw new Error(`QR upload failed: ${error.message}`);
+
+  const { data } = supabase.storage.from("member-qr-codes").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function sendMemberWelcomeEmail(member, qrPublicUrl) {
+  if (!member?.email) {
+    throw new Error("Member has no email address.");
+  }
+
+  const welcomeTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_WELCOME;
+  if (!welcomeTemplateId) {
+    throw new Error("Missing EmailJS config: VITE_EMAILJS_TEMPLATE_ID_WELCOME");
+  }
+
+  const { publicKey, serviceId } = assertEmailConfig();
+
+  const templateParams = {
+    to_name:   member.fullName  || member.full_name  || "Member",
+    to_email:  member.email,
+    member_id: member.memberId  || member.member_id  || "",
+    qr_url:    qrPublicUrl,
+    app_name:  "FitSync",
+  };
+
+  return emailjs.send(serviceId, welcomeTemplateId, templateParams, { publicKey });
+}
+
 function buildMessage(notification) {
   const safeDays = Number.isFinite(notification?.daysRemaining)
     ? Math.abs(notification.daysRemaining)
     : 0;
+  const dayWord = safeDays === 1 ? "day" : "days";
 
   if (notification.type === "OVERDUE BALANCE") {
     return `Your account has an overdue balance of ${notification.overdueAmountText}. Please settle your balance as soon as possible to keep your membership active.`;
   }
 
   if (notification.type === "MEMBERSHIP OVERDUE") {
-    return `Your membership is overdue by ${safeDays} day(s). Expiry date: ${notification.expiryText}. Please renew as soon as possible to continue accessing gym services.`;
+    return `Your membership is overdue by ${safeDays} ${dayWord}. Expiry date: ${notification.expiryText}. Please renew as soon as possible to continue accessing gym services.`;
   }
 
   if (notification.type === "MEMBERSHIP EXPIRED") {
     return `Your membership has expired${notification.expiryText ? ` on ${notification.expiryText}` : ""}. Please renew to continue accessing gym services.`;
   }
 
-  return `Your membership will expire in ${safeDays} day(s)${notification.expiryText ? ` on ${notification.expiryText}` : ""}. Please renew before the expiry date.`;
- } 
+  return `Your membership will expire in ${safeDays} ${dayWord}${notification.expiryText ? ` on ${notification.expiryText}` : ""}. Please renew before the expiry date.`;
+}
+
+function toTitleCase(str) {
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export async function sendMemberNotificationEmail(member, notification) {
   if (!member?.email) {
@@ -45,18 +92,20 @@ export async function sendMemberNotificationEmail(member, notification) {
   }
 
   const config = assertEmailConfig();
+  const isOverdueBalance = notification.type === "OVERDUE BALANCE";
+  const isExpiring = notification.type === "MEMBERSHIP EXPIRING";
+  const safeDays = Number.isFinite(notification?.daysRemaining)
+    ? Math.abs(notification.daysRemaining)
+    : 0;
 
   const templateParams = {
     to_name: member.full_name || "Member",
     to_email: member.email,
     member_id: member.member_id || "",
-    notification_type: notification.type,
+    notification_type: toTitleCase(notification.type),
     detail: notification.detail,
-    overdue_amount: notification.overdueAmountText || "",
-    days_remaining:
-      typeof notification.daysRemaining === "number"
-        ? String(Math.abs(notification.daysRemaining))
-        : "",
+    overdue_amount: isOverdueBalance ? (notification.overdueAmountText || "") : "N/A",
+    days_remaining: isExpiring ? String(safeDays) : "N/A",
     expiry_date: notification.expiryText || "",
     message: buildMessage(notification),
     app_name: "FitSync",

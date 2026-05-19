@@ -1,44 +1,33 @@
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import styles from "../Modal.module.css";
+import { sendMemberWelcomeEmail, uploadQRAndGetUrl } from "../../../services/notificationEmailService";
+import { generateMemberQRCardDataUrl } from "../../../utils/generateMemberIDPDF";
 
-export default function MemberRegisteredModal({ member, onClose, onPrint }) {
-  const qrContainerRef = useRef();
+export default function MemberRegisteredModal({ member, onClose }) {
+  const [emailStatus, setEmailStatus] = useState("idle"); // idle | sending | sent | error
+  const [emailError, setEmailError] = useState("");
 
-  useEffect(() => {
-    const memberId = member?.memberId || member?.member_id;
-    if (!qrContainerRef.current || !memberId) return;
-
-    const qrContainer = qrContainerRef.current;
-    const qrData = memberId;
-    const size = 180;
-
-    // Load QR library from CDN
-    if (!window.QRCode) {
-      const script = document.createElement("script");
-      script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
-      script.async = true;
-      script.onload = () => generateQR();
-      document.head.appendChild(script);
-    } else {
-      generateQR();
+  const handleEmailQR = async () => {
+    const email = member?.email;
+    if (!email) {
+      alert("This member has no email address on record. Please edit the member and add an email first.");
+      return;
     }
 
-    function generateQR() {
-      qrContainer.innerHTML = "";
-      // eslint-disable-next-line no-undef
-      new QRCode(qrContainer, {
-        text: qrData,
-        width: size,
-        height: size,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-      });
+    setEmailStatus("sending");
+    try {
+      const memberId = member.memberId || member.member_id;
+      const qrCardDataUrl = await generateMemberQRCardDataUrl(member);
+      const qrPublicUrl = await uploadQRAndGetUrl(memberId, qrCardDataUrl);
+      await sendMemberWelcomeEmail(member, qrPublicUrl);
+      setEmailStatus("sent");
+    } catch (err) {
+      const msg = err?.message || String(err);
+      console.error("Failed to send QR email:", msg);
+      setEmailError(msg);
+      setEmailStatus("error");
     }
-
-    return () => {
-      qrContainer.innerHTML = "";
-    };
-  }, [member]);
+  };
 
   if (!member) return null;
 
@@ -59,18 +48,36 @@ export default function MemberRegisteredModal({ member, onClose, onPrint }) {
           <p className={styles.registeredInfoRow}>
             <strong>Member ID :</strong> {member.memberId}
           </p>
+          {member.email && (
+            <p className={styles.registeredInfoRow}>
+              <strong>Email :</strong> {member.email}
+            </p>
+          )}
         </div>
 
-        {/* QR Code */}
-        <div className={styles.qrWrapper}>
-          <div ref={qrContainerRef} className={styles.qrCanvas} />
-          <p className={styles.qrLabel}>Scan QR to Verify</p>
-        </div>
+        {/* Email status feedback */}
+        {emailStatus === "sent" && (
+          <p style={{ color: "#7eba56", fontSize: "13px", textAlign: "center", margin: "8px 0 0" }}>
+            QR ID sent to {member.email}
+          </p>
+        )}
+        {emailStatus === "error" && (
+          <p style={{ color: "#e05555", fontSize: "13px", textAlign: "center", margin: "8px 0 0" }}>
+            {emailError || "Failed to send email. Check your EmailJS config and try again."}
+          </p>
+        )}
 
         {/* Buttons */}
         <div className={styles.registeredBtns}>
           <button className={styles.addMemberCancelBtn} onClick={onClose}>Done</button>
-          <button className={styles.addMemberSubmitBtn} onClick={() => onPrint?.(member)}>Print ID</button>
+          <button
+            className={styles.addMemberSubmitBtn}
+            onClick={handleEmailQR}
+            disabled={emailStatus === "sending" || emailStatus === "sent"}
+            style={{ opacity: emailStatus === "sending" ? 0.7 : 1 }}
+          >
+            {emailStatus === "sending" ? "Sending..." : emailStatus === "sent" ? "Sent ✓" : "Email QR ID"}
+          </button>
         </div>
       </div>
     </div>

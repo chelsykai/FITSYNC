@@ -6,7 +6,7 @@ import EditMembershipModal from "./EditMembershipModal";
 import EditMemberModal from "./EditMemberModal";
 import { formatMMDDYYYY } from "../../../utils/dateFormat";
 
-export default function MemberProfileModal({ member, onClose, onDelete, onMembershipUpdated }) {
+export default function MemberProfileModal({ member, onClose, onDelete, onMembershipUpdated, isAdmin = false }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
@@ -68,13 +68,18 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
   const phone = member.phone || "N/A";
   const email = member.email || "N/A";
 
+  const emergencyName   = member.emergency_contact_name   || "N/A";
+  const emergencyNumber = member.emergency_contact_number || "N/A";
+
   const details = [
-    { label: "Join Date", value: joinDate },
-    { label: "Birthday", value: birthday },
-    { label: "Expiry", value: expiry },
-    { label: "Phone Number", value: phone },
-    { label: "Email", value: email },
-    { label: "Address", value: address },
+    { label: "Join Date",                value: joinDate       },
+    { label: "Birthday",                 value: birthday       },
+    { label: "Expiry",                   value: expiry         },
+    { label: "Phone Number",             value: phone          },
+    { label: "Email",                    value: email          },
+    { label: "Address",                  value: address        },
+    { label: "Emergency Contact",        value: emergencyName  },
+    { label: "Emergency Contact Number", value: emergencyNumber},
   ];
 
   return (
@@ -152,27 +157,31 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
           >
             Print ID
           </button>
-          <button
-            className={styles.profileEmailBtn}
-            onClick={() => setShowEditMember(true)}
-          >
-            Edit Member
-          </button>
-          <button
-            className={styles.profileEmailBtn}
-            onClick={() => setShowEditMembership(true)}
-          >
-            Edit Membership
-          </button>
-          <button
-            className={styles.profileDeleteBtn}
-            onClick={() => {
-              setConfirmError(null);
-              setConfirmOpen(true);
-            }}
-          >
-            Delete
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                className={styles.profileEmailBtn}
+                onClick={() => setShowEditMember(true)}
+              >
+                Edit Member
+              </button>
+              <button
+                className={styles.profileEmailBtn}
+                onClick={() => setShowEditMembership(true)}
+              >
+                Edit Membership
+              </button>
+              <button
+                className={styles.profileDeleteBtn}
+                onClick={() => {
+                  setConfirmError(null);
+                  setConfirmOpen(true);
+                }}
+              >
+                Delete
+              </button>
+            </>
+          )}
           <button className={styles.profileCloseBtn} onClick={onClose}>Close</button>
         </div>
       </div>
@@ -221,4 +230,3 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
     </>
   );
 }
-

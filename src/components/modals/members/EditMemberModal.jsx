@@ -14,6 +14,8 @@ export default function EditMemberModal({ member, onClose, onSave }) {
     address:         member.address || "",
     phone:           member.phone || "",
     email:           member.email || "",
+    emergencyContactName:   member.emergency_contact_name   || "",
+    emergencyContactNumber: member.emergency_contact_number || "",
   });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(member.photo_url || null);
@@ -59,6 +61,8 @@ export default function EditMemberModal({ member, onClose, onSave }) {
       if (form.address !== member.address) updates.address = form.address || null;
       if (form.phone !== member.phone) updates.phone = form.phone || null;
       if (form.email !== member.email) updates.email = form.email || null;
+      if (form.emergencyContactName   !== (member.emergency_contact_name   || '')) updates.emergency_contact_name   = form.emergencyContactName   || null;
+      if (form.emergencyContactNumber !== (member.emergency_contact_number || '')) updates.emergency_contact_number = form.emergencyContactNumber || null;
 
       // Upload photo only if a new one was selected
       if (photoFile) {
@@ -186,6 +190,16 @@ export default function EditMemberModal({ member, onClose, onSave }) {
             <div className={styles.formGroupFull}>
               <label className={styles.formLabel}>Email</label>
               <input className={styles.formInput} placeholder="email@example.com" type="email" value={form.email} onChange={set("email")} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Emergency Contact Name</label>
+              <input className={styles.formInput} placeholder="Contact person name"
+                value={form.emergencyContactName} onChange={set("emergencyContactName")} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Emergency Contact Number</label>
+              <input className={styles.formInput} placeholder="09XXXXXXXXX"
+                value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} />
             </div>
           </div>
 

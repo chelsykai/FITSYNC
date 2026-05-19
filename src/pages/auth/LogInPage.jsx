@@ -53,7 +53,7 @@ export default function LogInPage({ onNavigate }) {
         return;
       }
 
-      onNavigate("overview");
+      onNavigate(String(user.role || "staff").toLowerCase() === "admin" ? "overview" : "staffDashboard");
     } catch (err) {
       setError("An error occurred. Please try again.");
       setLoading(false);
@@ -120,12 +120,6 @@ export default function LogInPage({ onNavigate }) {
 
           {error && <p className={styles.errorText}>{error}</p>}
 
-          <div className={styles.forgot}>
-            <a href="#" onClick={(e) => { e.preventDefault(); onNavigate("forgot"); }}>
-              Forgot Password?
-            </a>
-          </div>
-
           <button className={styles.loginBtn} onClick={handleLogin} disabled={loading}>
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -133,13 +127,7 @@ export default function LogInPage({ onNavigate }) {
             </svg>
             {loading ? "Logging in..." : "Login"}
           </button>
-
-          <p className={styles.notRegistered}>
-            Not registered?{" "}
-            <a href="#" onClick={(e) => { e.preventDefault(); onNavigate("create"); }}>
-              Create account
-            </a>
-          </p>
+          
         </div>
       </div>
     </div>

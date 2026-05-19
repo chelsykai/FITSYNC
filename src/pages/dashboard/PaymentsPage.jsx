@@ -147,7 +147,7 @@ const calculateStats = (payments, activeMemberships = 0) => {
   };
 };
 
-export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
+export default function PaymentsPage({ onNavigate, activePage = "payments", isAdmin = false }) {
   const [payments, setPayments] = useState([]);
   const [error, setError] = useState("");
   const [stats, setStats] = useState({
@@ -256,7 +256,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
   if (loadingPayments) {
     return (
       <div className={styles.layout}>
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar activePage={activePage} onNavigate={onNavigate} isAdmin={isAdmin} />
         <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Payments</h1>
           <div style={{ textAlign: "center", padding: "40px", fontSize: "16px", color: "#666" }}>
@@ -270,7 +270,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
   return (
     <>
       <div className={styles.layout}>
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar activePage={activePage} onNavigate={onNavigate} isAdmin={isAdmin} />
         <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Payments</h1>
 
@@ -290,15 +290,17 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
                 <p className={styles.statValue}>{loadingMembers ? "..." : members.length}</p>
               </div>
             </div>
-            <div
-              className={`${styles.statCard} ${styles.exportCard}`}
-              onClick={() => setShowExport(true)}
-            >
-              <span className={styles.statIcon}>🖨️</span>
-              <div>
-                <p className={styles.statLabel}>Export</p>
+            {isAdmin && (
+              <div
+                className={`${styles.statCard} ${styles.exportCard}`}
+                onClick={() => setShowExport(true)}
+              >
+                <span className={styles.statIcon}>🖨️</span>
+                <div>
+                  <p className={styles.statLabel}>Export</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Search */}
@@ -335,9 +337,11 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
           <div className={styles.tableCard}>
             <div className={styles.tableHeader}>
               <h2 className={styles.tableTitle}>Payment Records Table</h2>
-              <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
-                Add / Record Payment
-              </button>
+              {isAdmin && (
+                <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
+                  Add / Record Payment
+                </button>
+              )}
             </div>
 
             <table className={styles.table}>
@@ -416,8 +420,8 @@ export default function PaymentsPage({ onNavigate, activePage = "payments" }) {
       </div>
 
       {/* Modals */}
-      {showExport && (
-        <PaymentsExportModal payments={payments} members={members} onClose={() => setShowExport(false)} />
+      {showExport && isAdmin && (
+        <PaymentsExportModal payments={payments} members={members} onClose={() => setShowExport(false)} isAdmin={isAdmin} />
       )}
       {showViewAll && (
         <ViewAllPaymentsModal

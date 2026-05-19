@@ -91,7 +91,7 @@ function buildNotificationsFromMembers(members) {
             id: member.member_id,
             type: "MEMBERSHIP OVERDUE",
             name: member.full_name,
-            detail: `OVERDUE BY ${Math.abs(dayDiff)} DAY${Math.abs(dayDiff) === 1 ? "" : "S"}\nEXPIRY DATE: ${expiryText}`,
+            detail: `Overdue by ${Math.abs(dayDiff)} day${Math.abs(dayDiff) === 1 ? "" : "s"}`,
             color: "orange",
             action: "NOTIFY",
             daysRemaining: dayDiff,
@@ -104,7 +104,7 @@ function buildNotificationsFromMembers(members) {
             id: member.member_id,
             type: "MEMBERSHIP EXPIRED",
             name: member.full_name,
-            detail: `EXPIRES TODAY\nEXPIRY DATE: ${expiryText}`,
+            detail: `Expires today`,
             color: "red",
             action: "NOTIFY",
             daysRemaining: dayDiff,
@@ -118,7 +118,7 @@ function buildNotificationsFromMembers(members) {
             id: member.member_id,
             type: "MEMBERSHIP EXPIRING",
             name: member.full_name,
-            detail: `EXPIRY: ${dayDiff} DAY${dayDiff === 1 ? "" : "S"} REMAINING\nEXPIRY DATE: ${expiryText}`,
+            detail: `Expiry: ${dayDiff} day${dayDiff === 1 ? "" : "s"} remaining`,
             color: "yellow",
             action: "NOTIFY",
             daysRemaining: dayDiff,
@@ -132,7 +132,7 @@ function buildNotificationsFromMembers(members) {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export default function NotificationsPage({ onNavigate, activePage = "notifications" }) {
+export default function NotificationsPage({ onNavigate, activePage = "notifications", onNewNotif }) {
   const [search, setSearch]             = useState("");
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [selected, setSelected]         = useState([]);
@@ -146,6 +146,11 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const filtersDDRef   = useRef();
+
+  const pendingCount = notifications.filter(
+  (n) => !statusMap[n.key] || statusMap[n.key] === "Pending").length;
+
+   useEffect(() => { onNewNotif?.(pendingCount);}, [pendingCount]);
 
   const loadNotifications = useCallback(async (showLoader = false) => {
     try {

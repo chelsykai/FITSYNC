@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabaseClient';
 
 export const getAuditActorRole = async () => {
   try {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     const userId = currentUser?.user_id ? String(currentUser.user_id).trim() : '';
     const username = currentUser?.username ? String(currentUser.username).trim().toLowerCase() : '';
 

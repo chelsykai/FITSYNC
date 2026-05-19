@@ -2,37 +2,47 @@
   display: flex;
   min-height: 100vh;
   font-family: "Montserrat", sans-serif;
-  background-color: #f5f5f5;
+  background-color: #f3f8f0;
+  background-image: radial-gradient(rgba(126,186,86,0.13) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 .content {
   flex: 1;
   padding: 36px 40px;
   overflow-y: auto;
-  margin-left: 180px;
+  margin-left: 190px;
 }
 
 .title {
-  color: #7eba56;
+  color: #1a3d0a;
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0 0 20px 0;
+  padding-left: 14px;
+  border-left: 4px solid #7eba56;
 }
 
 /* SEARCH */
 .searchWrapper {
   display: flex;
   align-items: center;
-  background: #c9c9c9;
-  border: 1px solid #ddd;
+  background: #ffffff;
+  border: 1.5px solid #d4e8c0;
   border-radius: 12px;
   padding: 10px 16px;
   margin-bottom: 16px;
   gap: 10px;
   width: 340px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.searchIcon { font-size: 14px; color: #242424; }
+.searchWrapper:focus-within {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126,186,86,0.12);
+}
+
+.searchIcon { font-size: 14px; color: #7eba56; }
 
 .searchInput {
   border: none;
@@ -44,7 +54,7 @@
   background: transparent;
 }
 
-.searchInput::placeholder { color: #242424; }
+.searchInput::placeholder { color: #aaa; }
 
 .clearBtn {
   background: none;
@@ -304,3 +314,42 @@
 }
 
 .viewLogBtn:hover { background-color: #6aa947; }
+
+
+/* ── Tablet ── */
+@media (max-width: 1024px) {
+  .content { padding: 28px 24px; margin-left: 180px; }
+  .statRow { gap: 12px; }
+  .statValue { font-size: 22px; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .content { margin-left: 0 !important; padding: 80px 16px 24px; }
+  .statRow { flex-direction: column; gap: 10px; }
+  .statCard { min-width: unset; width: 100%; }
+  .chartsRow { flex-direction: column; }
+  .chartCard { min-width: unset; }
+  .searchWrapper { width: 100%; }
+  .tableCard { padding: 14px 12px; }
+  .actionRow { flex-wrap: wrap; gap: 8px; }
+  .revenueRow { flex-direction: column; }
+  .grid { grid-template-columns: 1fr; }
+  .filterBar { gap: 6px; }
+  .title { font-size: 22px; }
+  .formRow { flex-direction: column; gap: 12px; }
+  .formCard { padding: 24px 16px; }
+  .formRowStatus { flex-direction: column; align-items: flex-start; }
+  .actionBtns { width: 100%; }
+}
+
+/* ── Small mobile ── */
+@media (max-width: 480px) {
+  .content { padding: 72px 12px 20px; }
+  .statValue { font-size: 20px; }
+  .title { font-size: 20px; }
+  .viewAllBtn { padding: 10px 24px; width: 100%; }
+  .pageHeader { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .tableHeader { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .btnRow { flex-direction: column; }
+}

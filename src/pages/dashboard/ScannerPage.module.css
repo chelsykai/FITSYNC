@@ -317,9 +317,17 @@
   text-align: center;
 }
 
-@media (max-width: 760px) {
-  .content {
-    padding: 24px 18px;
-    margin-left: 0;
-  }
+@media (max-width: 768px) {
+  .content { padding: 80px 16px 24px; margin-left: 0 !important; }
+  .header { padding: 16px 16px 12px; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .title { font-size: 28px; }
+  .lead { font-size: 13px; }
+  .scannerCard { padding: 16px; }
+  .scannerFrame { min-height: 240px; }
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 22px; }
+  .scannerActions { flex-direction: column; }
+  .scannerStartBtn, .scannerStopBtn { width: 100%; }
 }

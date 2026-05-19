@@ -9,10 +9,9 @@ import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersM
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers, deleteMember } from "../../services/memberService";
-import { generateMemberIDPDF } from "../../utils/generateMemberIDPDF";
 import { formatMMDDYYYY } from "../../utils/dateFormat";
 
-export default function MembersPage({ onNavigate, activePage = "members" }) {
+export default function MembersPage({ onNavigate, activePage = "members", isAdmin = false }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -239,7 +238,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
   return (
     <>
       <div className={styles.layout}>
-        <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <Sidebar activePage={activePage} onNavigate={onNavigate} isAdmin={isAdmin} />
         <div className={`${styles.content} tab-slide-animation`}>
           <h1 className={styles.title}>Members</h1>
 
@@ -344,8 +343,12 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
           {!loading && (
           <div className={styles.tableCard}>
             <div className={styles.actionRow}>
-              <button className={styles.exportBtn} onClick={() => setShowExport(true)}>📤 Export</button>
-              <button className={styles.addBtn} onClick={() => setShowAddMember(true)}>👤 Add Member</button>
+              {isAdmin && (
+                <>
+                  <button className={styles.exportBtn} onClick={() => setShowExport(true)}>📤 Export</button>
+                  <button className={styles.addBtn} onClick={() => setShowAddMember(true)}>👤 Add Member</button>
+                </>
+              )}
               <button className={styles.addBtn} onClick={() => setShowAttendance(true)}>🗓️ Attendance</button>
             </div>
             <table className={styles.table}>
@@ -393,16 +396,16 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
       </div>
 
       {/* Modals */}
-      {showExport && (
-        <MembersExportModal members={members} onClose={() => setShowExport(false)} />
+      {showExport && isAdmin && (
+        <MembersExportModal members={members} onClose={() => setShowExport(false)} isAdmin={isAdmin} />
       )}
-      {showAddMember && (
+      {showAddMember && isAdmin && (
         <AddMemberModal
           onClose={() => setShowAddMember(false)}
           onSuccess={handleMemberAdded}
         />
       )}
-      {showAttendance && (
+      {showAttendance && isAdmin && (
         <AttendanceModal
           members={members}
           onClose={() => setShowAttendance(false)}
@@ -412,14 +415,6 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
         <MemberRegisteredModal
           member={registeredMember}
           onClose={() => setRegisteredMember(null)}
-          onPrint={async (m) => {
-            try {
-              await generateMemberIDPDF(m);
-            } catch (err) {
-              // eslint-disable-next-line no-console
-              console.error("Failed to generate PDF:", err);
-            }
-          }}
         />
       )}
       {showProfile && (
@@ -428,6 +423,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
           onClose={() => setShowProfile(null)}
           onDelete={handleProfileDelete}
           onMembershipUpdated={handleMembershipUpdated}
+          isAdmin={isAdmin}
         />
       )}
       {showViewAll && (
@@ -435,6 +431,7 @@ export default function MembersPage({ onNavigate, activePage = "members" }) {
           members={members}
           onClose={() => setShowViewAll(false)}
           onMemberDeleted={handleMemberDeleted}
+          isAdmin={isAdmin}
         />
       )}
     </>
