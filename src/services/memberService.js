@@ -152,6 +152,8 @@ export const addMember = async (memberData) => {
     joinDate,
     gender,
     photo,
+    emergencyContactName,
+    emergencyContactNumber,
   } = memberData;
 
   // Generate member ID
@@ -185,6 +187,8 @@ export const addMember = async (memberData) => {
     gender: gender,
     photo_url: photoUrl,
     join_date: resolvedJoinDate,
+    emergency_contact_name:   emergencyContactName   || null,
+    emergency_contact_number: emergencyContactNumber || null,
     created_at: new Date().toISOString(),
   };
 
@@ -228,7 +232,7 @@ export const fetchMembers = async () => {
     const resp = await supabase
       .from("member")
       .select(
-        "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, expiration_date, created_at"
+        "member_id, full_name, membership_type, email, phone, address, birthday, gender, photo_url, join_date, monthly_validity, membership_validity, expiration_date, emergency_contact_name, emergency_contact_number, created_at"
       )
       .order("created_at", { ascending: false });
 
@@ -287,7 +291,7 @@ export const updateMember = async (memberId, updates) => {
   // Fetch old data first to capture changes
   const { data: oldData, error: fetchError } = await supabase
     .from("member")
-    .select('full_name, membership_type, email, phone, address, birthday, photo_url')
+    .select('full_name, membership_type, email, phone, address, birthday, photo_url, emergency_contact_name, emergency_contact_number')
     .eq("member_id", memberId)
     .single();
 
@@ -322,6 +326,12 @@ export const updateMember = async (memberId, updates) => {
   }
   if (oldData.birthday !== updates.birthday) {
     changes.birthday = { old: oldData.birthday, new: updates.birthday };
+  }
+  if (oldData.emergency_contact_name !== updates.emergency_contact_name) {
+    changes.emergency_contact_name = { old: oldData.emergency_contact_name, new: updates.emergency_contact_name };
+  }
+  if (oldData.emergency_contact_number !== updates.emergency_contact_number) {
+    changes.emergency_contact_number = { old: oldData.emergency_contact_number, new: updates.emergency_contact_number };
   }
   if ('photo_url' in updates && oldData.photo_url !== updates.photo_url) {
     if (updates.photo_url) {
