@@ -2,7 +2,9 @@
   display: flex;
   min-height: 100vh;
   font-family: "Montserrat", sans-serif;
-  background-color: #f5f5f5;
+  background-color: #f3f8f0;
+  background-image: radial-gradient(rgba(126,186,86,0.13) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 .content {
@@ -13,26 +15,34 @@
 }
 
 .title {
-  color: #7eba56;
+  color: #1a3d0a;
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0 0 20px 0;
+  padding-left: 14px;
+  border-left: 4px solid #7eba56;
 }
 
 /* SEARCH */
 .searchWrapper {
   display: flex;
   align-items: center;
-  background: #c9c9c9;
-  border: 1px solid #ddd;
+  background: #ffffff;
+  border: 1.5px solid #d4e8c0;
   border-radius: 12px;
   padding: 10px 16px;
   margin-bottom: 16px;
   gap: 10px;
   width: 340px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.searchIcon { font-size: 14px; color: #242424; }
+.searchWrapper:focus-within {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126,186,86,0.12);
+}
+
+.searchIcon { font-size: 14px; color: #7eba56; }
 
 .searchInput {
   border: none;
@@ -44,7 +54,7 @@
   background: transparent;
 }
 
-.searchInput::placeholder { color: #242424; }
+.searchInput::placeholder { color: #aaa; }
 
 .clearBtn {
   background: none;

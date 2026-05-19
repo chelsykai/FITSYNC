@@ -125,8 +125,35 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
         return;
       }
 
+      let filteredPayments = [...payments];
+
+      // Apply date range filter using rawDate
+      if (dateFrom || dateTo) {
+        const from = dateFrom ? new Date(dateFrom + "T00:00:00") : null;
+        const to   = dateTo   ? new Date(dateTo   + "T23:59:59") : null;
+        filteredPayments = filteredPayments.filter((p) => {
+          if (!p.rawDate) return false;
+          const d = new Date(p.rawDate);
+          if (from && d < from) return false;
+          if (to   && d > to)   return false;
+          return true;
+        });
+      }
+
+      // Apply type filter (Monthly, Yearly, Quarterly) unless Select All
+      const allSelected = selected.length === dataTypes.length - 1;
+      if (!allSelected) {
+        filteredPayments = filteredPayments.filter((p) => selected.includes(p.type));
+      }
+
+      if (filteredPayments.length === 0) {
+        alert("No payment records found for the selected filters.");
+        setLoading(false);
+        return;
+      }
+
       const exportData = filteredPayments.map((p) => ({
-        "Member ID": p.id,
+        "Member ID": p.memberId,
         "Name": p.name,
         "Date": p.date,
         "Type": p.type,
@@ -175,7 +202,7 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
         doc.save(fileName + ".pdf");
       }
 
-      alert(`Successfully exported ${exportData.length} payment record(s)!`);
+      alert(`Successfully exported ${filteredPayments.length} payment record(s)!`);
       onClose();
     } catch (err) {
       console.error("Error exporting payments:", err);
