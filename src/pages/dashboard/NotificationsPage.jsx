@@ -8,6 +8,7 @@ import { sendMemberNotificationEmail } from "../../services/notificationEmailSer
 import { formatMMDDYYYY } from "../../utils/dateFormat";
 
 const FILTER_STATUS = ["Pending", "Sent", "Failed"];
+const STATUS_STORAGE_KEY = "fitsync.notificationStatuses";
 
 const filterMap = {
   ALL:        () => true,
@@ -141,14 +142,35 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   const [filterStatus, setFilterStatus] = useState(null);
   const [viewLogTarget, setViewLogTarget] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  const [statusMap, setStatusMap] = useState({});
+  const [statusMap, setStatusMap] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STATUS_STORAGE_KEY) || "{}");
+      return stored && typeof stored === "object" ? stored : {};
+    } catch {
+      return {};
+    }
+  });
   const [sendingMap, setSendingMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const filtersDDRef   = useRef();
 
-  const pendingCount = notifications.filter(
-  (n) => !statusMap[n.key] || statusMap[n.key] === "Pending").length;
+  useEffect(() => {
+    try {
+      localStorage.setItem(STATUS_STORAGE_KEY, JSON.stringify(statusMap));
+    } catch (err) {
+      console.error("Error saving notification statuses:", err);
+    }
+  }, [statusMap]);
+
+  const notificationsWithStatus = notifications.map((notification) => ({
+    ...notification,
+    status: statusMap[notification.key] || "Pending",
+  }));
+
+  const pendingCount = notificationsWithStatus.filter(
+    (notification) => notification.status === "Pending"
+  ).length;
 
    useEffect(() => { onNewNotif?.(pendingCount);}, [pendingCount]);
 
@@ -210,6 +232,10 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   }, []);
 
   const handleNotify = async (notification) => {
+    if (statusMap[notification.key] === "Sent") {
+      return;
+    }
+
     if (!notification?.member?.email) {
       setStatusMap((prev) => ({ ...prev, [notification.key]: "Failed" }));
       window.alert(`No email found for ${notification.name}.`);
@@ -219,37 +245,23 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
     try {
       setSendingMap((prev) => ({ ...prev, [notification.key]: true }));
       await sendMemberNotificationEmail(notification.member, notification);
-      setNotifications((prev) => prev.filter((item) => item.key !== notification.key));
-      setSelected((prev) => prev.filter((key) => key !== notification.key));
-      setStatusMap((prev) => {
-        const next = { ...prev };
-        delete next[notification.key];
-        return next;
-      });
-      setSendingMap((prev) => {
-        const next = { ...prev };
-        delete next[notification.key];
-        return next;
-      });
+      setStatusMap((prev) => ({ ...prev, [notification.key]: "Sent" }));
     } catch (err) {
       console.error("Error sending notification:", err);
       setStatusMap((prev) => ({ ...prev, [notification.key]: "Failed" }));
       window.alert(err?.message || "Failed to send notification.");
     } finally {
-      setSendingMap((prev) => {
-        if (!prev[notification.key]) return prev;
-        return { ...prev, [notification.key]: false };
-      });
+      setSendingMap((prev) => ({ ...prev, [notification.key]: false }));
     }
   };
 
   const filtered = notifications.filter((n) => {
+    const computedStatus = statusMap[n.key] || "Pending";
     const matchSearch =
       n.type.toLowerCase().includes(search.toLowerCase()) ||
       n.id.toLowerCase().includes(search.toLowerCase()) ||
       n.name.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filterMap[activeFilter](n);
-    const computedStatus = statusMap[n.key] || "Pending";
     const matchStatus = !filterStatus || computedStatus === filterStatus;
     return matchSearch && matchFilter && matchStatus;
   });
@@ -274,7 +286,9 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
     }
   };
 
-  const getActionClass = (action) => {
+  const getActionClass = (action, status) => {
+    if (status === "Sent") return styles.sentBtn;
+    if (status === "Failed") return styles.retryBtn;
     if (action === "VIEW LOG") return styles.viewLogBtn;
     if (action === "REMIND")   return styles.remindBtn;
     return styles.notifyBtn;
@@ -357,7 +371,13 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
 
           {/* Notification Grid */}
           <div className={styles.grid}>
-            {filtered.map((n) => (
+            {filtered.map((n) => {
+              const currentStatus = statusMap[n.key] || "Pending";
+              const isSent = currentStatus === "Sent";
+              const isFailed = currentStatus === "Failed";
+              const actionLabel = isSent ? "SENT" : isFailed ? "RETRY" : n.action;
+
+              return (
               <div
                 key={n.key}
                 className={`${styles.card} ${selectMode && selected.includes(n.key) ? styles.cardSelected : ""}`}
@@ -375,7 +395,7 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
                   <span className={styles.dot} style={{ backgroundColor: dotColor[n.color] }} />
                   <span className={styles.cardType}>{n.type}</span>
                   <button
-                    className={`${styles.actionBtn} ${getActionClass(n.action)}`}
+                    className={`${styles.actionBtn} ${getActionClass(n.action, currentStatus)}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (n.action === "VIEW LOG") {
@@ -384,9 +404,9 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
                       }
                       handleNotify(n);
                     }}
-                    disabled={Boolean(sendingMap[n.key])}
+                    disabled={Boolean(sendingMap[n.key]) || isSent}
                   >
-                    {sendingMap[n.key] ? "SENDING..." : n.action}
+                    {sendingMap[n.key] ? "SENDING..." : actionLabel}
                   </button>
                 </div>
                 <p className={styles.cardId}>{n.id}</p>
@@ -403,10 +423,11 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
                   </div>
                 </div>
                 <p className={styles.cardValue} style={{ marginTop: 10 }}>
-                  Status: {statusMap[n.key] || "Pending"}
+                  Status: {currentStatus}
                 </p>
               </div>
-            ))}
+              );
+            })}
 
             {!loading && filtered.length === 0 && (
               <div className={styles.card}>
