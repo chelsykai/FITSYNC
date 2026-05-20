@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import styles from "./MembersPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
-import MembersExportModal from "../../components/modals/members/MembersExportModal";
 import AddMemberModal from "../../components/modals/members/AddMemberModal";
 import AttendanceModal from "../../components/modals/members/AttendanceModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
@@ -17,7 +16,6 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [quickFilter, setQuickFilter] = useState("all");
-  const [showExport, setShowExport] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
   const [showProfile, setShowProfile] = useState(null);
@@ -343,48 +341,45 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
           {!loading && (
           <div className={styles.tableCard}>
             <div className={styles.actionRow}>
-              {isAdmin && (
-                <>
-                  <button className={styles.exportBtn} onClick={() => setShowExport(true)}>📤 Export</button>
-                  <button className={styles.addBtn} onClick={() => setShowAddMember(true)}>👤 Add Member</button>
-                </>
-              )}
+              <button className={styles.addBtn} onClick={() => setShowAddMember(true)}>👤 Add Member</button>
               <button className={styles.addBtn} onClick={() => setShowAttendance(true)}>🗓️ Attendance</button>
             </div>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Member ID</th>
-                  <th>Name</th>
-                  <th>Birthday</th>
-                  <th>Membership Type</th>
+            <div className={styles.tableScroll}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Member ID</th>
+                    <th>Name</th>
+                    <th>Birthday</th>
+                    <th>Membership Type</th>
                     <th className={styles.membershipPlanCol}>Membership Plan</th>
                     <th>Monthly Expiry</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((m) => {
-                  const membershipPlan = getMembershipPlanParts(m.membership_validity, m.monthly_validity);
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((m) => {
+                    const membershipPlan = getMembershipPlanParts(m.membership_validity, m.monthly_validity);
                     const expiryDate = getMemberExpiryDate(m);
-                  return (
-                    <tr key={m.member_id} className={styles.clickableRow}
-                      onClick={() => setShowProfile(m)}>
-                      <td>{m.member_id}</td>
-                      <td>{m.full_name}</td>
-                      <td>{m.birthday ? formatMMDDYYYY(m.birthday) : "N/A"}</td>
-                      <td>{m.membership_type}</td>
-                      <td className={styles.membershipPlanCol}>
-                        <span className={styles.membershipPlanTerm}>{membershipPlan.term}</span>
-                      </td>
+                    return (
+                      <tr key={m.member_id} className={styles.clickableRow}
+                        onClick={() => setShowProfile(m)}>
+                        <td>{m.member_id}</td>
+                        <td>{m.full_name}</td>
+                        <td>{m.birthday ? formatMMDDYYYY(m.birthday) : "N/A"}</td>
+                        <td>{m.membership_type}</td>
+                        <td className={styles.membershipPlanCol}>
+                          <span className={styles.membershipPlanTerm}>{membershipPlan.term}</span>
+                        </td>
                         <td>{expiryDate ? formatMMDDYYYY(expiryDate) : "N/A"}</td>
-                    </tr>
-                  );
-                })}
+                      </tr>
+                    );
+                  })}
                   {filtered.length === 0 && (
                     <tr><td colSpan={6} className={styles.noResults}>No members found.</td></tr>
                   )}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
             <div className={styles.viewAllWrapper}>
               <button className={styles.viewAllBtn} onClick={() => setShowViewAll(true)}>
                 View All
@@ -396,16 +391,13 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
       </div>
 
       {/* Modals */}
-      {showExport && isAdmin && (
-        <MembersExportModal members={members} onClose={() => setShowExport(false)} isAdmin={isAdmin} />
-      )}
-      {showAddMember && isAdmin && (
+        {showAddMember && (
         <AddMemberModal
           onClose={() => setShowAddMember(false)}
           onSuccess={handleMemberAdded}
         />
       )}
-      {showAttendance && isAdmin && (
+        {showAttendance && (
         <AttendanceModal
           members={members}
           onClose={() => setShowAttendance(false)}

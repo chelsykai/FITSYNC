@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import styles from "./PaymentsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
-import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
@@ -162,7 +161,6 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
   const [loadingPayments, setLoadingPayments] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [search, setSearch] = useState("");
-  const [showExport, setShowExport] = useState(false);
   const [showViewAll, setShowViewAll] = useState(false);
   const [members, setMembers] = useState([]);
 
@@ -290,17 +288,6 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
                 <p className={styles.statValue}>{loadingMembers ? "..." : members.length}</p>
               </div>
             </div>
-            {isAdmin && (
-              <div
-                className={`${styles.statCard} ${styles.exportCard}`}
-                onClick={() => setShowExport(true)}
-              >
-                <span className={styles.statIcon}>🖨️</span>
-                <div>
-                  <p className={styles.statLabel}>Export</p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Search */}
@@ -337,51 +324,51 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
           <div className={styles.tableCard}>
             <div className={styles.tableHeader}>
               <h2 className={styles.tableTitle}>Payment Records Table</h2>
-              {isAdmin && (
-                <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
-                  Add / Record Payment
-                </button>
-              )}
+              <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
+                Add / Record Payment
+              </button>
             </div>
 
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Member ID</th>
-                  <th>Name</th>
-                  <th>Payment Date</th>
-                  <th>Membership Type</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.length === 0 ? (
-                  <tr key="no-payments"><td colSpan={6} className={styles.noResults}>
-                    No payment records yet. Click "Add / Record Payment" to create one.
-                  </td></tr>
-                ) : filtered.length === 0 ? (
-                  <tr key="no-match"><td colSpan={6} className={styles.noResults}>
-                    No records match your search.
-                  </td></tr>
-                ) : (
-                  filtered.map((p, index) => (
-                    <tr key={`${p.memberId}-${p.date}-${index}`}>
-                      <td>{p.memberId}</td>
-                      <td>{p.name}</td>
-                      <td>{p.date}</td>
-                      <td>{p.type}</td>
-                      <td>{p.total.toLocaleString()}</td>
-                      <td>
-                        <span className={`${styles.badge} ${p.status === "Paid" ? styles.paid : styles.pending}`}>
-                          {p.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            <div className={styles.tableScroll}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Member ID</th>
+                    <th>Name</th>
+                    <th>Payment Date</th>
+                    <th>Membership Type</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.length === 0 ? (
+                    <tr key="no-payments"><td colSpan={6} className={styles.noResults}>
+                      No payment records yet. Click "Add / Record Payment" to create one.
+                    </td></tr>
+                  ) : filtered.length === 0 ? (
+                    <tr key="no-match"><td colSpan={6} className={styles.noResults}>
+                      No records match your search.
+                    </td></tr>
+                  ) : (
+                    filtered.map((p, index) => (
+                      <tr key={`${p.memberId}-${p.date}-${index}`}>
+                        <td>{p.memberId}</td>
+                        <td>{p.name}</td>
+                        <td>{p.date}</td>
+                        <td>{p.type}</td>
+                        <td>{p.total.toLocaleString()}</td>
+                        <td>
+                          <span className={`${styles.badge} ${p.status === "Paid" ? styles.paid : styles.pending}`}>
+                            {p.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             <div className={styles.viewAllWrapper}>
               <button className={styles.viewAllBtn} onClick={() => setShowViewAll(true)}>
@@ -391,38 +378,37 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
           </div>
 
           {/* Revenue Cards */}
-          <div className={styles.revenueRow}>
-            <div className={styles.revenueCard}>
-              <span className={styles.revenueIcon}>💰</span>
-              <div>
-                <p className={styles.revenueLabel}>Today's Revenue</p>
-                <p className={styles.revenueValue}>₱ {revenue.today.toLocaleString()}</p>
+          {isAdmin && (
+            <div className={styles.revenueRow}>
+              <div className={styles.revenueCard}>
+                <span className={styles.revenueIcon}>💰</span>
+                <div>
+                  <p className={styles.revenueLabel}>Today's Revenue</p>
+                  <p className={styles.revenueValue}>₱ {revenue.today.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className={styles.revenueCard}>
+                <span className={styles.revenueIcon}>📊</span>
+                <div>
+                  <p className={styles.revenueLabel}>This month's Revenue</p>
+                  <p className={styles.revenueValue}>₱ {revenue.thisMonth.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className={`${styles.revenueCard} ${styles.pendingCard}`}>
+                <span className={styles.revenueIcon}>🕐</span>
+                <div>
+                  <p className={styles.revenueLabel}>Pending Payments</p>
+                  <p className={`${styles.revenueValue} ${styles.pendingValue}`}>
+                    ₱ {revenue.pending.toLocaleString()}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className={styles.revenueCard}>
-              <span className={styles.revenueIcon}>📊</span>
-              <div>
-                <p className={styles.revenueLabel}>This month's Revenue</p>
-                <p className={styles.revenueValue}>₱ {revenue.thisMonth.toLocaleString()}</p>
-              </div>
-            </div>
-            <div className={`${styles.revenueCard} ${styles.pendingCard}`}>
-              <span className={styles.revenueIcon}>🕐</span>
-              <div>
-                <p className={styles.revenueLabel}>Pending Payments</p>
-                <p className={`${styles.revenueValue} ${styles.pendingValue}`}>
-                  ₱ {revenue.pending.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Modals */}
-      {showExport && isAdmin && (
-        <PaymentsExportModal payments={payments} members={members} onClose={() => setShowExport(false)} isAdmin={isAdmin} />
-      )}
       {showViewAll && (
         <ViewAllPaymentsModal
           payments={payments}

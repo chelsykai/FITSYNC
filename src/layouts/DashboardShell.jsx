@@ -22,14 +22,17 @@ const NON_SCANNER_ROUTES = new Set([
   "changePassword",
 ]);
 
-const ADMIN_ONLY_ROUTES = new Set([
+const ADMIN_ONLY_ROUTES = new Set(["accounts"]);
+
+const STAFF_ALLOWED_ROUTES = new Set([
+  "staffDashboard",
+  "overview",
+  "members",
   "payments",
   "notifications",
-  "accounts",
   "recordPayment",
+  "changePassword",
 ]);
-
-const STAFF_ALLOWED_ROUTES = new Set(["staffDashboard", "overview", "members", "changePassword"]);
 
 const normalizePathname = (pathname = "/") => {
   if (!pathname) return "/";
@@ -161,16 +164,13 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       case "members":
         return <MembersPage key="members" activePage="members" {...pageProps} />;
       case "payments":
-        if (!isAdmin) return <OverviewPage key="overview-staff" activePage="overview" {...pageProps} />;
         return <PaymentsPage key="payments" activePage="payments" {...pageProps} />;
       case "notifications":
-        if (!isAdmin) return <OverviewPage key="overview-staff-2" activePage="overview" {...pageProps} />;
         return <NotificationsPage key="notifications" activePage="notifications" {...pageProps} />;
       case "accounts":
         if (!isAdmin) return <OverviewPage key="overview-staff-3" activePage="overview" {...pageProps} />;
         return <AccountsPage key="accounts" activePage="accounts" {...pageProps} />;
       case "recordPayment":
-        if (!isAdmin) return <OverviewPage key="overview-staff-4" activePage="overview" {...pageProps} />;
         return <RecordPaymentPage key="recordPayment" activePage="payments" {...pageProps} />;
       case "changePassword":
         return <ChangePasswordPage key="changePassword" activePage="accounts" {...pageProps} />;

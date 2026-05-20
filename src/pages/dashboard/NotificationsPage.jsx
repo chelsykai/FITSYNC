@@ -219,13 +219,27 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
     try {
       setSendingMap((prev) => ({ ...prev, [notification.key]: true }));
       await sendMemberNotificationEmail(notification.member, notification);
-      setStatusMap((prev) => ({ ...prev, [notification.key]: "Sent" }));
+      setNotifications((prev) => prev.filter((item) => item.key !== notification.key));
+      setSelected((prev) => prev.filter((key) => key !== notification.key));
+      setStatusMap((prev) => {
+        const next = { ...prev };
+        delete next[notification.key];
+        return next;
+      });
+      setSendingMap((prev) => {
+        const next = { ...prev };
+        delete next[notification.key];
+        return next;
+      });
     } catch (err) {
       console.error("Error sending notification:", err);
       setStatusMap((prev) => ({ ...prev, [notification.key]: "Failed" }));
       window.alert(err?.message || "Failed to send notification.");
     } finally {
-      setSendingMap((prev) => ({ ...prev, [notification.key]: false }));
+      setSendingMap((prev) => {
+        if (!prev[notification.key]) return prev;
+        return { ...prev, [notification.key]: false };
+      });
     }
   };
 

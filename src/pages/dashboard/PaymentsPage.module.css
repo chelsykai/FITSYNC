@@ -50,16 +50,6 @@
   box-shadow: 0 8px 26px rgba(0,0,0,0.11);
 }
 
-.exportCard {
-  border: 4px solid #E5F0DE;
-  background: white;
-  cursor: pointer;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
 .statIcon { font-size: 26px; }
 
 .statLabel {
@@ -125,6 +115,31 @@
   padding: 22px 26px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   margin-bottom: 24px;
+}
+
+.tableScroll {
+  max-height: 460px;
+  overflow-y: auto;
+  border: 1px solid #edf5e8;
+  border-radius: 12px;
+}
+
+.tableScroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+  background: #f3f8ef;
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+  background: #b9d3a8;
+  border-radius: 999px;
+  border: 2px solid #f3f8ef;
+}
+
+.tableScroll::-webkit-scrollbar-thumb:hover {
+  background: #9fc182;
 }
 
 .tableHeader {

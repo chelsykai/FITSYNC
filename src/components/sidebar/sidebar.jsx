@@ -14,6 +14,8 @@ const STAFF_NAV_ITEMS = [
   { label: "DASHBOARD", route: "staffDashboard", icon: "ti-home"        },
   { label: "OVERVIEW",  route: "overview",       icon: "ti-layout-dashboard" },
   { label: "MEMBERS",   route: "members",        icon: "ti-users"            },
+  { label: "PAYMENTS",  route: "payments",       icon: "ti-credit-card"      },
+  { label: "NOTIFICATIONS", route: "notifications", icon: "ti-bell"          },
 ];
 
 const getStoredRole = () => {
