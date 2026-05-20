@@ -120,6 +120,10 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       return;
     }
 
+    if (meta?.user) {
+      setCurrentUser(meta.user);
+    }
+
     if (ADMIN_ONLY_ROUTES.has(to) && !isAdmin) {
       setRoute("overview");
       return;

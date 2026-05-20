@@ -11,8 +11,9 @@ const ADMIN_NAV_ITEMS = [
 ];
 
 const STAFF_NAV_ITEMS = [
-  { label: "OVERVIEW", route: "overview", icon: "ti-layout-dashboard" },
-  { label: "MEMBERS",  route: "members",  icon: "ti-users"            },
+  { label: "DASHBOARD", route: "staffDashboard", icon: "ti-home"        },
+  { label: "OVERVIEW",  route: "overview",       icon: "ti-layout-dashboard" },
+  { label: "MEMBERS",   route: "members",        icon: "ti-users"            },
 ];
 
 const getStoredRole = () => {

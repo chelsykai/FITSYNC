@@ -9,6 +9,7 @@
 
 .content {
   flex: 1;
+  margin-left: 190px;
   padding: 40px;
   overflow-y: auto;
 }
@@ -168,8 +169,13 @@
 }
 
 @media (max-width: 760px) {
+  .layout {
+    display: block;
+  }
+
   .content {
     padding: 24px 18px;
+    margin-left: 0;
   }
 
   .quickActions {

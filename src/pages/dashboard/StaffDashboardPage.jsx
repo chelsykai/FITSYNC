@@ -27,7 +27,7 @@ export default function StaffDashboardPage({ onNavigate, userRole = "staff" }) {
 
   return (
     <div className={styles.layout}>
-      <Sidebar activePage="overview" onNavigate={onNavigate} isAdmin={false} />
+      <Sidebar activePage="staffDashboard" onNavigate={onNavigate} isAdmin={false} />
 
       <main className={styles.content}>
         <section className={styles.hero}>
