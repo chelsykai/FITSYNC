@@ -386,34 +386,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
             </div>
           </div>
 
-          {/* Revenue Cards */}
-          {isAdmin && (
-            <div className={styles.revenueRow}>
-              <div className={styles.revenueCard}>
-                <span className={styles.revenueIcon}>💰</span>
-                <div>
-                  <p className={styles.revenueLabel}>Today's Revenue</p>
-                  <p className={styles.revenueValue}>₱ {revenue.today.toLocaleString()}</p>
-                </div>
-              </div>
-              <div className={styles.revenueCard}>
-                <span className={styles.revenueIcon}>📊</span>
-                <div>
-                  <p className={styles.revenueLabel}>This month's Revenue</p>
-                  <p className={styles.revenueValue}>₱ {revenue.thisMonth.toLocaleString()}</p>
-                </div>
-              </div>
-              <div className={`${styles.revenueCard} ${styles.pendingCard}`}>
-                <span className={styles.revenueIcon}>🕐</span>
-                <div>
-                  <p className={styles.revenueLabel}>Pending Payments</p>
-                  <p className={`${styles.revenueValue} ${styles.pendingValue}`}>
-                    ₱ {revenue.pending.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+
         </div>
       </div>
 
