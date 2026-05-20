@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import styles from "./PaymentsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
+import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
@@ -162,6 +163,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [search, setSearch] = useState("");
   const [showViewAll, setShowViewAll] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [members, setMembers] = useState([]);
 
   const loadMembers = useCallback(async (showLoader = false) => {
@@ -324,9 +326,16 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
           <div className={styles.tableCard}>
             <div className={styles.tableHeader}>
               <h2 className={styles.tableTitle}>Payment Records Table</h2>
-              <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
-                Add / Record Payment
-              </button>
+              <div className={styles.tableActions}>
+                {isAdmin && (
+                  <button className={styles.exportBtn} onClick={() => setShowExport(true)}>
+                    Export
+                  </button>
+                )}
+                <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
+                  Add / Record Payment
+                </button>
+              </div>
             </div>
 
             <div className={styles.tableScroll}>
@@ -414,6 +423,14 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
           payments={payments}
           onClose={() => setShowViewAll(false)}
           onAddPayment={() => { setShowViewAll(false); onNavigate("recordPayment"); }}
+        />
+      )}
+      {showExport && isAdmin && (
+        <PaymentsExportModal
+          payments={payments}
+          members={members}
+          onClose={() => setShowExport(false)}
+          isAdmin={isAdmin}
         />
       )}
     </>

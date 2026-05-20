@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import LogInPage from "../pages/auth/LogInPage";
 import OverviewPage from "../pages/dashboard/OverviewPage";
 import StaffDashboardPage from "../pages/dashboard/StaffDashboardPage";
+import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
 import MembersPage from "../pages/dashboard/MembersPage";
 import PaymentsPage from "../pages/dashboard/PaymentsPage";
 import NotificationsPage from "../pages/dashboard/NotificationsPage";
@@ -13,6 +14,7 @@ import { getWorkingDaysLeft } from "../utils/dateUtils";
 
 const AUTH_ROUTES = new Set(["login", "create", "forgot"]);
 const NON_SCANNER_ROUTES = new Set([
+  "adminDashboard",
   "overview",
   "members",
   "payments",
@@ -59,7 +61,11 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       const user = JSON.parse(stored);
       setCurrentUser(user);
       const lastRoute = localStorage.getItem("lastRoute");
-      const fallbackRoute = allowedRoutes.has(lastRoute) ? lastRoute : "overview";
+      const fallbackRoute = allowedRoutes.has(lastRoute)
+        ? lastRoute
+        : isAdmin
+          ? "adminDashboard"
+          : "staffDashboard";
 
       if (user.password_change_required === true) {
         const daysLeft = getWorkingDaysLeft(user.password_change_deadline);
@@ -161,6 +167,8 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
         return <OverviewPage key="overview" activePage="overview" {...pageProps} />;
       case "staffDashboard":
         return <StaffDashboardPage key="staffDashboard" {...pageProps} />;
+      case "adminDashboard":
+        return <AdminDashboardPage key="adminDashboard" {...pageProps} />;
       case "members":
         return <MembersPage key="members" activePage="members" {...pageProps} />;
       case "payments":

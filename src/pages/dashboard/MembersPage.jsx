@@ -6,6 +6,7 @@ import AttendanceModal from "../../components/modals/members/AttendanceModal";
 import MemberProfileModal from "../../components/modals/members/MemberProfileModal";
 import ViewAllMembersModal from "../../components/modals/members/ViewAllMembersModal";
 import MemberRegisteredModal from "../../components/modals/members/MemberRegisteredModal";
+import MembersExportModal from "../../components/modals/members/MembersExportModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers, deleteMember } from "../../services/memberService";
 import { formatMMDDYYYY } from "../../utils/dateFormat";
@@ -20,6 +21,7 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
   const [showAttendance, setShowAttendance] = useState(false);
   const [showProfile, setShowProfile] = useState(null);
   const [showViewAll, setShowViewAll] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [registeredMember, setRegisteredMember] = useState(null);
 
   const loadMembers = useCallback(async (showLoader = false) => {
@@ -343,6 +345,11 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
             <div className={styles.actionRow}>
               <button className={styles.addBtn} onClick={() => setShowAddMember(true)}>👤 Add Member</button>
               <button className={styles.addBtn} onClick={() => setShowAttendance(true)}>🗓️ Attendance</button>
+              {isAdmin && (
+                <button className={styles.exportBtn} onClick={() => setShowExport(true)}>
+                  Export
+                </button>
+              )}
             </div>
             <div className={styles.tableScroll}>
               <table className={styles.table}>
@@ -424,6 +431,12 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
           onClose={() => setShowViewAll(false)}
           onMemberDeleted={handleMemberDeleted}
           isAdmin={isAdmin}
+        />
+      )}
+      {showExport && isAdmin && (
+        <MembersExportModal
+          members={members}
+          onClose={() => setShowExport(false)}
         />
       )}
     </>
