@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./RecordPaymentPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
-import ReAuthModal from "../../components/ReAuthModal";
 import { supabase } from "../../lib/supabaseClient";
 import { getAuditActorRole } from "../../services/auditService";
 
@@ -112,7 +111,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [showReAuth, setShowReAuth] = useState(false);
   const [membersLoading, setMembersLoading] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -400,17 +398,7 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
               </div>
             </div>
             <div className={styles.actionBtns}>
-              <button className={styles.addRecordBtn} onClick={() => {
-                // Validate first, then show ReAuth
-                setError("");
-                if (!form.memberName.trim()) { setError("Member Info is required"); return; }
-                if (!form.memberId) { setError("Please select a valid member from the list"); return; }
-                if (!form.date) { setError("Date is required"); return; }
-                if (!form.total) { setError("Total is required"); return; }
-                const requiresRef = ["GCash","Bank Transfer","Credit Card"].includes(form.modeOfPayment);
-                if (requiresRef && !form.referenceNumber.trim()) { setError("Reference Number is required"); return; }
-                setShowReAuth(true);
-              }} disabled={loading}>
+              <button className={styles.addRecordBtn} onClick={handleSubmit} disabled={loading}>
                 {loading ? "Adding..." : "Add Record"}
               </button>
               <button className={styles.cancelBtn} onClick={() => onNavigate("payments")} disabled={loading}>
@@ -427,13 +415,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
         </div>
 
       </div>
-      {showReAuth && (
-        <ReAuthModal
-          actionLabel="record this payment"
-          onSuccess={() => { setShowReAuth(false); handleSubmit(); }}
-          onClose={() => setShowReAuth(false)}
-        />
-      )}
     </div>
   );
 }
