@@ -8,9 +8,9 @@ import PaymentsPage from "../pages/dashboard/PaymentsPage";
 import NotificationsPage from "../pages/dashboard/NotificationsPage";
 import AccountsPage from "../pages/dashboard/AccountsPage";
 import RecordPaymentPage from "../pages/dashboard/RecordPaymentPage";
-import ChangePasswordPage from "../pages/dashboard/ChangePasswordPage";
 import ForcePasswordChangeModal from "../components/modals/accounts/ForcePasswordChangeModal";
 import { getWorkingDaysLeft } from "../utils/dateUtils";
+import ChangePasswordPage from "../pages/dashboard/ChangePasswordPage";
 
 const AUTH_ROUTES = new Set(["login", "create", "forgot"]);
 const NON_SCANNER_ROUTES = new Set([
@@ -150,6 +150,8 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
   };
 
   const renderPage = () => {
+    // All shared props — includes badge counts and isAdmin so every
+    // page (and the Sidebar inside it) gets the data it needs.
     const pageProps = {
       onNavigate: navigate,
       newMembersCount,
@@ -181,7 +183,7 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       case "recordPayment":
         return <RecordPaymentPage key="recordPayment" activePage="payments" {...pageProps} />;
       case "changePassword":
-        return <ChangePasswordPage key="changePassword" activePage="accounts" {...pageProps} />;
+        return <ChangePasswordPage key="changePassword" activePage={isAdmin ? "accounts" : "overview"} {...pageProps} />;
       default:
         return <LogInPage key="login" {...pageProps} />;
     }
