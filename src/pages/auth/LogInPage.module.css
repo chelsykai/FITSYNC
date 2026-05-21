@@ -127,25 +127,7 @@
   border-color: #7eba56;
 }
 
-/* FORGOT */
-.forgot {
-  text-align: right;
-  margin-bottom: 16px;
-  width: 100%;
-}
-
-.forgot a {
-  font-size: 12px;
-  color: #7eba56;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.forgot a:hover {
-  text-decoration: underline;
-}
-
-/* BUTTON */
+/* LOGIN BUTTON */
 .loginBtn {
   width: 100%;
   padding: 13px;
@@ -174,24 +156,6 @@
   cursor: not-allowed;
 }
 
-/* NOT REGISTERED */
-.notRegistered {
-  font-size: 12px;
-  color: #999;
-  text-align: center;
-  margin: 0;
-}
-
-.notRegistered a {
-  color: #7eba56;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.notRegistered a:hover {
-  text-decoration: underline;
-}
-
 /* ERROR */
 .errorText {
   color: #e05555;
@@ -204,7 +168,7 @@
 .passwordWrapper {
   position: relative;
   width: 100%;
-  margin-bottom: 6px;
+  margin-bottom: 12px;
 }
 
 .passwordWrapper .inputField {
