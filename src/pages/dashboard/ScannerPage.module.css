@@ -1,333 +1,542 @@
+/* ══════════════════════════════════════════════════════
+   ScannerPage.module.css  — FitSync Scanner (v2)
+   ══════════════════════════════════════════════════════ */
+
+/* ── Layout ────────────────────────────────────────────────────────────────── */
 .layout {
+  position: relative;
   display: block;
   min-height: 100vh;
   font-family: "Montserrat", sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(126, 186, 86, 0.14), transparent 34%),
-    radial-gradient(circle at top right, rgba(217, 236, 204, 0.9), transparent 28%),
-    linear-gradient(180deg, #f8fbf5 0%, #eef4e8 100%);
+    radial-gradient(circle at top left,  rgba(126, 186, 86, 0.13), transparent 36%),
+    radial-gradient(circle at top right, rgba(217, 236, 204, 0.9), transparent 30%),
+    linear-gradient(180deg, #f8fbf5 0%, #edf3e7 100%);
+  overflow-x: hidden;
+  cursor: default;
 }
 
+/* ── Decorative blobs ──────────────────────────────────────────────────────── */
+.blob1,
+.blob2 {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+  opacity: 0.35;
+}
+
+.blob1 {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, #a8d880 0%, transparent 70%);
+  top: -140px;
+  right: -160px;
+}
+
+.blob2 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, #c8e8a8 0%, transparent 70%);
+  bottom: -80px;
+  left: -100px;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
 .header {
+  position: relative;
+  z-index: 1;
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
-  align-items: end;
-  max-width: 1180px;
+  gap: 16px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 40px 40px 16px;
+  padding: 44px 40px 20px;
+  flex-wrap: wrap;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .eyebrow {
-  margin: 0 0 10px;
+  display: block;
   color: #5c7a4a;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.content {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 0 40px 44px;
-}
-
 .title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #1f3a1a;
+  font-size: clamp(22px, 4vw, 36px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.titleIcon {
+  width: clamp(24px, 3.5vw, 36px);
+  height: clamp(24px, 3.5vw, 36px);
   color: #7eba56;
-  font-size: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.titleIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Session badge ─────────────────────────────────────────────────────────── */
+.sessionBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #fff 0%, #f3f9ee 100%);
+  border: 1px solid #d0e6bc;
+  border-radius: 16px;
+  padding: 10px 18px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  min-width: 80px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sessionCount {
+  display: block;
+  font-size: clamp(22px, 4vw, 32px);
+  font-weight: 900;
+  color: #3a6b28;
+  line-height: 1;
+}
+
+.sessionLabel {
+  display: block;
+  font-size: 10px;
   font-weight: 700;
-  margin: 0;
+  color: #7a9965;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 3px;
 }
 
-.lead {
-  max-width: 520px;
-  color: #5f7651;
-  font-size: 14px;
-  line-height: 1.6;
-  margin: 0;
+/* ── Content wrapper ───────────────────────────────────────────────────────── */
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 40px 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
+/* ── Scanner card ──────────────────────────────────────────────────────────── */
 .scannerCard {
-  background: linear-gradient(180deg, #eef7e8 0%, #e5f0de 100%);
-  border: 1px solid #d3e3c2;
-  border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(160deg, #ffffff 0%, #f4faf0 100%);
+  border: 1.5px solid #cfe3bc;
+  border-radius: 22px;
+  padding: clamp(18px, 3vw, 26px);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9) inset,
+    0 14px 36px rgba(0, 0, 0, 0.07);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
 .scannerCardDuplicate {
-  background: linear-gradient(180deg, #fff2f2 0%, #ffe7e7 100%);
   border-color: #e59a9a;
-  box-shadow: 0 0 0 1px rgba(183, 40, 40, 0.08), 0 10px 30px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(160deg, #fff8f8 0%, #ffe9e9 100%);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9) inset,
+    0 14px 36px rgba(183, 40, 40, 0.10);
 }
 
-.scannerHeader {
-  margin-bottom: 16px;
+.scannerCardError {
+  border-color: #f0b0a8;
+  background: linear-gradient(160deg, #fff8f7 0%, #ffecea 100%);
+}
+
+.scannerCardSuccess {
+  border-color: #8fd06a;
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9) inset,
+    0 14px 36px rgba(106, 169, 71, 0.14);
+}
+
+/* ── Card top row ──────────────────────────────────────────────────────────── */
+.cardTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
 .scannerTitle {
-  margin: 0 0 6px 0;
-  font-size: 20px;
+  margin: 0 0 5px;
+  font-size: clamp(15px, 2.5vw, 19px);
   font-weight: 800;
-  color: #23331f;
+  color: #1f311b;
+  letter-spacing: -0.2px;
 }
 
 .scannerSubtitle {
   margin: 0;
   color: #5f7651;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: clamp(11px, 1.8vw, 13px);
+  line-height: 1.55;
 }
 
-.scanHighlightCard {
-  background: linear-gradient(180deg, #ffffff 0%, #f3f9ee 100%);
-  border: 1px solid #cde1bf;
-  border-radius: 16px;
-  padding: 14px 16px;
-  margin-bottom: 14px;
-  display: flex;
+/* ── Status pill ───────────────────────────────────────────────────────────── */
+.statusPill {
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-  opacity: 1;
-  transition: opacity 1s ease;
-}
-
-.scanHighlightCardFade {
-  opacity: 0;
-}
-
-.scanHighlightPhoto,
-.scanHighlightPlaceholder {
-  width: 72px;
-  height: 72px;
+  gap: 7px;
+  padding: 5px 12px;
   border-radius: 999px;
-  border: 2px solid #cde1bf;
-  object-fit: cover;
-  background: #ecf3e5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 34px;
+  font-size: clamp(10px, 1.6vw, 12px);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+  border: 1.5px solid transparent;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
   flex-shrink: 0;
 }
 
-.scanHighlightInfo {
+.statusDotPulse {
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+.statusPill_idle       { background: #f2f7ee; color: #7a9462; border-color: #d4e8c0; }
+.statusPill_ready      { background: #eaf5e1; color: #3f7a26; border-color: #b4d898; }
+.statusPill_starting,
+.statusPill_processing { background: #e8f4e0; color: #4a7f30; border-color: #b8d89a; }
+.statusPill_success    { background: #d8f0c8; color: #2a6018; border-color: #98cc78; }
+.statusPill_error      { background: #fde8e6; color: #c0281e; border-color: #f0b0a8; }
+.statusPill_duplicate  { background: #fde8e8; color: #9f1d1d; border-color: #e89898; }
+
+/* ── Member highlight card ─────────────────────────────────────────────────── */
+.highlightCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #f0fbea 0%, #e4f5da 100%);
+  border: 1.5px solid #9fd87a;
+  border-radius: 16px;
+  padding: clamp(12px, 2vw, 16px) clamp(14px, 2.5vw, 18px);
+  margin-bottom: 16px;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.highlightIn  { opacity: 1; transform: translateY(0); }
+.highlightOut { opacity: 0; transform: translateY(-4px); }
+
+.highlightLeft {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.highlightAvatar,
+.highlightAvatarFallback {
+  width: clamp(48px, 7vw, 64px);
+  height: clamp(48px, 7vw, 64px);
+  border-radius: 50%;
+  border: 2.5px solid #8ccc68;
+  object-fit: cover;
+  background: #d8f0c4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(20px, 3vw, 26px);
+  color: #4f7f2c;
+}
+
+.highlightSuccessBadge {
+  position: absolute;
+  bottom: 0;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #7eba56 0%, #5fa03c 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.highlightInfo {
+  flex: 1;
   min-width: 0;
 }
 
-.scanHighlightTitle {
-  margin: 0 0 4px 0;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.35px;
-  color: #6a8360;
-  font-weight: 700;
-}
-
-.scanHighlightName {
-  margin: 0;
-  color: #1f311b;
-  font-size: 18px;
+.highlightLabel {
+  margin: 0 0 3px;
+  font-size: 10px;
   font-weight: 800;
-  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #5a8a3c;
 }
 
-.scanHighlightId {
-  margin: 3px 0 0 0;
-  color: #547249;
-  font-size: 13px;
-  font-weight: 600;
+.highlightName {
+  margin: 0 0 4px;
+  font-size: clamp(15px, 2.5vw, 19px);
+  font-weight: 800;
+  color: #1a3018;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.scannerViewport {
+.highlightId {
+  margin: 0;
   display: flex;
-  justify-content: center;
-  padding: 18px;
-  margin-bottom: 14px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid #d8e8cc;
-  border-radius: 16px;
-}
-
-.scannerViewportDuplicate {
-  background: rgba(255, 240, 240, 0.92);
-  border-color: #e69a9a;
-  box-shadow: inset 0 0 0 1px rgba(159, 29, 29, 0.08);
-}
-
-.scannerFrame {
-  width: min(100%, 420px);
-  min-height: 320px;
-}
-
-.scannerFrame :global(video),
-.scannerFrame :global(canvas),
-.scannerFrame :global(iframe) {
-  border-radius: 12px;
-}
-
-.scannerViewportDuplicate .scannerFrame {
-  border: 2px solid rgba(159, 29, 29, 0.45);
-  border-radius: 12px;
-  padding: 4px;
-  background: rgba(255, 232, 232, 0.9);
-}
-
-.scannerViewportDuplicate .scannerFrame :global(video),
-.scannerViewportDuplicate .scannerFrame :global(canvas),
-.scannerViewportDuplicate .scannerFrame :global(iframe) {
-  border: 2px solid rgba(159, 29, 29, 0.45);
-}
-
-/* Mirror the live video/canvas to create a selfie-style preview */
-.scannerFrameMirrored :global(video),
-.scannerFrameMirrored :global(canvas),
-.scannerFrameMirrored :global(iframe) {
-  transform: scaleX(-1);
-  transform-origin: center;
-}
-
-.scannerActions {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-
-.scannerInputWrap {
-  margin-bottom: 14px;
-}
-
-.scannerInputLabel {
-  display: block;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
-  font-weight: 700;
-  color: #4d6440;
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: #508038;
+}
+
+.highlightCheck {
+  font-size: clamp(20px, 3.5vw, 28px);
+  color: #7eba56;
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+
+/* ── Input zone — WHITE ────────────────────────────────────────────────────── */
+.inputZone {
+  position: relative;
+  background: #ffffff;
+  border: 2px dashed #c4ddb0;
+  border-radius: 18px;
+  padding: clamp(20px, 3.5vw, 28px) clamp(16px, 3vw, 24px) clamp(16px, 2.5vw, 20px);
+  margin-bottom: 14px;
+  text-align: center;
+  cursor: text;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.inputZoneFocused {
+  border-style: solid;
+  border-color: #7eba56;
+  box-shadow: 0 0 0 4px rgba(126, 186, 86, 0.10);
+}
+
+.inputZoneDuplicate {
+  border-color: #e59a9a;
+  background: #fff8f8;
+}
+
+/* Watermark QR icon */
+.inputZoneBgIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 110px;
+  height: 110px;
+  color: #7eba56;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.inputZoneBgIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.inputLabel {
+  display: block;
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #6a8a58;
+  margin-bottom: 12px;
 }
 
 .scannerInput {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  border: 1px solid #c9d8bb;
+  max-width: 360px;
+  border: 1.5px solid #c4ddb0;
   border-radius: 12px;
-  padding: 14px 16px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #23331f;
-  background: #fff;
+  padding: clamp(11px, 1.8vw, 14px) 18px;
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(13px, 2vw, 15px);
+  font-weight: 700;
+  color: #1f311b;
+  background: #f7fbf4;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  text-align: center;
+  letter-spacing: 0.05em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-sizing: border-box;
+  display: block;
+  margin: 0 auto;
 }
 
 .scannerInput:focus {
   border-color: #7eba56;
-  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.15);
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.18);
+  background: #fff;
 }
 
-.scannerInputHint {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #5f7651;
-}
-
-.scannerStartBtn,
-.scannerStopBtn {
-  border: none;
-  border-radius: 10px;
-  padding: 10px 18px;
-  font-family: "Montserrat", sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.scannerStartBtn {
-  background: linear-gradient(180deg, #7eba56 0%, #6aa947 100%);
-  color: #fff;
-}
-
-.scannerStartBtn:hover {
-  transform: translateY(-1px);
-}
-
-.scannerStartBtn:disabled {
-  opacity: 0.65;
+.scannerInput:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
-.scannerStopBtn {
-  background: #2f3f2c;
-  color: #fff;
+.inputHint {
+  position: relative;
+  z-index: 1;
+  margin: 12px 0 0;
+  font-size: clamp(10px, 1.6vw, 12px);
+  color: #7a9a68;
+  line-height: 1.5;
 }
 
-.scannerStopBtn:hover {
-  background: #41553d;
-}
-
-.scannerStatus {
+/* ── Status bar ────────────────────────────────────────────────────────────── */
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border-radius: 12px;
-  padding: 12px 14px;
-  font-size: 13px;
+  padding: clamp(10px, 1.8vw, 13px) clamp(12px, 2vw, 16px);
+  font-size: clamp(11px, 1.8vw, 13px);
   font-weight: 600;
   line-height: 1.5;
   margin-bottom: 12px;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+  border: 1.5px solid transparent;
 }
 
-.scannerStatus_idle,
-.scannerStatus_ready {
-  background: #f7fbf4;
-  color: #4d6440;
-  border: 1px solid #d8e8cc;
+.statusBar_idle,
+.statusBar_ready      { background: #f4f9f0; color: #4d6440; border-color: #d4e8c0; }
+.statusBar_starting,
+.statusBar_processing { background: #edf6e5; color: #4a7a32; border-color: #c4e0a8; }
+.statusBar_success    { background: #e0f5d0; color: #28601a; border-color: #9cce78; }
+.statusBar_error      { background: #fde8e6; color: #b42318; border-color: #f0b0a8; }
+.statusBar_duplicate  { background: #fde8e8; color: #9f1d1d; border-color: #e89898; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.scannerStatus_starting,
-.scannerStatus_processing {
-  background: #f2f8ec;
-  color: #4f7a37;
-  border: 1px solid #cfe2bd;
+.spinIcon {
+  display: inline-block;
+  animation: spin 0.9s linear infinite;
+  flex-shrink: 0;
 }
 
-.scannerStatus_success {
-  background: #eaf7e1;
-  color: #2f6b1e;
-  border: 1px solid #bde0a9;
-}
-
-.scannerStatus_error {
-  background: #fff1f1;
-  color: #b42318;
-  border: 1px solid #f3c2c2;
-}
-
-.scannerStatus_duplicate {
-  background: #ffecec;
-  color: #9f1d1d;
-  border: 1px solid #e69a9a;
-  box-shadow: inset 0 0 0 1px rgba(159, 29, 29, 0.08);
-}
-
-.scannerHint {
-  font-size: 12px;
-  color: #5f7651;
+/* ── Footer hint ───────────────────────────────────────────────────────────── */
+.footerHint {
+  margin: 0;
+  font-size: clamp(10px, 1.6vw, 12px);
+  color: #7a9a6a;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-@media (max-width: 768px) {
-  .content { padding: 80px 16px 24px; margin-left: 0 !important; }
-  .header { padding: 16px 16px 12px; flex-direction: column; align-items: flex-start; gap: 12px; }
-  .title { font-size: 28px; }
-  .lead { font-size: 13px; }
-  .scannerCard { padding: 16px; }
-  .scannerFrame { min-height: 240px; }
+/* ── Help panel ────────────────────────────────────────────────────────────── */
+.helpPanel {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1.5px solid #d4e8c0;
+  border-radius: 18px;
+  padding: clamp(14px, 2.5vw, 20px) clamp(16px, 3vw, 24px);
+}
+
+.helpTitle {
+  margin: 0 0 10px;
+  font-size: clamp(12px, 2vw, 14px);
+  font-weight: 800;
+  color: #23331f;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.helpList {
+  margin: 0;
+  padding-left: 20px;
+  color: #4d6440;
+  font-size: clamp(11px, 1.8vw, 13px);
+  line-height: 1.9;
+}
+
+/* ── kbd ───────────────────────────────────────────────────────────────────── */
+.kbd {
+  display: inline-block;
+  background: #e8f0e0;
+  border: 1px solid #c4d8b0;
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a6a38;
+  line-height: 1.6;
+  box-shadow: 0 1px 0 #b8d0a0;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .header  { padding: 24px 20px 16px; }
+  .content { padding: 0 20px 40px; }
+  .sessionBadge { flex-direction: row; align-items: center; gap: 8px; padding: 8px 14px; }
+  .sessionCount { font-size: 22px; }
+  .cardTopRow { flex-direction: column; gap: 8px; }
+  .highlightCard { gap: 10px; }
 }
 
 @media (max-width: 480px) {
-  .title { font-size: 22px; }
-  .scannerActions { flex-direction: column; }
-  .scannerStartBtn, .scannerStopBtn { width: 100%; }
+  .header  { padding: 20px 16px 14px; }
+  .content { padding: 0 16px 32px; }
+  .scannerCard { border-radius: 18px; }
+  .inputZone   { border-radius: 14px; }
+  .highlightCard { flex-wrap: wrap; }
+  .highlightCheck { display: none; }
 }
