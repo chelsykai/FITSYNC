@@ -897,7 +897,9 @@
 
 .unitInputWrap .formInput {
   width: 100%;
-  padding-right: 72px;
+  /* enough room for the pill badge without overlapping text */
+  padding-right: 68px;
+  box-sizing: border-box;
 }
 
 .unitInputWrap .formInput:disabled {
@@ -909,14 +911,18 @@
 
 .unitSuffix {
   position: absolute;
-  right: 12px;
+  right: 10px;
   top: 50%;
-  transform: translateY(-50%);
-  font-size: 11px;
-  font-weight: 700;
-  color: #666;
+  transform: translateY(-100%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #6f7869;
+  border-radius: 5px;
+  padding: 2px 8px;
   font-family: "Montserrat", sans-serif;
   pointer-events: none;
+  white-space: nowrap;
+  line-height: 1.6;
 }
 
 .inputContextLabel {
