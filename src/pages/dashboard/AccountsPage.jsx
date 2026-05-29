@@ -12,7 +12,7 @@ import { fetchAuditLogs, getAuditUsers } from "../../services/auditService";
 
 const ITEMS_PER_PAGE = 5;
 
-// ── Dropdown menu for each row ────────────────────────────────────────────────
+// ── Dropdown ──────────────────────────────────────────────────────────────────
 function ManageDropdown({ account, onEdit, onDelete, onReqChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -36,30 +36,17 @@ function ManageDropdown({ account, onEdit, onDelete, onReqChange }) {
         Manage
         <span className={`ti ti-chevron-down ${styles.manageCaret} ${open ? styles.manageCaretOpen : ""}`} aria-hidden="true" />
       </button>
-
       {open && (
         <div className={styles.dropdownMenu}>
-          <button
-            className={styles.dropdownItem}
-            onClick={() => { setOpen(false); onEdit(account); }}
-          >
-            <span className="ti ti-pencil" aria-hidden="true" />
-            Edit
+          <button className={styles.dropdownItem} onClick={() => { setOpen(false); onEdit(account); }}>
+            <span className="ti ti-pencil" aria-hidden="true" /> Edit
           </button>
-          <button
-            className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}
-            onClick={() => { setOpen(false); onDelete(account); }}
-          >
-            <span className="ti ti-trash" aria-hidden="true" />
-            Delete
+          <button className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`} onClick={() => { setOpen(false); onDelete(account); }}>
+            <span className="ti ti-trash" aria-hidden="true" /> Delete
           </button>
           <div className={styles.dropdownDivider} />
-          <button
-            className={`${styles.dropdownItem} ${styles.dropdownItemWarn}`}
-            onClick={() => { setOpen(false); onReqChange(account); }}
-          >
-            <span className="ti ti-key" aria-hidden="true" />
-            Req. Change
+          <button className={`${styles.dropdownItem} ${styles.dropdownItemWarn}`} onClick={() => { setOpen(false); onReqChange(account); }}>
+            <span className="ti ti-key" aria-hidden="true" /> Req. Change
           </button>
         </div>
       )}
@@ -69,33 +56,22 @@ function ManageDropdown({ account, onEdit, onDelete, onReqChange }) {
 
 // ── Last activity badge ───────────────────────────────────────────────────────
 function LastActivityBadge({ lastActivity }) {
-  if (!lastActivity) {
-    return <span className={styles.activityNa}>N/A</span>;
-  }
-
+  if (!lastActivity) return <span className={styles.activityNa}>N/A</span>;
   const date = new Date(lastActivity);
-  if (isNaN(date.getTime())) {
-    return <span className={styles.activityNa}>N/A</span>;
-  }
+  if (isNaN(date.getTime())) return <span className={styles.activityNa}>N/A</span>;
 
   const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
+  const diffMs    = now - date;
+  const diffMins  = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  const diffDays  = Math.floor(diffMs / 86400000);
 
   let label, cls;
-  if (diffMins < 5) {
-    label = "Just now"; cls = styles.activityNow;
-  } else if (diffMins < 60) {
-    label = `${diffMins}m ago`; cls = styles.activityRecent;
-  } else if (diffHours < 24) {
-    label = `${diffHours}h ago`; cls = styles.activityRecent;
-  } else if (diffDays === 1) {
-    label = "Yesterday"; cls = styles.activityOld;
-  } else {
-    label = `${diffDays}d ago`; cls = styles.activityOld;
-  }
+  if (diffMins < 5)        { label = "Just now";           cls = styles.activityNow;    }
+  else if (diffMins < 60)  { label = `${diffMins}m ago`;   cls = styles.activityRecent; }
+  else if (diffHours < 24) { label = `${diffHours}h ago`;  cls = styles.activityRecent; }
+  else if (diffDays === 1) { label = "Yesterday";           cls = styles.activityOld;    }
+  else                     { label = `${diffDays}d ago`;    cls = styles.activityOld;    }
 
   const formatted = date.toLocaleString("en-PH", {
     month: "short", day: "numeric", year: "numeric",
@@ -110,26 +86,25 @@ function LastActivityBadge({ lastActivity }) {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function AccountsPage({ onNavigate, activePage = "accounts", isAdmin = false }) {
-  const [accounts, setAccounts]       = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
-  const [auditLogs, setAuditLogs]     = useState([]);
-  const [auditLoading, setAuditLoading] = useState(false);
-  const [auditError, setAuditError]   = useState(null);
-  const [admins, setAdmins]           = useState(["all users"]);
-  const [showAudit, setShowAudit]     = useState(false);
-  const [filterAdmin, setFilterAdmin] = useState("");
-  const [startDate, setStartDate]     = useState("");
-  const [endDate, setEndDate]         = useState("");
-  const [page, setPage]               = useState(1);
-  const [showCreate, setShowCreate]   = useState(false);
-  const [editTarget, setEditTarget]   = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [changePassTarget, setChangePassTarget] = useState(null);
-  const [showReAuth, setShowReAuth]   = useState(false);
-  const [pendingAction, setPendingAction] = useState(null);
+  const [accounts,        setAccounts]        = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [error,           setError]           = useState(null);
+  const [auditLogs,       setAuditLogs]       = useState([]);
+  const [auditLoading,    setAuditLoading]    = useState(false);
+  const [auditError,      setAuditError]      = useState(null);
+  const [admins,          setAdmins]          = useState(["all users"]);
+  const [showAudit,       setShowAudit]       = useState(false);
+  const [filterAdmin,     setFilterAdmin]     = useState("");
+  const [startDate,       setStartDate]       = useState("");
+  const [endDate,         setEndDate]         = useState("");
+  const [page,            setPage]            = useState(1);
+  const [showCreate,      setShowCreate]      = useState(false);
+  const [editTarget,      setEditTarget]      = useState(null);
+  const [deleteTarget,    setDeleteTarget]    = useState(null);
+  const [showReAuth,      setShowReAuth]      = useState(false);
+  const [pendingAction,   setPendingAction]   = useState(null);
 
   const loadAccounts = useCallback(async (showLoader = false) => {
     try {
@@ -146,11 +121,11 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
 
   useEffect(() => {
     loadAccounts(true);
-    const accountsChannel = supabase
+    const ch = supabase
       .channel("accounts-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "system_user" }, () => loadAccounts())
       .subscribe();
-    return () => supabase.removeChannel(accountsChannel);
+    return () => supabase.removeChannel(ch);
   }, [loadAccounts]);
 
   useEffect(() => {
@@ -178,11 +153,11 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
   useEffect(() => {
     if (!showAudit) return;
     loadAuditData();
-    const auditChannel = supabase
+    const ch = supabase
       .channel("audit-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "audit_trail" }, () => loadAuditData())
       .subscribe();
-    return () => supabase.removeChannel(auditChannel);
+    return () => supabase.removeChannel(ch);
   }, [showAudit, loadAuditData]);
 
   const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
@@ -270,20 +245,24 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
     <>
       <div className={styles.layout}>
         <Sidebar activePage={activePage} onNavigate={onNavigate} isAdmin={isAdmin} />
+
         <div className={`${styles.content} tab-slide-animation`}>
 
           {/* ── ACCOUNTS TABLE ── */}
           {!showAudit && (
             <>
+              {/* Page header — title left, Audit Trail right */}
               <div className={styles.pageHeader}>
                 <h1 className={styles.title}>Accounts</h1>
                 {isAdmin && (
                   <button className={styles.auditBtn} onClick={() => requestAction("audit")}>
-                    Audit Trail &nbsp;›
+                    <span className="ti ti-clipboard-list" aria-hidden="true" />
+                    Audit Trail
                   </button>
                 )}
               </div>
 
+              {/* Table card — fills remaining height */}
               <div className={styles.tableCard}>
                 {error && (
                   <div className={styles.errorBanner}>
@@ -292,10 +271,12 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
                   </div>
                 )}
 
+                {/* toolbar: Add Account left */}
                 {isAdmin && (
                   <div className={styles.actionRow}>
                     <button className={styles.addBtn} onClick={() => requestAction("create")}>
-                      ＋ Add Account
+                      <span className="ti ti-user-plus" aria-hidden="true" />
+                      Add Account
                     </button>
                   </div>
                 )}
@@ -363,7 +344,14 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
           {/* ── AUDIT TRAIL ── */}
           {showAudit && (
             <>
-              <h1 className={styles.title}>Audit Trail</h1>
+              <div className={styles.pageHeader}>
+                <h1 className={styles.title}>Audit Trail</h1>
+                <button className={styles.auditBtn} onClick={() => setShowAudit(false)}>
+                  <span className="ti ti-arrow-left" aria-hidden="true" />
+                  Back
+                </button>
+              </div>
+
               <div className={styles.tableCard}>
                 {auditError && (
                   <div className={styles.errorBanner}>
@@ -416,7 +404,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
                           <td>
                             <div className={styles.changes}>
                               {(() => {
-                                const action = log.action || "";
+                                const action  = log.action || "";
                                 const changes = log.changes || {};
                                 const subjectName = changes.accountName || changes.memberName || changes.fullName || changes.name || changes.member || changes.member_id || "";
                                 if (action.includes("Deleted")) return <span style={{ color: "#dc3545", fontWeight: 500 }}>deleted {subjectName}</span>;
@@ -435,7 +423,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
                                 }
                                 if (action.toLowerCase().includes("record")) {
                                   const memberId = changes.memberId || changes.member_id || changes.member || "";
-                                  const amount = changes.amount || changes.amount_paid || "";
+                                  const amount   = changes.amount || changes.amount_paid || "";
                                   return <span style={{ color: "#007bff", fontWeight: 500 }}>recorded payment{memberId ? ` for ${memberId}` : ""}{amount ? ` — ₱${amount}` : ""}</span>;
                                 }
                                 return <span>Unknown action</span>;
@@ -447,13 +435,10 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
                     </tbody>
                   </table>
                 )}
-
-                <div className={styles.closeRow}>
-                  <button className={styles.closeBtn} onClick={() => setShowAudit(false)}>Close</button>
-                </div>
               </div>
             </>
           )}
+
         </div>
       </div>
 
@@ -469,10 +454,10 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
       {showReAuth && (
         <ReAuthModal
           actionLabel={
-            pendingAction?.type === "create"    ? "add a new account" :
-            pendingAction?.type === "edit"      ? "edit this account" :
-            pendingAction?.type === "delete"    ? "delete this account" :
-            pendingAction?.type === "reqChange" ? "request a password change" :
+            pendingAction?.type === "create"    ? "add a new account"          :
+            pendingAction?.type === "edit"      ? "edit this account"          :
+            pendingAction?.type === "delete"    ? "delete this account"        :
+            pendingAction?.type === "reqChange" ? "request a password change"  :
             "view the audit trail"
           }
           onSuccess={handleReAuthSuccess}

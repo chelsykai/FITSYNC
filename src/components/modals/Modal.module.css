@@ -859,214 +859,28 @@
 .membershipSettings {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
-  padding: 16px 16px 14px;
-  border: 1.5px solid #c8e0b0;
-  border-radius: 14px;
-  background: linear-gradient(160deg, #f8fcf4 0%, #eef7e6 100%);
-}
-
-.msHeader {
-  display: flex;
-  align-items: center;
   gap: 10px;
-}
-
-.msIcon {
-  width: 34px;
-  height: 34px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid #d7e4cd;
   border-radius: 10px;
-  background: linear-gradient(180deg, #7eba56 0%, #6aa947 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(244, 249, 239, 0.9) 100%);
 }
 
 .membershipSettingsTitle {
   margin: 0;
-  font-size: 13px;
-  font-weight: 800;
-  color: #2d4a1e;
+  font-size: 12px;
+  font-weight: 700;
+  color: #44563a;
   font-family: "Montserrat", sans-serif;
 }
 
 .membershipSettingsHint {
-  margin: 2px 0 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: #6a8a58;
-  font-family: "Montserrat", sans-serif;
-}
-
-.msDivider {
-  height: 1px;
-  background: #d4eac0;
-}
- 
-/* Plan section label */
-.planSectionLabel {
+  margin: -2px 0 2px 0;
   font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #5a7a48;
-  font-family: "Montserrat", sans-serif;
-  margin: 0 0 8px;
-}
- 
-/* Two-column plan card grid */
-.planGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
- 
-/* Individual plan card */
-.planCard {
-  border: 1.5px solid #d0e8b8;
-  border-radius: 12px;
-  background: #fff;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
- 
-.planCardActive {
-  border-color: #7eba56;
-  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.12);
-  background: linear-gradient(160deg, #f5fbee 0%, #eef7e4 100%);
-}
- 
-.planCardHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
- 
-.planCardDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid #b8d898;
-  background: #fff;
-  flex-shrink: 0;
-  margin-top: 3px;
-  transition: background 0.2s, border-color 0.2s;
-}
- 
-.planCardDotActive {
-  background: #7eba56;
-  border-color: #7eba56;
-}
- 
-.planCardName {
-  margin: 0 0 2px;
-  font-size: 12px;
-  font-weight: 800;
-  color: #2d4a1e;
-  font-family: "Montserrat", sans-serif;
-}
- 
-.planCardDesc {
-  margin: 0;
-  font-size: 11px;
   font-weight: 600;
-  color: #7a9a65;
+  color: #6f7869;
   font-family: "Montserrat", sans-serif;
-}
- 
-/* Input inside a plan card */
-.planCardInputWrap {
-  position: relative;
-}
- 
-.planCardInput {
-  width: 100%;
-  border: 1.5px solid #c8ddb8;
-  border-radius: 9px;
-  padding: 9px 46px 9px 12px;
-  font-family: "Montserrat", sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: #1f311b;
-  background: #fff;
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
- 
-.planCardInput:focus {
-  border-color: #7eba56;
-  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.13);
-}
- 
-.planCardInput::placeholder {
-  color: #b8ceac;
-  font-weight: 500;
-  font-size: 12px;
-}
- 
-.planCardUnit {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  font-weight: 800;
-  color: #5a8a3c;
-  background: #dff0cc;
-  border-radius: 5px;
-  padding: 2px 7px;
-  pointer-events: none;
-  font-family: "Montserrat", sans-serif;
-}
- 
-/* Reset row */
-.msResetRow {
-  display: flex;
-  justify-content: flex-end;
-}
- 
-/* planResetBtn — replace old rule */
-.planResetBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1.5px solid #c4d8b0;
-  background: #f5f9f1;
-  color: #4a6e38;
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: "Montserrat", sans-serif;
-  cursor: pointer;
-  transition: background 0.18s ease;
-}
- 
-.planResetBtn:hover  { background: #e8f2de; }
-.planResetBtn:disabled { opacity: 0.45; cursor: not-allowed; }
- 
-/* Error message inside form */
-.formError {
-  color: #d32f2f;
-  font-size: 12px;
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: #ffebee;
-  border-radius: 8px;
-  font-family: "Montserrat", sans-serif;
-}
- 
-/* Responsive — stack plan cards on narrow screens */
-@media (max-width: 480px) {
-  .planGrid { grid-template-columns: 1fr; }
 }
 
 .autoDateHint {
@@ -1083,7 +897,9 @@
 
 .unitInputWrap .formInput {
   width: 100%;
-  padding-right: 72px;
+  /* enough room for the pill badge without overlapping text */
+  padding-right: 68px;
+  box-sizing: border-box;
 }
 
 .unitInputWrap .formInput:disabled {
@@ -1095,14 +911,18 @@
 
 .unitSuffix {
   position: absolute;
-  right: 12px;
+  right: 10px;
   top: 50%;
-  transform: translateY(-50%);
-  font-size: 11px;
-  font-weight: 700;
-  color: #666;
+  transform: translateY(-100%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #6f7869;
+  border-radius: 5px;
+  padding: 2px 8px;
   font-family: "Montserrat", sans-serif;
   pointer-events: none;
+  white-space: nowrap;
+  line-height: 1.6;
 }
 
 .inputContextLabel {
@@ -1112,6 +932,23 @@
   color: #6f7869;
   font-family: "Montserrat", sans-serif;
   line-height: 1.2;
+}
+
+.planResetBtn {
+  border: 1px solid #c4d1bb;
+  background: #f5f8f2;
+  color: #3f5234;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.planResetBtn:hover {
+  background: #ebf1e5;
 }
 
 /* Modal footer layout for action buttons */
@@ -1135,6 +972,11 @@
   .modalFooter { flex-direction: column; gap: 8px; }
   .modalFooter .profileDeleteBtn, .modalFooter .closeBtn { width: 100%; }
   .modalFooter .submitBtn { width: 100%; flex: none; }
+}
+
+.planResetBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 /* Gender */
