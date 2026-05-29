@@ -251,6 +251,18 @@ export default function AddMemberModal({ onClose, onSuccess }) {
     }
   };
 
+  const calculateAge = (birthdayStr) => {
+  if (!birthdayStr) return null;
+  const today = new Date();
+  const birth = new Date(birthdayStr);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age : null;
+};
+
   return (
     <div className={styles.overlay} onClick={handleModalClose}>
       <div className={styles.addMemberModal} onClick={(e) => e.stopPropagation()}>
@@ -347,8 +359,11 @@ export default function AddMemberModal({ onClose, onSuccess }) {
             <div className={styles.fieldRow}>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Phone Number</label>
-                <input className={styles.formInput} placeholder="09XXXXXXXXX"
-                  value={form.phone} onChange={set("phone")} />
+                <div className={styles.phoneInputWrap}>
+                  <span className={styles.phonePrefix}>+63</span>
+                  <input className={styles.formInput} placeholder="9XX XXX XXXX" 
+                    value={form.phone} onChange={set("phone")} />
+                </div>
               </div>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Address</label>
@@ -356,15 +371,16 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                   value={form.address} onChange={set("address")} />
               </div>
             </div>
-            <div className={styles.labeledField}>
-              <label className={styles.modernLabel}>Birthday</label>
-              <input className={styles.formInput} type="date"
-                value={form.birthday} onChange={set("birthday")} />
-            </div>
-
+                <div className={styles.labeledField}>
+                  <label className={styles.modernLabel}>Birthday</label>
+                  <input className={styles.formInput} type="date"
+                   value={form.birthday} onChange={set("birthday")} />
+                   {form.birthday && calculateAge(form.birthday) !== null && (
+                  <span style={{fontSize: 11,fontWeight: 700,color: "#7eba56",marginTop: 4,display: "block"
+                     }}> Age: {calculateAge(form.birthday)} years old</span> )}
+                </div>
             <div className={styles.membershipSettings}>
               <p className={styles.membershipSettingsTitle}>Membership Settings</p>
-
               <div className={styles.fieldRow}>
                 <div className={styles.labeledField}>
                   <label className={styles.modernLabel}>Member Type</label>
@@ -427,8 +443,11 @@ export default function AddMemberModal({ onClose, onSuccess }) {
               </div>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Emergency Contact Number</label>
-                <input className={styles.formInput} placeholder="09XXXXXXXXX"
-                  value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} />
+                <div className={styles.phoneInputWrap}>
+                  <span className={styles.phonePrefix}>+63</span>
+                  <input className={styles.formInput} placeholder="9XX XXX XXXX" 
+                    value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} />
+                </div>
               </div>
             </div>
 

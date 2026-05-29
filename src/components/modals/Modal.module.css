@@ -749,6 +749,29 @@
 .deletConfirmBtn:hover { background: #c43e3e; }
 
 /* ── Add Member Modal ── */
+.phoneInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.phonePrefix {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #444;
+  font-family: "Montserrat", sans-serif;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.phoneInputWrap .formInput {
+  padding-left: 44px;
+  width: 100%;
+}
+
 .addMemberModal {
   background: #ffffff;
   border-radius: 16px;
