@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import styles from "../Modal.module.css";
 import { addMember } from "../../../services/memberService";
 
@@ -25,15 +25,143 @@ export default function AddMemberModal({ onClose, onSuccess }) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
   const fileRef = useRef();
+  const cameraVideoRef = useRef(null);
+  const cameraCanvasRef = useRef(null);
+  const cameraStreamRef = useRef(null);
 
   useEffect(() => {
+    const previewUrl = preview;
     return () => {
-      if (preview) {
-        URL.revokeObjectURL(preview);
+      if (previewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
       }
     };
   }, [preview]);
+
+  useEffect(() => {
+    if (!cameraOpen) return undefined;
+
+    const stream = cameraStreamRef.current;
+    const videoElement = cameraVideoRef.current;
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        if (cameraStreamRef.current === stream) {
+          cameraStreamRef.current = null;
+        }
+      }
+      if (videoElement) {
+        videoElement.srcObject = null;
+      }
+    };
+  }, [cameraOpen]);
+
+  const stopCamera = useCallback(() => {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject = null;
+    }
+  }, []);
+
+  const closeCamera = useCallback(() => {
+    stopCamera();
+    setCameraOpen(false);
+    setCameraLoading(false);
+  }, [stopCamera]);
+
+  const handleModalClose = useCallback(() => {
+    closeCamera();
+    onClose();
+  }, [closeCamera, onClose]);
+
+  const openCamera = async () => {
+    setCameraError(null);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Camera access is not supported in this browser.");
+      return;
+    }
+
+    try {
+      setCameraLoading(true);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+
+      cameraStreamRef.current = stream;
+      setCameraOpen(true);
+
+      window.requestAnimationFrame(() => {
+        if (cameraVideoRef.current) {
+          cameraVideoRef.current.srcObject = stream;
+          cameraVideoRef.current.play?.().catch(() => {});
+        }
+      });
+    } catch (err) {
+      setCameraError(err?.message || "Unable to open the camera.");
+      closeCamera();
+    } finally {
+      setCameraLoading(false);
+    }
+  };
+
+  const captureCameraPhoto = async () => {
+    const video = cameraVideoRef.current;
+    const canvas = cameraCanvasRef.current;
+
+    if (!video || !canvas || !video.videoWidth || !video.videoHeight) {
+      setCameraError("Camera is not ready yet.");
+      return;
+    }
+
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      setCameraError("Unable to process the captured image.");
+      return;
+    }
+
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(video, 0, 0, width, height);
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(resolve, "image/png");
+    });
+
+    if (!blob) {
+      setCameraError("Unable to capture a photo from the camera.");
+      return;
+    }
+
+    const capturedFile = new File([blob], `member-camera-${Date.now()}.png`, {
+      type: "image/png",
+      lastModified: Date.now(),
+    });
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
+    setError(null);
+    setCameraError(null);
+    setForm((prev) => ({ ...prev, photo: capturedFile }));
+    setPreview(URL.createObjectURL(capturedFile));
+    closeCamera();
+  };
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
   const setNumber = (field) => (e) => {
@@ -73,7 +201,7 @@ export default function AddMemberModal({ onClose, onSuccess }) {
     }
 
     setError(null);
-    setForm({ ...form, photo: file });
+    setForm((prev) => ({ ...prev, photo: file }));
     setPreview(URL.createObjectURL(file));
   };
 
@@ -124,7 +252,7 @@ export default function AddMemberModal({ onClose, onSuccess }) {
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} onClick={handleModalClose}>
       <div className={styles.addMemberModal} onClick={(e) => e.stopPropagation()}>
         <h2 className={styles.addMemberTitle}>Add New Member</h2>
 
@@ -139,8 +267,67 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                   </div>
               }
             </div>
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhoto} />
-            <p className={styles.uploadLabel}>Upload Photo</p>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+                <button type="button" className={styles.planResetBtn} onClick={openCamera} disabled={cameraLoading}>
+                  {cameraLoading ? "Opening Camera..." : "Use Camera"}
+                </button>
+                <button type="button" className={styles.planResetBtn} onClick={() => fileRef.current?.click()}>
+                  Choose File
+                </button>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style={{ display: "none" }}
+                onChange={handlePhoto}
+              />
+              <p className={styles.uploadLabel}>Take or upload photo</p>
+
+              {cameraError && (
+                <div style={{
+                  color: "#d32f2f",
+                  fontSize: "0.9rem",
+                  marginTop: "10px",
+                  padding: "8px",
+                  backgroundColor: "#ffebee",
+                  borderRadius: "4px",
+                  maxWidth: "220px",
+                  textAlign: "left",
+                }}>
+                  {cameraError}
+                </div>
+              )}
+
+              {cameraOpen && (
+                <div style={{
+                  marginTop: "12px",
+                  width: "100%",
+                  maxWidth: "260px",
+                  padding: "12px",
+                  borderRadius: "16px",
+                  border: "1px solid #dfe8d6",
+                  background: "#f8fbf5",
+                }}>
+                  <video
+                    ref={cameraVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    style={{ width: "100%", borderRadius: "12px", background: "#111" }}
+                  />
+                  <canvas ref={cameraCanvasRef} style={{ display: "none" }} />
+                  <div style={{ display: "flex", gap: "8px", marginTop: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+                    <button type="button" className={styles.planResetBtn} onClick={captureCameraPhoto} disabled={cameraLoading}>
+                      Capture
+                    </button>
+                    <button type="button" className={styles.planResetBtn} onClick={closeCamera}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
           </div>
 
           {/* Right — form fields */}
@@ -279,7 +466,7 @@ export default function AddMemberModal({ onClose, onSuccess }) {
 
         {/* Buttons */}
         <div className={styles.addMemberBtns}>
-          <button className={styles.addMemberCancelBtn} onClick={onClose} disabled={loading}>Cancel</button>
+          <button className={styles.addMemberCancelBtn} onClick={handleModalClose} disabled={loading}>Cancel</button>
           <button 
             className={styles.addMemberSubmitBtn} 
             onClick={handleSubmit}

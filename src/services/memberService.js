@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
 import { getAuditActorRole } from "./auditService";
 import { requireAdminRole } from "../utils/permissions";
+import { compressImageFile } from "../utils/imageCompression";
 
 const MEMBER_PHOTO_BUCKET = "member_photo";
 const MEMBER_PHOTO_PREFIX = "member_photos";
@@ -120,14 +121,16 @@ const getPhotoAccessUrl = async (photoRef) => {
 export const uploadMemberPhoto = async (file, memberId) => {
   if (!file) return null;
 
-  const safeName = sanitizeFileName(file.name || "photo");
+  const compressedFile = await compressImageFile(file);
+
+  const safeName = sanitizeFileName(compressedFile.name || file.name || "photo");
   const filePath = `${MEMBER_PHOTO_PREFIX}/${memberId}/${Date.now()}-${safeName}`;
 
   const { error: uploadError } = await supabase.storage
     .from(MEMBER_PHOTO_BUCKET)
-    .upload(filePath, file, {
+    .upload(filePath, compressedFile, {
       upsert: false,
-      contentType: file.type || "application/octet-stream",
+      contentType: compressedFile.type || file.type || "application/octet-stream",
       cacheControl: "3600",
     });
 
@@ -257,14 +260,12 @@ export const fetchMembers = async () => {
         } catch (err) {
           // If photo retrieval fails for a single member, log and return the raw member so UI can still render.
           // This prevents one broken storage entry from causing the entire fetch to fail.
-          // eslint-disable-next-line no-console
           console.warn('Failed to get photo URL for member', member?.member_id, err);
           return member;
         }
       })
     );
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error("Error fetching members:", err);
     throw err;
   }
@@ -356,7 +357,6 @@ export const updateMember = async (memberId, updates) => {
       newRecord.photo_url = accessUrl || newRecord.photo_url;
     } catch (err) {
       // If conversion fails, leave the stored value so caller can handle it
-      // eslint-disable-next-line no-console
       console.warn('Failed to convert photo_url to access URL', err);
     }
   }

@@ -1,10 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import styles from "../Modal.module.css";
 import { updateMember, uploadMemberPhoto } from "../../../services/memberService";
 import ReAuthModal from "../../ReAuthModal";
 
 export default function EditMemberModal({ member, onClose, onSave }) {
   const photoInputRef = useRef(null);
+  const cameraVideoRef = useRef(null);
+  const cameraCanvasRef = useRef(null);
+  const cameraStreamRef = useRef(null);
   const [form, setForm] = useState({
     firstName:       (member.full_name?.split(" ")[0]) || "",
     lastName:        (member.full_name?.split(" ").slice(1).join(" ")) || "",
@@ -22,22 +25,156 @@ export default function EditMemberModal({ member, onClose, onSave }) {
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState(null);
   const [showReAuth, setShowReAuth] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+
+  useEffect(() => {
+    const previewUrl = photoPreview;
+    return () => {
+      if (previewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [photoPreview]);
+
+  useEffect(() => {
+    if (!cameraOpen) return undefined;
+
+    const stream = cameraStreamRef.current;
+    const videoElement = cameraVideoRef.current;
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        if (cameraStreamRef.current === stream) {
+          cameraStreamRef.current = null;
+        }
+      }
+      if (videoElement) {
+        videoElement.srcObject = null;
+      }
+    };
+  }, [cameraOpen]);
+
+  const stopCamera = useCallback(() => {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject = null;
+    }
+  }, []);
+
+  const closeCamera = useCallback(() => {
+    stopCamera();
+    setCameraOpen(false);
+    setCameraLoading(false);
+  }, [stopCamera]);
+
+  const handleModalClose = useCallback(() => {
+    closeCamera();
+    onClose();
+  }, [closeCamera, onClose]);
+
+  const openCamera = async () => {
+    setCameraError(null);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Camera access is not supported in this browser.");
+      return;
+    }
+
+    try {
+      setCameraLoading(true);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+
+      cameraStreamRef.current = stream;
+      setCameraOpen(true);
+
+      window.requestAnimationFrame(() => {
+        if (cameraVideoRef.current) {
+          cameraVideoRef.current.srcObject = stream;
+          cameraVideoRef.current.play?.().catch(() => {});
+        }
+      });
+    } catch (err) {
+      setCameraError(err?.message || "Unable to open the camera.");
+      closeCamera();
+    } finally {
+      setCameraLoading(false);
+    }
+  };
+
+  const captureCameraPhoto = async () => {
+    const video = cameraVideoRef.current;
+    const canvas = cameraCanvasRef.current;
+
+    if (!video || !canvas || !video.videoWidth || !video.videoHeight) {
+      setCameraError("Camera is not ready yet.");
+      return;
+    }
+
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      setCameraError("Unable to process the captured image.");
+      return;
+    }
+
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(video, 0, 0, width, height);
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(resolve, "image/png");
+    });
+
+    if (!blob) {
+      setCameraError("Unable to capture a photo from the camera.");
+      return;
+    }
+
+    const capturedFile = new File([blob], `member-camera-${Date.now()}.png`, {
+      type: "image/png",
+      lastModified: Date.now(),
+    });
+
+    if (photoPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(photoPreview);
+    }
+
+    setPhotoFile(capturedFile);
+    setPhotoPreview(URL.createObjectURL(capturedFile));
+    setCameraError(null);
+    closeCamera();
+  };
 
   const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   const handlePhotoSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (photoPreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(photoPreview);
+      }
       setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setPhotoPreview(event.target?.result);
-      };
-      reader.readAsDataURL(file);
+      setPhotoPreview(URL.createObjectURL(file));
     }
   };
 
   const handleRemovePhoto = () => {
+    if (photoPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(photoPreview);
+    }
     setPhotoFile(null);
     setPhotoPreview(null);
   };
@@ -95,7 +232,7 @@ export default function EditMemberModal({ member, onClose, onSave }) {
 
   return (
     <>
-      <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.overlay} onClick={handleModalClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
           <h2 className={styles.modalTitle}>Edit Member</h2>
 
@@ -130,27 +267,84 @@ export default function EditMemberModal({ member, onClose, onSave }) {
                   <span style={{ fontSize: '48px' }}>📷</span>
                 )}
               </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  className={styles.formInput}
+                  onClick={openCamera}
+                  type="button"
+                  style={{ marginTop: '8px', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
+                  disabled={cameraLoading}
+                >
+                  {cameraLoading ? 'Opening Camera...' : 'Use Camera'}
+                </button>
+                <button
+                  className={styles.formInput}
+                  onClick={() => photoInputRef.current?.click()}
+                  type="button"
+                  style={{ marginTop: '8px', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
+                >
+                  Choose Photo
+                </button>
+              </div>
               <button
                 className={styles.formInput}
                 onClick={handleRemovePhoto}
+                type="button"
                 style={{ marginTop: '8px', padding: '8px', cursor: 'pointer', backgroundColor: '#ffebee', border: '1px solid #ffcdd2', color: '#d32f2f' }}
               >
                 Remove Photo
-              </button>
-              <button
-                className={styles.formInput}
-                onClick={() => photoInputRef.current?.click()}
-                style={{ marginTop: '8px', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
-              >
-                Choose Photo
               </button>
               <input
                 ref={photoInputRef}
                 type="file"
                 accept="image/*"
+                capture="environment"
                 onChange={handlePhotoSelect}
                 style={{ display: 'none' }}
               />
+
+              {cameraError && (
+                <div style={{ color:"#d32f2f", backgroundColor:"#ffebee", padding:"12px", borderRadius:"4px", marginTop:"12px", fontSize:"14px" }}>
+                  {cameraError}
+                </div>
+              )}
+
+              {cameraOpen && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  borderRadius: '16px',
+                  border: '1px solid #ddd',
+                  backgroundColor: '#fafafa',
+                }}>
+                  <video
+                    ref={cameraVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    style={{ width: '100%', borderRadius: '12px', backgroundColor: '#111', maxHeight: '320px' }}
+                  />
+                  <canvas ref={cameraCanvasRef} style={{ display: 'none' }} />
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                    <button
+                      className={styles.formInput}
+                      onClick={captureCameraPhoto}
+                      type="button"
+                      style={{ marginTop: '0', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
+                    >
+                      Capture
+                    </button>
+                    <button
+                      className={styles.formInput}
+                      onClick={closeCamera}
+                      type="button"
+                      style={{ marginTop: '0', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
+                    >
+                      Close Camera
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Form Fields */}
@@ -206,7 +400,7 @@ export default function EditMemberModal({ member, onClose, onSave }) {
           <button className={styles.submitBtn} onClick={handleSaveClick} disabled={loading}>
             {loading ? "Saving..." : "Save Changes"}
           </button>
-          <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Cancel</button>
+          <button className={styles.closeBtn} onClick={handleModalClose} disabled={loading}>Cancel</button>
         </div>
       </div>
 
