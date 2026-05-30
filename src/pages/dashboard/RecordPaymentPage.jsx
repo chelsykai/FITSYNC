@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./RecordPaymentPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import { supabase } from "../../lib/supabaseClient";
@@ -6,34 +6,41 @@ import { getAuditActorRole } from "../../services/auditService";
 
 const getTodayDateString = () => new Date().toISOString().split("T")[0];
 
-const defaultForm = {
+const defaultExistingForm = {
   memberName: "",
   memberId: "",
   date: getTodayDateString(),
   description: "",
-  promoCode: "",
   modeOfPayment: "Cash",
   referenceNumber: "",
   status: "Paid",
   total: "",
 };
 
-/**
- * Fetch all members from the database
- */
+const defaultWalkInForm = {
+  description: "",
+  modeOfPayment: "Cash",
+  referenceNumber: "",
+  status: "Paid",
+  total: "",
+};
+
+const defaultRegForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  plan: "",
+};
+
+// ── Fetch members (with plan + expiry) ────────────────────────────────────────
 const fetchMembers = async () => {
   try {
     const { data, error } = await supabase
       .from("member")
-      .select("member_id, full_name")
+      .select("member_id, full_name, membership_type, monthly_expiry")
       .order("full_name");
-
-    if (error) {
-      console.error("Supabase error:", error);
-      throw error;
-    }
-    
-    console.log("Members fetched:", data); // Debug
+    if (error) throw error;
     return data || [];
   } catch (err) {
     console.error("Error fetching members:", err);
@@ -41,379 +48,452 @@ const fetchMembers = async () => {
   }
 };
 
-/**
- * Add a payment record to the record_payment table
- * Maps form fields to database columns
- */
+// ── Record existing-member payment ────────────────────────────────────────────
 const add_record = async (formData) => {
   try {
-    if (!formData.memberId) {
-      throw new Error("Please select a valid member");
-    }
+    if (!formData.memberId) throw new Error("Please select a valid member");
+    const requiresRef = ["GCash", "Bank Transfer", "Credit Card"].includes(formData.modeOfPayment);
+    const refNum = requiresRef && String(formData.referenceNumber || "").trim()
+      ? String(formData.referenceNumber).trim() : null;
 
-    const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(formData.modeOfPayment);
-    const referenceNumber = requiresReference && String(formData.referenceNumber || "").trim()
-      ? String(formData.referenceNumber).trim()
-      : null;
+    const { error } = await supabase.from("record_payment").insert([{
+      member_id:   formData.memberId,
+      date:        formData.date,
+      mop:         formData.modeOfPayment,
+      ref_number:  refNum,
+      status:      formData.status,
+      amount_paid: parseInt(formData.total) || 0,
+    }]);
+    if (error) throw new Error(error.message);
 
-    const { error } = await supabase.from("record_payment").insert([
-      {
-        member_id: formData.memberId,
-        date: formData.date,
-        promo_id: formData.promoCode || null,
-        mop: formData.modeOfPayment,
-        ref_number: referenceNumber,
-        status: formData.status,
-        amount_paid: parseInt(formData.total) || 0,
-      },
-    ]);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    // Log audit trail for payment record
     try {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      const actorName = currentUser?.username || currentUser?.name || 'system';
+      const currentUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+      const actorName = currentUser?.username || currentUser?.name || "system";
       const actorRole = await getAuditActorRole();
-      await supabase.from('audit_trail').insert([{
-        user_name: actorName,
-        user_role: actorRole,
-        action_performed: 'Recorded payment',
-        affected_module: 'Payments',
-        affected_data: {
-          memberId: formData.memberId,
-          memberName: formData.memberName,
-          amount: parseInt(formData.total) || 0,
-          date: formData.date,
-          mop: formData.modeOfPayment,
-          ref_number: referenceNumber,
-          status: formData.status,
-        },
+      await supabase.from("audit_trail").insert([{
+        user_name: actorName, user_role: actorRole,
+        action_performed: "Recorded payment", affected_module: "Payments",
+        affected_data: { memberId: formData.memberId, memberName: formData.memberName,
+          amount: parseInt(formData.total) || 0, date: formData.date,
+          mop: formData.modeOfPayment, ref_number: refNum, status: formData.status },
         created_at: new Date().toISOString(),
       }]);
-    } catch (logErr) {
-      // Audit logging failing should not break the main flow
-      // eslint-disable-next-line no-console
-      console.warn('Failed to write audit log for payment:', logErr);
-    }
+    } catch (logErr) { console.warn("Audit log failed:", logErr); }
 
     return { success: true };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
+  } catch (err) { return { success: false, error: err.message }; }
 };
 
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+const TABS = [
+  { id: "existing", label: "1. Existing Member Payment", icon: "ti-user-check" },
+  { id: "walkin",   label: "2. Walk-in Payment",          icon: "ti-walk"       },
+];
+
 export default function RecordPaymentPage({ onNavigate, activePage = "payments" }) {
-  const [form, setForm] = useState(defaultForm);
-  const [members, setMembers] = useState([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [activeTab,      setActiveTab]      = useState("existing");
+  const [form,           setForm]           = useState(defaultExistingForm);
+  const [walkInForm,     setWalkInForm]     = useState(defaultWalkInForm);
+  const [regForm,        setRegForm]        = useState(defaultRegForm);
+  const [members,        setMembers]        = useState([]);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [error,          setError]          = useState("");
+  const [walkInError,    setWalkInError]    = useState("");
+  const [regError,       setRegError]       = useState("");
+  const [loading,        setLoading]        = useState(false);
+  const [walkInLoading,  setWalkInLoading]  = useState(false);
+  const [regLoading,     setRegLoading]     = useState(false);
+  const [successMsg,     setSuccessMsg]     = useState("");
+  const [walkInSuccess,  setWalkInSuccess]  = useState("");
+  const [regSuccess,     setRegSuccess]     = useState("");
   const [membersLoading, setMembersLoading] = useState(true);
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdown,   setShowDropdown]   = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    const loadMembers = async () => {
+    (async () => {
       setMembersLoading(true);
-      const data = await fetchMembers();
-      setMembers(data);
+      setMembers(await fetchMembers());
       setMembersLoading(false);
-    };
-    loadMembers();
+    })();
   }, []);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+        setShowDropdown(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // ── Existing member handlers ────────────────────────────────────────────────
   const handleMemberInputChange = (e) => {
     const value = e.target.value;
-    setForm((prev) => ({
-      ...prev,
-      memberName: value,
-      memberId: "", // Reset member ID until they select from dropdown
-    }));
+    setForm((prev) => ({ ...prev, memberName: value, memberId: "" }));
+    setSelectedMember(null);
     setShowDropdown(true);
   };
 
-  const handleSelectMember = (fullName, memberId) => {
-    setForm((prev) => ({
-      ...prev,
-      memberName: fullName,
-      memberId: memberId,
-    }));
+  const handleSelectMember = (member) => {
+    setForm((prev) => ({ ...prev, memberName: member.full_name, memberId: member.member_id }));
+    setSelectedMember(member);
     setShowDropdown(false);
   };
 
   const set = (field) => (e) => {
     const value = e.target.value;
     if (field === "modeOfPayment") {
-      const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
-      setForm({
-        ...form,
-        modeOfPayment: value,
-        referenceNumber: requiresReference ? form.referenceNumber : "",
-      });
+      const req = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
+      setForm({ ...form, modeOfPayment: value, referenceNumber: req ? form.referenceNumber : "" });
       return;
     }
     setForm({ ...form, [field]: value });
   };
 
-  // Filter members based on input
+  const setWI = (field) => (e) => {
+    const value = e.target.value;
+    if (field === "modeOfPayment") {
+      const req = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
+      setWalkInForm({ ...walkInForm, modeOfPayment: value, referenceNumber: req ? walkInForm.referenceNumber : "" });
+      return;
+    }
+    setWalkInForm({ ...walkInForm, [field]: value });
+  };
+
   const filteredMembers = form.memberName
-    ? members.filter((m) =>
-        m.full_name.toLowerCase().includes(form.memberName.toLowerCase())
-      )
+    ? members.filter((m) => m.full_name.toLowerCase().includes(form.memberName.toLowerCase()) ||
+        String(m.member_id).includes(form.memberName))
     : members;
 
   const handleSubmit = async () => {
-    setError("");
-    setSuccessMessage("");
-
-    // Validation
-    if (!form.memberName.trim()) {
-      setError("Member Info is required");
-      return;
-    }
-    if (!form.memberId) {
-      setError("Please select a valid member from the list");
-      return;
-    }
-    if (!form.date) {
-      setError("Date is required");
-      return;
-    }
-    if (!form.total) {
-      setError("Total is required");
-      return;
-    }
-
-    const requiresReference = ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment);
-    if (requiresReference && !form.referenceNumber.trim()) {
-      setError("Reference Number is required for selected mode of payment");
-      return;
-    }
+    setError(""); setSuccessMsg("");
+    if (!form.memberName.trim()) { setError("Member Info is required"); return; }
+    if (!form.memberId)          { setError("Please select a valid member from the list"); return; }
+    if (!form.date)              { setError("Date is required"); return; }
+    if (!form.total)             { setError("Total is required"); return; }
+    const reqRef = ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment);
+    if (reqRef && !form.referenceNumber.trim()) { setError("Reference Number is required"); return; }
 
     setLoading(true);
     const result = await add_record(form);
-
     if (result.success) {
-      setSuccessMessage("Payment record added successfully!");
-      setForm({ ...defaultForm, date: getTodayDateString() });
-      setTimeout(() => {
-        onNavigate("payments");
-      }, 1500);
+      setSuccessMsg("Payment record added successfully!");
+      setForm({ ...defaultExistingForm, date: getTodayDateString() });
+      setSelectedMember(null);
+      setTimeout(() => onNavigate("payments"), 1500);
     } else {
       setError(result.error || "Failed to add payment record");
     }
-
     setLoading(false);
+  };
+
+  // Walk-in submit — UI only, wired up for backend later
+  const handleWalkInSubmit = async () => {
+    setWalkInError(""); setWalkInSuccess("");
+    if (!walkInForm.total) { setWalkInError("Total is required"); return; }
+    setWalkInLoading(true);
+    // TODO: backend dev — wire up walk-in payment API here
+    setTimeout(() => {
+      setWalkInSuccess("Walk-in payment recorded! (UI only — backend pending)");
+      setWalkInForm(defaultWalkInForm);
+      setWalkInLoading(false);
+    }, 800);
+  };
+
+  // Registration submit — UI only
+  const handleRegSubmit = async () => {
+    setRegError(""); setRegSuccess("");
+    if (!regForm.firstName.trim() || !regForm.lastName.trim()) { setRegError("First and last name are required"); return; }
+    if (!regForm.plan) { setRegError("Please select a plan"); return; }
+    setRegLoading(true);
+    // TODO: backend dev — wire up walk-in registration API here
+    setTimeout(() => {
+      setRegSuccess("Walk-in registration submitted! (UI only — backend pending)");
+      setRegForm(defaultRegForm);
+      setRegLoading(false);
+    }, 800);
+  };
+
+  // ── Format expiry date ──────────────────────────────────────────────────────
+  const formatExpiry = (dateStr) => {
+    if (!dateStr) return "N/A";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "N/A";
+    return d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
   };
 
   return (
     <div className={styles.layout}>
       <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <div className={`${styles.content} tab-slide-animation`}>
+
+      <div className={`${styles.content} tab-slide-animation`}>
+
+        {/* ── Title ── */}
         <div className={styles.titleRow}>
           <span className={styles.titleIcon}>🗂️</span>
           <h1 className={styles.title}>Record Payment</h1>
         </div>
 
-        {/* Form Card */}
-        <div className={styles.formCard}>
+        {/* ── Main two-column layout ── */}
+        <div className={styles.mainLayout}>
 
-          {/* Error & Success Messages */}
-          {error && (
-            <div style={{
-              padding: "12px 16px",
-              marginBottom: "16px",
-              backgroundColor: "#fee",
-              border: "1px solid #fcc",
-              borderRadius: "6px",
-              color: "#c00",
-              fontSize: "14px",
-            }}>
-              {error}
-            </div>
-          )}
-          {successMessage && (
-            <div style={{
-              padding: "12px 16px",
-              marginBottom: "16px",
-              backgroundColor: "#efe",
-              border: "1px solid #cfc",
-              borderRadius: "6px",
-              color: "#060",
-              fontSize: "14px",
-            }}>
-              {successMessage}
-            </div>
-          )}
+          {/* ── LEFT — tabbed panel ── */}
+          <div className={styles.leftPanel}>
 
-          {/* Loading Members */}
-          {membersLoading && (
-            <div style={{
-              padding: "12px 16px",
-              marginBottom: "16px",
-              backgroundColor: "#f0f0f0",
-              borderRadius: "6px",
-              color: "#666",
-              fontSize: "14px",
-            }}>
-              Loading members...
+            {/* Tab bar */}
+            <div className={styles.tabBar}>
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  className={`${styles.tabBtn} ${activeTab === tab.id ? styles.tabBtnActive : ""}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <span className={`ti ${tab.icon}`} aria-hidden="true" />
+                  {tab.label}
+                </button>
+              ))}
             </div>
-          )}
 
-          {/* Row 1 */}
-          <div className={styles.formRow}>
-            <div className={styles.formGroup} style={{ position: "relative" }}>
-              <label className={styles.formLabel}>Member Info</label>
-              <input 
-                className={styles.formInput}
-                placeholder="Type member name (e.g., ay...)"
-                value={form.memberName} 
-                onChange={handleMemberInputChange}
-                onFocus={() => setShowDropdown(true)}
-                disabled={membersLoading}
-                autoComplete="off"
-              />
-              
-              {/* Dropdown List */}
-              {showDropdown && !membersLoading && (
-                <div style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  backgroundColor: "white",
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  maxHeight: "250px",
-                  overflowY: "auto",
-                  zIndex: 1000,
-                  marginTop: "4px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                }}>
-                  {filteredMembers.length > 0 ? (
-                    filteredMembers.map((member) => (
-                      <div
-                        key={member.member_id}
-                        onClick={() => handleSelectMember(member.full_name, member.member_id)}
-                        style={{
-                          padding: "12px 16px",
-                          cursor: "pointer",
-                          borderBottom: "1px solid #eee",
-                          transition: "background-color 0.2s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8f8f8")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
-                      >
-                        <div style={{ fontWeight: "500", color: "#333" }}>
-                          {member.full_name}
+            {/* ── Tab 1: Existing Member Payment ── */}
+            {activeTab === "existing" && (
+              <div className={styles.formCard}>
+
+                {error      && <div className={styles.alertError}>{error}</div>}
+                {successMsg && <div className={styles.alertSuccess}>{successMsg}</div>}
+                {membersLoading && <div className={styles.alertInfo}>Loading members…</div>}
+
+                {/* Search member */}
+                <div className={styles.formGroup} ref={dropdownRef}>
+                  <label className={styles.formLabel}>Search Member</label>
+                  <div className={styles.searchWrap}>
+                    <span className="ti ti-search" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#aaa", fontSize:15 }} aria-hidden="true" />
+                    <input
+                      className={styles.searchInput}
+                      placeholder="Search existing member name or ID"
+                      value={form.memberName}
+                      onChange={handleMemberInputChange}
+                      onFocus={() => setShowDropdown(true)}
+                      disabled={membersLoading}
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  {showDropdown && !membersLoading && (
+                    <div className={styles.dropdown}>
+                      {filteredMembers.length > 0 ? filteredMembers.map((m) => (
+                        <div key={m.member_id} className={styles.dropdownItem} onClick={() => handleSelectMember(m)}>
+                          <span className={styles.dropdownName}>{m.full_name}</span>
+                          <span className={styles.dropdownId}>ID: {m.member_id}</span>
                         </div>
-                        <div style={{ fontSize: "12px", color: "#999" }}>
-                          ID: {member.member_id}
+                      )) : (
+                        <div className={styles.dropdownEmpty}>
+                          {form.memberName ? `No members found matching "${form.memberName}"` : "Start typing to see members"}
                         </div>
-                      </div>
-                    ))
-                  ) : form.memberName ? (
-                    <div style={{
-                      padding: "12px 16px",
-                      color: "#999",
-                      textAlign: "center",
-                    }}>
-                      No members found matching "{form.memberName}"
-                    </div>
-                  ) : (
-                    <div style={{
-                      padding: "12px 16px",
-                      color: "#999",
-                      textAlign: "center",
-                    }}>
-                      Start typing to see members
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Date</label>
-              <input className={styles.formInput} type="date" placeholder="MM/DD/YYYY"
-                value={form.date} onChange={set("date")} disabled />
-            </div>
-          </div>
 
-          {/* Row 2 */}
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Payment Details</label>
-              <input className={styles.formInput} placeholder="Description"
-                value={form.description} onChange={set("description")} />
-            </div>
-          </div>
+                {/* Member details auto-populated */}
+                <div className={styles.memberDetails}>
+                  <p className={styles.memberDetailsTitle}>Member Details</p>
+                  <p className={styles.memberDetailsRow}>
+                    <span className={styles.memberDetailsKey}>Name:</span>
+                    <span>{selectedMember?.full_name || "[Auto-populated]"}</span>
+                  </p>
+                  <p className={styles.memberDetailsRow}>
+                    <span className={styles.memberDetailsKey}>Current Plan:</span>
+                    <span>{selectedMember?.membership_type || "[Auto-populated]"}</span>
+                  </p>
+                  <p className={styles.memberDetailsRow}>
+                    <span className={styles.memberDetailsKey}>Expiration:</span>
+                    <span>{selectedMember ? formatExpiry(selectedMember.monthly_expiry) : "[Auto-populated]"}</span>
+                  </p>
+                </div>
 
-          {/* Row 3 */}
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Mode Of Payment</label>
-              <select className={styles.formInput} value={form.modeOfPayment} onChange={set("modeOfPayment")}>
-                {["Cash", "GCash", "Bank Transfer", "Credit Card"].map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-            { ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment) && (
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Reference Number</label>
-                <input className={styles.formInput} placeholder="Enter Reference Number"
-                  value={form.referenceNumber} onChange={set("referenceNumber")} />
+                {/* Date + Payment Details */}
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Date</label>
+                    <input className={styles.formInput} type="date" value={form.date} onChange={set("date")} disabled />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Payment Details</label>
+                    <input className={styles.formInput} placeholder="e.g. Monthly Renewal" value={form.description} onChange={set("description")} />
+                  </div>
+                </div>
+
+                {/* Mode of Payment */}
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Mode Of Payment</label>
+                    <select className={styles.formInput} value={form.modeOfPayment} onChange={set("modeOfPayment")}>
+                      {["Cash","GCash","Bank Transfer","Credit Card"].map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {["GCash","Bank Transfer","Credit Card"].includes(form.modeOfPayment) && (
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Reference Number</label>
+                      <input className={styles.formInput} placeholder="Enter Reference Number" value={form.referenceNumber} onChange={set("referenceNumber")} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Total */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Total</label>
+                  <input className={styles.formInput} type="number" placeholder="Enter Total Amount" value={form.total} onChange={set("total")} />
+                </div>
+
+                {/* Status + actions */}
+                <div className={styles.formRowStatus}>
+                  <div className={styles.statusGroup}>
+                    <label className={styles.formLabel}>Status</label>
+                    <div className={styles.radioRow}>
+                      {["Paid","Unpaid"].map((s) => (
+                        <label key={s} className={styles.radioOption}>
+                          <input type="radio" name="status" value={s} checked={form.status === s} onChange={set("status")} style={{ accentColor:"#7eba56" }} />
+                          {s}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={styles.actionBtns}>
+                    <button className={styles.addRecordBtn} onClick={handleSubmit} disabled={loading}>
+                      {loading ? "Adding…" : "Add Record"}
+                    </button>
+                    <button className={styles.cancelBtn} onClick={() => { setForm({ ...defaultExistingForm, date: getTodayDateString() }); setSelectedMember(null); setError(""); }} disabled={loading}>Clear</button>
+                  </div>
+                </div>
               </div>
             )}
+
+            {/* ── Tab 2: Walk-in Payment ── */}
+            {activeTab === "walkin" && (
+              <div className={styles.formCard}>
+
+                {walkInError   && <div className={styles.alertError}>{walkInError}</div>}
+                {walkInSuccess && <div className={styles.alertSuccess}>{walkInSuccess}</div>}
+
+                {/* Mode of Payment + Reference */}
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Mode Of Payment</label>
+                    <select className={styles.formInput} value={walkInForm.modeOfPayment} onChange={setWI("modeOfPayment")}>
+                      {["Cash","GCash","Bank Transfer","Credit Card"].map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {["GCash","Bank Transfer","Credit Card"].includes(walkInForm.modeOfPayment) && (
+                    <div className={styles.formGroup}>
+                      <label className={styles.formLabel}>Reference Number</label>
+                      <input className={styles.formInput} placeholder="Enter Reference Number" value={walkInForm.referenceNumber} onChange={setWI("referenceNumber")} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Payment Details */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Payment Details</label>
+                  <input className={styles.formInput} placeholder="e.g. Day Pass" value={walkInForm.description} onChange={setWI("description")} />
+                </div>
+
+                {/* Total */}
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Total</label>
+                  <input className={styles.formInput} type="number" placeholder="Enter Total Amount" value={walkInForm.total} onChange={setWI("total")} />
+                </div>
+
+                {/* Status + actions */}
+                <div className={styles.formRowStatus}>
+                  <div className={styles.statusGroup}>
+                    <label className={styles.formLabel}>Status</label>
+                    <div className={styles.radioRow}>
+                      {["Paid","Unpaid"].map((s) => (
+                        <label key={s} className={styles.radioOption}>
+                          <input type="radio" name="wi-status" value={s} checked={walkInForm.status === s} onChange={setWI("status")} style={{ accentColor:"#7eba56" }} />
+                          {s}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={styles.actionBtns}>
+                    <button className={styles.addRecordBtn} onClick={handleWalkInSubmit} disabled={walkInLoading}>
+                      {walkInLoading ? "Adding…" : "Add Record"}
+                    </button>
+                    <button className={styles.cancelBtn} onClick={() => { setWalkInForm(defaultWalkInForm); setWalkInError(""); }} disabled={walkInLoading}>Clear</button>
+                  </div>
+                </div>
+              </div> )}
           </div>
 
-          {/* Row 3.5 — Total */}
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Total</label>
-              <input className={styles.formInput} type="number" placeholder="Enter Total Amount"
-                value={form.total} onChange={set("total")} />
-            </div>
-          </div>
+          {/* ── RIGHT — Walk-in Registration ── */}
+          <div className={styles.rightPanel}>
+            <div className={styles.regCard}>
+              <div className={styles.regHeader}>
+                <span className="ti ti-clipboard-plus" style={{ fontSize:18 }} aria-hidden="true" />
+                <h2 className={styles.regTitle}>3. Walk-in Registration</h2>
+              </div>
 
-          {/* Row 4 — Status + Buttons */}
-          <div className={styles.formRowStatus}>
-            <div className={styles.statusGroup}>
-              <label className={styles.formLabel}>Status</label>
-              <div className={styles.radioRow}>
-                <label className={styles.radioOption}>
-                  <input type="radio" name="status" value="Paid"
-                    checked={form.status === "Paid"} onChange={set("status")}
-                    style={{ accentColor: "#7eba56" }} />
-                  Paid
-                </label>
-                <label className={styles.radioOption}>
-                  <input type="radio" name="status" value="Unpaid"
-                    checked={form.status === "Unpaid"} onChange={set("status")}
-                    style={{ accentColor: "#7eba56" }} />
-                  Unpaid
-                </label>
+              {regError   && <div className={styles.alertError}>{regError}</div>}
+              {regSuccess && <div className={styles.alertSuccess}>{regSuccess}</div>}
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>First Name</label>
+                <input className={styles.formInput} placeholder="First Name" value={regForm.firstName} onChange={(e) => setRegForm({ ...regForm, firstName: e.target.value })} />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Last Name</label>
+                <input className={styles.formInput} placeholder="Last Name" value={regForm.lastName} onChange={(e) => setRegForm({ ...regForm, lastName: e.target.value })} />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Email Address</label>
+                <input className={styles.formInput} placeholder="Email Address" type="email" value={regForm.email} onChange={(e) => setRegForm({ ...regForm, email: e.target.value })} />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Phone Number</label>
+                <input className={styles.formInput} placeholder="Phone Number" value={regForm.phone} onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })} />
+              </div>
+
+              {/* Plan selection */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Select a Plan</label>
+                <div className={styles.planList}>
+                  {["Day Pass", "7-Day Pass", "Monthly"].map((plan) => (
+                    <label key={plan} className={styles.planOption}>
+                      <input
+                        type="radio"
+                        name="reg-plan"
+                        value={plan}
+                        checked={regForm.plan === plan}
+                        onChange={(e) => setRegForm({ ...regForm, plan: e.target.value })}
+                        style={{ accentColor:"#7eba56" }}
+                      />
+                      {plan}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.regActions}>
+                <button className={styles.addRecordBtn} onClick={handleRegSubmit} disabled={regLoading}>
+                  {regLoading ? "Registering…" : "Register"}
+                </button>
+                <button className={styles.cancelBtn} onClick={() => { setRegForm(defaultRegForm); setRegError(""); }} disabled={regLoading}>Clear</button>
               </div>
             </div>
-            <div className={styles.actionBtns}>
-              <button className={styles.addRecordBtn} onClick={handleSubmit} disabled={loading}>
-                {loading ? "Adding..." : "Add Record"}
-              </button>
-              <button className={styles.cancelBtn} onClick={() => onNavigate("payments")} disabled={loading}>
-                Cancel
-              </button>
+
+            <div className={styles.regCloseRow}>
+              <button className={styles.closePageBtn} onClick={() => onNavigate("payments")}>Close</button>
             </div>
           </div>
 
         </div>
-
-        {/* Close button bottom right */}
-        <div className={styles.closeRow}>
-          <button className={styles.closePageBtn} onClick={() => onNavigate("payments")}>Close</button>
-        </div>
-
       </div>
     </div>
   );

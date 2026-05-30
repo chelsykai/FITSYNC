@@ -381,7 +381,7 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                 </div>
             <div className={styles.membershipSettings}>
               <p className={styles.membershipSettingsTitle}>Membership Settings</p>
-              <div className={styles.fieldRow}>
+=              <div className={styles.fieldRow}>
                 <div className={styles.labeledField}>
                   <label className={styles.modernLabel}>Member Type</label>
                   <select className={styles.formInput} value={form.membershipType} onChange={set("membershipType")}>

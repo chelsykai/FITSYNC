@@ -1,15 +1,14 @@
-/* ── Shared overlay ── */
+/* ── Overlay ── */
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(3px);
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 9999;
+  justify-content: center;
+  z-index: 10000;
+  padding: 16px;
 }
 
 /* ── Modal shell (used by ViewAll, MembersExport, AddMember) ── */
@@ -1260,6 +1259,7 @@
 
 .exportAttendanceBtn:hover {
   background: #555;
+
 }/* ── Attendance Modal — full rewrite ── */
 .attendanceModal {
   background: white;
