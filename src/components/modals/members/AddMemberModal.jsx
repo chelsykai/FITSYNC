@@ -477,12 +477,20 @@ export default function AddMemberModal({ onClose, onSuccess }) {
               </div>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Emergency Contact Number</label>
-                <input
-                  className={styles.formInput}
-                  placeholder="09XXXXXXXXX"
-                  value={form.emergencyContactNumber}
-                  onChange={set("emergencyContactNumber")}
-                />
+                <div className={styles.phoneInputWrap}>
+                  <span className={styles.phonePrefix}>+63</span>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="9XXXXXXXXX"
+                    maxLength={10}
+                    value={form.emergencyContactNumber}
+                    onChange={(e) =>
+                      setForm({ ...form, emergencyContactNumber: e.target.value.replace(/[^\d]/g, "") })
+                    }
+                  />
+                </div>
               </div>
             </div>
 
