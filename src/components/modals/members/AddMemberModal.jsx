@@ -354,16 +354,16 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                 />
               </div>
               <div className={styles.labeledField}>
-                <label className={styles.modernLabel}>Gender</label>
+                <label className={styles.modernLabel}>Sex</label>
                 <div className={styles.genderRow}>
-                  {["Male", "Female", "Other"].map((g) => (
+                  {["Male", "Female"].map((g) => (
                     <label key={g} className={styles.genderOption}>
                       <input
                         type="radio"
-                        name="gender"
+                        name="sex"
                         value={g}
-                        checked={form.gender === g}
-                        onChange={set("gender")}
+                        checked={form.sex === g}
+                        onChange={set("sex")}
                       />
                       {g}
                     </label>
