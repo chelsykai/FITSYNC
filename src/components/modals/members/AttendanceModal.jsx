@@ -26,7 +26,7 @@ export default function AttendanceModal({ members = [], onClose }) {
   );
   const [error,        setError]        = useState(null);
   const [search,       setSearch]       = useState("");
-  const [showYearDrop, setShowYearDrop] = useState(false);
+  const [showMonthDrop,setShowMonthDrop]= useState(false);
   const [page,         setPage]         = useState(0);
 
   /* ── Load data ── */
@@ -67,11 +67,11 @@ export default function AttendanceModal({ members = [], onClose }) {
       const pastDays  = days.filter((d) => new Date(year, month - 1, d) <= todayStart);
       const presentCt = pastDays.filter((d) => attended.has(d)).length;
       const absentCt  = pastDays.length - presentCt;
-      const pct       = pastDays.length ? Math.round((presentCt / pastDays.length) * 100) : 0;
-      return { id, presentCt, absentCt, pct };
+      return { id, presentCt, absentCt };
     });
   }, [members, attendanceMap, days, year, month]);
 
+  /* Column totals for the visible page */
   const colTotals = useMemo(() => {
     return pageDays.map((d) => {
       const cellDate = new Date(year, month - 1, d);
@@ -105,43 +105,13 @@ export default function AttendanceModal({ members = [], onClose }) {
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.attendanceModal} onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Top bar ── */}
+        {/* ── Top bar: title left | legend + close right ── */}
         <div className={styles.attendanceTopBar}>
-          {/* Month nav */}
-          <div className={styles.attendanceNavGroup}>
-            <button className={styles.attendanceNavBtn} onClick={prevMonth}>
-              <i className="ti ti-chevron-left" /> Prev
-            </button>
-
-            <div style={{ position: "relative" }}>
-              <button
-                className={styles.attendanceMonthBtn}
-                onClick={() => setShowYearDrop((v) => !v)}
-              >
-                {MONTH_NAMES[month - 1]} {year}
-                <i className="ti ti-chevron-down" />
-              </button>
-              {showYearDrop && (
-                <div className={styles.attendanceYearDrop}>
-                  {yearOptions.map((y) => (
-                    <button
-                      key={y}
-                      className={styles.attendanceYearOption}
-                      onClick={() => { setYear(y); setShowYearDrop(false); }}
-                    >
-                      {y}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button className={styles.attendanceNavBtn} onClick={nextMonth}>
-              Next <i className="ti ti-chevron-right" />
-            </button>
+          <div>
+            <div className={styles.attendanceTopBarTitle}>Attendance Records</div>
+            <div className={styles.attendanceTopBarSub}>Track member attendance daily.</div>
           </div>
 
-          {/* Legend */}
           <div className={styles.attendanceLegend}>
             <span className={styles.legendItem}>
               <span className={styles.attDotPresent}><i className="ti ti-check" /></span>
@@ -155,18 +125,17 @@ export default function AttendanceModal({ members = [], onClose }) {
             <span className={styles.legendSep} />
             <span className={styles.legendItem}>
               <span className={styles.attDotFuture} />
-              Pending
+              Pending Record
             </span>
+            <button className={styles.attendanceCloseBtn} onClick={onClose}>
+              <i className="ti ti-x" /> Close
+            </button>
           </div>
-
-          {/* Close */}
-          <button className={styles.attendanceCloseBtn} onClick={onClose}>
-            <i className="ti ti-x" /> Close
-          </button>
         </div>
 
-        {/* ── Search filter ── */}
-        <div className={styles.attendanceFilters}>
+        {/* ── Toolbar: search left | month nav right ── */}
+        <div className={styles.attendanceToolbar}>
+          {/* Search */}
           <div className={styles.attendanceSearch}>
             <i className={`ti ti-search ${styles.attendanceSearchIcon}`} />
             <input
@@ -177,9 +146,52 @@ export default function AttendanceModal({ members = [], onClose }) {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <span className={styles.attendanceMemberCount}>
-            {filteredMembers.length} member{filteredMembers.length !== 1 ? "s" : ""}
-          </span>
+
+          {/* Month navigator — right side */}
+          <div className={styles.attendanceNavGroup}>
+            <button className={styles.attendanceNavBtn} onClick={prevMonth}>
+              <i className="ti ti-chevron-left" />
+            </button>
+
+            <div style={{ position: "relative" }}>
+              <button
+                className={styles.attendanceMonthBtn}
+                onClick={() => setShowMonthDrop((v) => !v)}
+              >
+                <i className="ti ti-calendar" style={{ fontSize: 14 }} />
+                {MONTH_NAMES[month - 1].toUpperCase().slice(0, 3)} {year}
+                <i className="ti ti-chevron-down" style={{ fontSize: 12 }} />
+              </button>
+
+              {showMonthDrop && (
+                <div className={styles.attendanceMonthDrop}>
+                  {yearOptions.map((y) => (
+                    <div key={y} className={styles.attendanceMonthDropYear}>
+                      <div className={styles.attendanceMonthDropYearLabel}>{y}</div>
+                      <div className={styles.attendanceMonthDropGrid}>
+                        {MONTH_NAMES.map((mn, idx) => {
+                          const sel = y === year && idx + 1 === month;
+                          return (
+                            <button
+                              key={mn}
+                              className={`${styles.attendanceMonthOption} ${sel ? styles.attendanceMonthOptionActive : ""}`}
+                              onClick={() => { setYear(y); setMonth(idx + 1); setShowMonthDrop(false); }}
+                            >
+                              {mn.slice(0, 3)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button className={styles.attendanceNavBtn} onClick={nextMonth}>
+              <i className="ti ti-chevron-right" />
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -195,9 +207,9 @@ export default function AttendanceModal({ members = [], onClose }) {
               <tr>
                 <th className={styles.attThAvatar}></th>
                 <th className={styles.attThName}>Member</th>
-                <th className={styles.attThSummary}>Summary</th>
+                <th className={styles.attThSummary}>Status Summary</th>
                 {pageDays.map((d) => {
-                  const dow      = DAY_ABBR[new Date(year, month - 1, d).getDay()];
+                  const dow       = DAY_ABBR[new Date(year, month - 1, d).getDay()];
                   const isWeekend = dow === "SAT" || dow === "SUN";
                   return (
                     <th
@@ -212,11 +224,12 @@ export default function AttendanceModal({ members = [], onClose }) {
                 })}
               </tr>
             </thead>
+
             <tbody>
               {filteredMembers.map((m) => {
                 const id       = getMemberId(m);
                 const attended = attendanceMap[id] || new Set();
-                const stat     = memberStats.find((s) => s.id === id) || { presentCt: 0, absentCt: 0, pct: 0 };
+                const stat     = memberStats.find((s) => s.id === id) || { presentCt: 0, absentCt: 0 };
                 return (
                   <tr key={id} className={styles.attRow}>
                     <td className={styles.attTdAvatar}>
@@ -225,11 +238,9 @@ export default function AttendanceModal({ members = [], onClose }) {
                     <td className={styles.attTdName}>{getMemberName(m)}</td>
                     <td className={styles.attTdSummary}>
                       <div className={styles.attSummaryBadge}>
-                        <span className={styles.attSummaryPresent}>{stat.presentCt}P</span>
+                        <span className={styles.attSummaryPresent}>{stat.presentCt} Present</span>
                         <span className={styles.attSummaryDot} />
-                        <span className={styles.attSummaryAbsent}>{stat.absentCt}A</span>
-                        <span className={styles.attSummaryDot} />
-                        <span className={styles.attSummaryPct}>{stat.pct}%</span>
+                        <span className={styles.attSummaryAbsent}>{stat.absentCt} Absent</span>
                       </div>
                     </td>
                     {pageDays.map((d) => {
@@ -259,7 +270,7 @@ export default function AttendanceModal({ members = [], onClose }) {
                 );
               })}
 
-              {/* Daily totals row */}
+              {/* ── Daily Totals row ── */}
               <tr className={styles.attTotalsRow}>
                 <td className={styles.attTdAvatar} />
                 <td className={styles.attTdName} style={{ fontWeight: 800 }}>Daily Totals</td>
@@ -268,8 +279,8 @@ export default function AttendanceModal({ members = [], onClose }) {
                   <td key={i} className={styles.attTdDay}>
                     {t ? (
                       <div className={styles.attTotalCell}>
-                        <span className={styles.attTotalP}>P{t.p}</span>
-                        <span className={styles.attTotalA}>A{t.a}</span>
+                        <span className={styles.attTotalP}>P:{t.p}</span>
+                        <span className={styles.attTotalA}>A:{t.a}</span>
                       </div>
                     ) : (
                       <span className={styles.attFutureDash}>—</span>
@@ -283,16 +294,8 @@ export default function AttendanceModal({ members = [], onClose }) {
 
         {/* ── Pagination ── */}
         <div className={styles.attendancePagination}>
-          <button
-            className={styles.attPageBtn}
-            onClick={() => setPage(0)}
-            disabled={page === 0}
-          >«</button>
-          <button
-            className={styles.attPageBtn}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-          >‹</button>
+          <button className={styles.attPageBtn} onClick={() => setPage(0)} disabled={page === 0}>«</button>
+          <button className={styles.attPageBtn} onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
 
           {Array.from({ length: totalPages }, (_, i) => (
             <button
@@ -304,16 +307,8 @@ export default function AttendanceModal({ members = [], onClose }) {
             </button>
           ))}
 
-          <button
-            className={styles.attPageBtn}
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page === totalPages - 1}
-          >›</button>
-          <button
-            className={styles.attPageBtn}
-            onClick={() => setPage(totalPages - 1)}
-            disabled={page === totalPages - 1}
-          >»</button>
+          <button className={styles.attPageBtn} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}>›</button>
+          <button className={styles.attPageBtn} onClick={() => setPage(totalPages - 1)} disabled={page === totalPages - 1}>»</button>
 
           <span className={styles.attPageInfo}>
             Days {page * DAYS_PER_PAGE + 1}–{Math.min((page + 1) * DAYS_PER_PAGE, daysInMonth)} of {daysInMonth}
