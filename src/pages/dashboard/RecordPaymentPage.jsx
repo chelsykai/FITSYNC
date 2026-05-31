@@ -379,6 +379,23 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                 {walkInError   && <div className={styles.alertError}>{walkInError}</div>}
                 {walkInSuccess && <div className={styles.alertSuccess}>{walkInSuccess}</div>}
 
+                {/* Members  Name */}
+                <div className={styles.formGroup} ref={dropdownRef}>
+                  <label className={styles.formLabel}> Search Member</label>
+                </div>
+                  <div className={styles.searchWrap}>
+                    <span className="ti ti-search" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#aaa", fontSize:15 }} aria-hidden="true" />
+                    <input
+                      className={styles.searchInput}
+                      placeholder="Search existing member name or ID"
+                      value={form.memberName}
+                      onChange={handleMemberInputChange}
+                      onFocus={() => setShowDropdown(true)}
+                      disabled={membersLoading}
+                      autoComplete="off"
+                    />
+                  </div>
+
                 {/* Mode of Payment + Reference */}
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
