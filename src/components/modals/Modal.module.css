@@ -606,6 +606,7 @@
   font-weight: 500;
   margin: 4px 0 0;
   font-family: "Montserrat", sans-serif;
+  padding: 0 28px 0px;
 }
 
 /* Body: photo left + fields right */
@@ -840,6 +841,14 @@
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.planCardInput::-webkit-outer-spin-button,
+.planCardInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .planCardInput:focus {

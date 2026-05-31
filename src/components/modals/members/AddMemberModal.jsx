@@ -348,6 +348,7 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                 <input
                   className={styles.formInput}
                   type="date"
+                  max={getTodayDateString()}
                   value={form.birthday}
                   onChange={set("birthday")}
                 />
