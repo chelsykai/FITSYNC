@@ -5,93 +5,58 @@ import { addMember } from "../../../services/memberService";
 const getTodayDateString = () => new Date().toISOString().split("T")[0];
 
 const defaultForm = {
-  fullName: "",
-  email: "",
-  phone: "",
-  address: "",
-  birthday: "",
-  membershipType: "Student",
-  monthlyValidity: "",
-  membershipValidity: "",
-  joinDate: getTodayDateString(),
-  gender: "Male",
-  photo: null,
-  emergencyContactName: "",
+  fullName:             "",
+  email:                "",
+  phone:                "",
+  address:              "",
+  birthday:             "",
+  membershipType:       "Student",
+  monthlyValidity:      "",
+  membershipValidity:   "",
+  joinDate:             getTodayDateString(),
+  gender:               "Male",
+  photo:                null,
+  emergencyContactName:   "",
   emergencyContactNumber: "",
 };
 
-function PhoneInput({ value, onChange }) {
-  const handleChange = (e) => {
-    const raw = e.target.value.replace(/[^\d]/g, "");
-    onChange(raw);
-  };
-  return (
-    <div style={{
-      display: "flex", alignItems: "center",
-      border: "1px solid #ddd", borderRadius: 8,
-      overflow: "hidden", background: "#fff",
-      fontFamily: "Montserrat, sans-serif",
-    }}>
-      <span style={{
-        padding: "8px 10px", background: "#f4f9f1",
-        borderRight: "1px solid #ddd", fontSize: 12,
-        fontWeight: 700, color: "#2e7d32", whiteSpace: "nowrap",
-        flexShrink: 0,
-      }}>+63</span>
-      <input
-        type="text"
-        inputMode="numeric"
-        placeholder="9XXXXXXXXX"
-        value={value}
-        onChange={handleChange}
-        maxLength={10}
-        style={{
-          flex: 1, border: "none", outline: "none",
-          padding: "8px 10px", fontSize: 12,
-          fontFamily: "Montserrat, sans-serif", color: "#333",
-          background: "transparent",
-        }}
-      />
-    </div>
-  );
-}
-
 export default function AddMemberModal({ onClose, onSuccess }) {
-  const [form, setForm] = useState(defaultForm);
-  const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [cameraOpen, setCameraOpen] = useState(false);
+  const [form,          setForm]          = useState(defaultForm);
+  const [preview,       setPreview]       = useState(null);
+  const [loading,       setLoading]       = useState(false);
+  const [error,         setError]         = useState(null);
+  const [cameraOpen,    setCameraOpen]    = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
-  const [cameraError, setCameraError] = useState(null);
-  const fileRef = useRef();
-  const cameraVideoRef = useRef(null);
+  const [cameraError,   setCameraError]   = useState(null);
+
+  const fileRef        = useRef();
+  const cameraVideoRef  = useRef(null);
   const cameraCanvasRef = useRef(null);
   const cameraStreamRef = useRef(null);
 
+  /* ── Cleanup preview URL ── */
   useEffect(() => {
-    const previewUrl = preview;
-    return () => {
-      if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
-    };
+    const url = preview;
+    return () => { if (url?.startsWith("blob:")) URL.revokeObjectURL(url); };
   }, [preview]);
 
+  /* ── Cleanup camera stream on unmount ── */
   useEffect(() => {
     if (!cameraOpen) return undefined;
-    const stream = cameraStreamRef.current;
-    const videoElement = cameraVideoRef.current;
+    const stream      = cameraStreamRef.current;
+    const videoEl     = cameraVideoRef.current;
     return () => {
       if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+        stream.getTracks().forEach((t) => t.stop());
         if (cameraStreamRef.current === stream) cameraStreamRef.current = null;
       }
-      if (videoElement) videoElement.srcObject = null;
+      if (videoEl) videoEl.srcObject = null;
     };
   }, [cameraOpen]);
 
   const stopCamera = useCallback(() => {
     if (cameraStreamRef.current) {
-      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current.getTracks().forEach((t) => t.stop());
       cameraStreamRef.current = null;
     }
     if (cameraVideoRef.current) cameraVideoRef.current.srcObject = null;
@@ -108,6 +73,7 @@ export default function AddMemberModal({ onClose, onSuccess }) {
     onClose();
   }, [closeCamera, onClose]);
 
+  /* ── Camera ── */
   const openCamera = async () => {
     setCameraError(null);
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -137,77 +103,81 @@ export default function AddMemberModal({ onClose, onSuccess }) {
   };
 
   const captureCameraPhoto = async () => {
-    const video = cameraVideoRef.current;
+    const video  = cameraVideoRef.current;
     const canvas = cameraCanvasRef.current;
     if (!video || !canvas || !video.videoWidth || !video.videoHeight) {
       setCameraError("Camera is not ready yet.");
       return;
     }
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    if (!context) { setCameraError("Unable to process the captured image."); return; }
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, width, height);
-    context.drawImage(video, 0, 0, width, height);
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) { setCameraError("Unable to process the captured image."); return; }
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0);
+    const blob = await new Promise((res) => canvas.toBlob(res, "image/png"));
     if (!blob) { setCameraError("Unable to capture a photo from the camera."); return; }
-    const capturedFile = new File([blob], `member-camera-${Date.now()}.png`, {
+    const file = new File([blob], `member-camera-${Date.now()}.png`, {
       type: "image/png", lastModified: Date.now(),
     });
     if (preview) URL.revokeObjectURL(preview);
     setError(null);
     setCameraError(null);
-    setForm((prev) => ({ ...prev, photo: capturedFile }));
-    setPreview(URL.createObjectURL(capturedFile));
+    setForm((prev) => ({ ...prev, photo: file }));
+    setPreview(URL.createObjectURL(file));
     closeCamera();
   };
 
-  const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  /* ── Form helpers ── */
+  const set       = (field) => (e) => setForm({ ...form, [field]: e.target.value });
   const setNumber = (field) => (e) => {
-    const nextValue = e.target.value;
-    if (nextValue === "") { setForm({ ...form, [field]: "" }); return; }
-    const sanitized = nextValue.replace(/[^\d]/g, "");
-    setForm({ ...form, [field]: sanitized });
+    const v = e.target.value;
+    setForm({ ...form, [field]: v === "" ? "" : v.replace(/[^\d]/g, "") });
   };
-  const resetMembershipPlan = () => {
+  const resetMembershipPlan = () =>
     setForm((prev) => ({ ...prev, monthlyValidity: "", membershipValidity: "" }));
-  };
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) { setError("Please select an image file."); return; }
-    if (file.size > 5 * 1024 * 1024) { setError("Photo size must be 5MB or less."); return; }
+    if (file.size > 5 * 1024 * 1024)    { setError("Photo size must be 5 MB or less."); return; }
     if (preview) URL.revokeObjectURL(preview);
     setError(null);
     setForm((prev) => ({ ...prev, photo: file }));
     setPreview(URL.createObjectURL(file));
   };
 
+  const calculateAge = (birthdayStr) => {
+    if (!birthdayStr) return null;
+    const today = new Date();
+    const birth = new Date(birthdayStr);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age >= 0 ? age : null;
+  };
+
+  /* ── Submit ── */
   const handleSubmit = async () => {
-    if (!form.fullName.trim()) { setError("Full name is required"); return; }
+    if (!form.fullName.trim()) { setError("Full name is required."); return; }
+    const months = Number.parseInt(form.monthlyValidity, 10);
+    const years  = Number.parseInt(form.membershipValidity, 10);
+    const hasMonths = Number.isInteger(months) && months > 0;
+    const hasYears  = Number.isInteger(years)  && years  > 0;
+    if (!hasMonths && !hasYears) {
+      setError("Please enter at least one plan: Months or Years.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const monthlyValidityMonths = Number.parseInt(form.monthlyValidity, 10);
-      const membershipValidityYears = Number.parseInt(form.membershipValidity, 10);
-      const hasMonthlyPlan = Number.isInteger(monthlyValidityMonths) && monthlyValidityMonths > 0;
-      const hasYearlyMembership = Number.isInteger(membershipValidityYears) && membershipValidityYears > 0;
-      if (!hasMonthlyPlan && !hasYearlyMembership) {
-        setError("Please enter at least one plan: Months or Years.");
-        setLoading(false);
-        return;
-      }
       const payload = {
         ...form,
-        monthlyValidity: hasMonthlyPlan ? `${monthlyValidityMonths} Month${monthlyValidityMonths === 1 ? "" : "s"}` : "",
-        membershipValidity: hasYearlyMembership ? `${membershipValidityYears} Year${membershipValidityYears === 1 ? "" : "s"}` : "",
-        joinDate: form.joinDate || getTodayDateString(),
-        emergencyContactName: form.emergencyContactName || "",
-        emergencyContactNumber: form.emergencyContactNumber || "",
+        monthlyValidity:    hasMonths ? `${months} Month${months === 1 ? "" : "s"}` : "",
+        membershipValidity: hasYears  ? `${years}  Year${years  === 1 ? "" : "s"}` : "",
+        joinDate:           form.joinDate || getTodayDateString(),
       };
       const newMember = await addMember(payload);
       onSuccess?.(newMember);
@@ -215,144 +185,98 @@ export default function AddMemberModal({ onClose, onSuccess }) {
       setPreview(null);
     } catch (err) {
       setError(err.message || "Failed to add member. Please try again.");
-      console.error("Error adding member:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateAge = (birthdayStr) => {
-  if (!birthdayStr) return null;
-  const today = new Date();
-  const birth = new Date(birthdayStr);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age >= 0 ? age : null;
-};
+  const age = calculateAge(form.birthday);
 
+  /* ──────────────────────────────────────────────────────────
+     RENDER
+  ────────────────────────────────────────────────────────── */
   return (
     <div className={styles.overlay} onClick={handleModalClose}>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#fff",
-          borderRadius: 16,
-          width: 720,
-          maxHeight: "90vh",
-          overflow: "hidden",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.16)",
-          fontFamily: "Montserrat, sans-serif",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className={styles.addMemberModal} onClick={(e) => e.stopPropagation()}>
+
         {/* ── Header ── */}
-        <div style={{
-          background: "linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%)",
-          padding: "22px 28px",
-          flexShrink: 0,
-        }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff", fontFamily: "Montserrat, sans-serif" }}>
-            Add New Member
-          </h2>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "rgba(255,255,255,0.65)", fontWeight: 500 }}>
+        <div className={styles.addMemberHeader}>
+          <h2 className={styles.addMemberTitle}>Add New Member</h2>
+          <p className={styles.addMemberSubtitle}>
             Fill in the details below to register a new member.
           </p>
         </div>
 
         {/* ── Body ── */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <div className={styles.addMemberBody}>
 
-          {/* Left — photo section */}
-          <div style={{
-            width: 180,
-            flexShrink: 0,
-            background: "#f4f9f1",
-            borderRight: "1px solid #ddebd4",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "28px 16px",
-            gap: 12,
-          }}>
+          {/* Left — photo panel */}
+          <div className={styles.photoSection}>
             {/* Photo box */}
             <div
-              onClick={() => fileRef.current.click()}
-              style={{
-                width: 110,
-                height: 110,
-                borderRadius: 12,
-                background: "#e0edd8",
-                border: "2px dashed #9dc47a",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                overflow: "hidden",
-                transition: "border-color 0.2s",
-              }}
+              className={styles.photoBox}
+              onClick={() => fileRef.current?.click()}
             >
-              {preview
-                ? <img src={preview} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <span style={{ fontSize: 32 }}>🖼️+</span>
-              }
+              {preview ? (
+                <img src={preview} alt="Member preview" className={styles.photoPreview} />
+              ) : (
+                <div className={styles.photoPlaceholder}>
+                  <i className="ti ti-user-circle" style={{ fontSize: 36, color: "#9dc47a" }} />
+                </div>
+              )}
             </div>
 
-            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#5d7a52", textAlign: "center", letterSpacing: "0.3px", textTransform: "uppercase" }}>
-              Take or upload photo
-            </p>
+            <p className={styles.uploadLabel}>Take or Upload Photo</p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-              <button
-                type="button"
-                onClick={openCamera}
-                disabled={cameraLoading}
-                style={{
-                  border: "1px solid #c4d1bb", background: "#fff", color: "#3f5234",
-                  borderRadius: 8, padding: "8px 0", fontSize: 11, fontWeight: 700,
-                  fontFamily: "Montserrat, sans-serif", cursor: "pointer", width: "100%",
-                }}
-              >
-                {cameraLoading ? "Opening..." : "📷 Camera"}
-              </button>
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                style={{
-                  border: "1px solid #c4d1bb", background: "#fff", color: "#3f5234",
-                  borderRadius: 8, padding: "8px 0", fontSize: 11, fontWeight: 700,
-                  fontFamily: "Montserrat, sans-serif", cursor: "pointer", width: "100%",
-                }}
-              >
-                📁 Choose File
-              </button>
-            </div>
+            <button
+              type="button"
+              className={styles.photoActionBtn}
+              onClick={openCamera}
+              disabled={cameraLoading}
+            >
+              <i className="ti ti-camera" />
+              {cameraLoading ? "Opening…" : "Camera"}
+            </button>
 
-            <input ref={fileRef} type="file" accept="image/*" capture="environment"
-              style={{ display: "none" }} onChange={handlePhoto} />
+            <button
+              type="button"
+              className={styles.photoActionBtn}
+              onClick={() => fileRef.current?.click()}
+            >
+              <i className="ti ti-folder-open" />
+              Choose File
+            </button>
+
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: "none" }}
+              onChange={handlePhoto}
+            />
 
             {cameraError && (
-              <div style={{ color: "#d32f2f", fontSize: 10, padding: "6px 8px", backgroundColor: "#ffebee", borderRadius: 6, textAlign: "left", width: "100%" }}>
-                {cameraError}
-              </div>
+              <div className={styles.formError} style={{ fontSize: 11 }}>{cameraError}</div>
             )}
 
+            {/* Camera live preview */}
             {cameraOpen && (
-              <div style={{ width: "100%", padding: 8, borderRadius: 12, border: "1px solid #dfe8d6", background: "#f8fbf5" }}>
-                <video ref={cameraVideoRef} autoPlay playsInline muted
-                  style={{ width: "100%", borderRadius: 8, background: "#111" }} />
+              <div className={styles.cameraPreviewWrap}>
+                <video
+                  ref={cameraVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={styles.cameraVideo}
+                />
                 <canvas ref={cameraCanvasRef} style={{ display: "none" }} />
-                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                  <button type="button" onClick={captureCameraPhoto}
-                    style={{ flex: 1, border: "1px solid #c4d1bb", background: "#fff", color: "#3f5234", borderRadius: 6, padding: "6px 0", fontSize: 10, fontWeight: 700, fontFamily: "Montserrat, sans-serif", cursor: "pointer" }}>
-                    Capture
+                <div className={styles.cameraBtnRow}>
+                  <button type="button" className={styles.photoActionBtn} onClick={captureCameraPhoto}>
+                    <i className="ti ti-camera" /> Capture
                   </button>
-                  <button type="button" onClick={closeCamera}
-                    style={{ flex: 1, border: "1px solid #c4d1bb", background: "#fff", color: "#3f5234", borderRadius: 6, padding: "6px 0", fontSize: 10, fontWeight: 700, fontFamily: "Montserrat, sans-serif", cursor: "pointer" }}>
-                    Close
+                  <button type="button" className={styles.photoActionBtn} onClick={closeCamera}>
+                    <i className="ti ti-x" /> Close
                   </button>
                 </div>
               </div>
@@ -361,68 +285,179 @@ export default function AddMemberModal({ onClose, onSuccess }) {
 
           {/* Right — form fields */}
           <div className={styles.addMemberFields}>
+
+            {/* Row 1: Name + Email */}
             <div className={styles.fieldRow}>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Full Name</label>
-                <input className={styles.formInput} placeholder="Enter full name"
-                  value={form.fullName} onChange={set("fullName")} />
+                <input
+                  className={styles.formInput}
+                  placeholder="Enter full name"
+                  value={form.fullName}
+                  onChange={set("fullName")}
+                />
               </div>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Email Address</label>
-                <input className={styles.formInput} placeholder="name@email.com" type="email"
-                  value={form.email} onChange={set("email")} />
+                <input
+                  className={styles.formInput}
+                  type="email"
+                  placeholder="name@email.com"
+                  value={form.email}
+                  onChange={set("email")}
+                />
               </div>
             </div>
+
+            {/* Row 2: Phone + Address */}
             <div className={styles.fieldRow}>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Phone Number</label>
-                <input className={styles.formInput} placeholder="09XXXXXXXXX"
-                  value={form.phone} onChange={set("phone")} />
+                <div className={styles.phoneInputWrap}>
+                  <span className={styles.phonePrefix}>+63</span>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="9XXXXXXXXX"
+                    maxLength={10}
+                    value={form.phone}
+                    onChange={(e) =>
+                      setForm({ ...form, phone: e.target.value.replace(/[^\d]/g, "") })
+                    }
+                  />
+                </div>
               </div>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Address</label>
-                <input className={styles.formInput} placeholder="Street, City"
-                  value={form.address} onChange={set("address")} />
+                <input
+                  className={styles.formInput}
+                  placeholder="Street, City"
+                  value={form.address}
+                  onChange={set("address")}
+                />
               </div>
             </div>
-            <div className={styles.labeledField}>
-              <label className={styles.modernLabel}>Birthday</label>
-              <input className={styles.formInput} type="date"
-                value={form.birthday} onChange={set("birthday")} />
+
+            {/* Row 3: Birthday + Gender */}
+            <div className={styles.fieldRow}>
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>
+                  Birthday{age !== null ? ` · Age ${age}` : ""}
+                </label>
+                <input
+                  className={styles.formInput}
+                  type="date"
+                  value={form.birthday}
+                  onChange={set("birthday")}
+                />
+              </div>
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Gender</label>
+                <div className={styles.genderRow}>
+                  {["Male", "Female", "Other"].map((g) => (
+                    <label key={g} className={styles.genderOption}>
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={g}
+                        checked={form.gender === g}
+                        onChange={set("gender")}
+                      />
+                      {g}
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
+            {/* Membership settings box */}
             <div className={styles.membershipSettings}>
-              <p className={styles.membershipSettingsTitle}>Membership Settings</p>
-
-              <div className={styles.fieldRow}>
-                <div className={styles.labeledField}>
-                  <label className={styles.modernLabel}>Member Type</label>
-                  <select className={styles.formInput} value={form.membershipType} onChange={set("membershipType")}>
-                    {["Student", "Regular", "Senior", "PWD"].map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <div className={styles.unitInputWrap}>
-                    <input className={styles.formInput} placeholder="Plan Duration" type="number" min="1" step="1"
-                      inputMode="numeric" value={form.monthlyValidity} onChange={setNumber("monthlyValidity")} />
-                    <span className={styles.unitSuffix}>Months</span>
-                    <p className={styles.inputContextLabel}>Plan Duration (Months)</p>
-                  </div>
-                  <div className={styles.unitInputWrap}>
-                    <input className={styles.formInput} placeholder="Membership Term" type="number" min="0" step="1"
-                      inputMode="numeric" value={form.membershipValidity} onChange={setNumber("membershipValidity")} />
-                    <span className={styles.unitSuffix}>Years</span>
-                    <p className={styles.inputContextLabel}>Membership Term (Years)</p>
-                  </div>
+              <div className={styles.msHeader}>
+                <div className={styles.msIcon}>
+                  <i className="ti ti-id-badge" />
                 </div>
                 <div>
-                  <button type="button" className={styles.planResetBtn} onClick={resetMembershipPlan}
-                    disabled={!form.monthlyValidity && !form.membershipValidity}>
-                    Reset Plan Selection
-                  </button>
+                  <p className={styles.membershipSettingsTitle}>Membership Settings</p>
+                  <p className={styles.membershipSettingsHint}>Set member type and plan duration</p>
                 </div>
+              </div>
+
+              <div className={styles.msDivider} />
+
+              {/* Member type */}
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Member Type</label>
+                <select
+                  className={styles.formInput}
+                  value={form.membershipType}
+                  onChange={set("membershipType")}
+                >
+                  {["Student", "Regular", "Senior", "PWD"].map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Plan cards */}
+              <p className={styles.planSectionLabel}>Plan Duration</p>
+              <div className={styles.planGrid}>
+                <div className={`${styles.planCard} ${form.monthlyValidity ? styles.planCardActive : ""}`}>
+                  <div className={styles.planCardHeader}>
+                    <div className={`${styles.planCardDot} ${form.monthlyValidity ? styles.planCardDotActive : ""}`} />
+                    <div>
+                      <p className={styles.planCardName}>Monthly Plan</p>
+                      <p className={styles.planCardDesc}>Billed per month</p>
+                    </div>
+                  </div>
+                  <div className={styles.planCardInputWrap}>
+                    <input
+                      className={styles.planCardInput}
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={form.monthlyValidity}
+                      onChange={setNumber("monthlyValidity")}
+                    />
+                    <span className={styles.planCardUnit}>Months</span>
+                  </div>
+                </div>
+
+                <div className={`${styles.planCard} ${form.membershipValidity ? styles.planCardActive : ""}`}>
+                  <div className={styles.planCardHeader}>
+                    <div className={`${styles.planCardDot} ${form.membershipValidity ? styles.planCardDotActive : ""}`} />
+                    <div>
+                      <p className={styles.planCardName}>Yearly Membership</p>
+                      <p className={styles.planCardDesc}>Annual term</p>
+                    </div>
+                  </div>
+                  <div className={styles.planCardInputWrap}>
+                    <input
+                      className={styles.planCardInput}
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={form.membershipValidity}
+                      onChange={setNumber("membershipValidity")}
+                    />
+                    <span className={styles.planCardUnit}>Years</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.msResetRow}>
+                <button
+                  type="button"
+                  className={styles.planResetBtn}
+                  onClick={resetMembershipPlan}
+                  disabled={!form.monthlyValidity && !form.membershipValidity}
+                >
+                  <i className="ti ti-rotate" /> Reset Plan
+                </button>
               </div>
             </div>
 
@@ -433,57 +468,50 @@ export default function AddMemberModal({ onClose, onSuccess }) {
             <div className={styles.fieldRow}>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Emergency Contact Name</label>
-                <input className={styles.formInput} placeholder="Contact person name"
-                  value={form.emergencyContactName} onChange={set("emergencyContactName")} />
+                <input
+                  className={styles.formInput}
+                  placeholder="Contact person name"
+                  value={form.emergencyContactName}
+                  onChange={set("emergencyContactName")}
+                />
               </div>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Emergency Contact Number</label>
-                <input className={styles.formInput} placeholder="09XXXXXXXXX"
-                  value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} />
+                <input
+                  className={styles.formInput}
+                  placeholder="09XXXXXXXXX"
+                  value={form.emergencyContactNumber}
+                  onChange={set("emergencyContactNumber")}
+                />
               </div>
             </div>
 
             {/* Error */}
-            {error && (
-              <div style={{ color: "#d32f2f", fontSize: 12, padding: "8px 12px", backgroundColor: "#ffebee", borderRadius: 6 }}>
-                {error}
-              </div>
-            )}
+            {error && <div className={styles.formError}>{error}</div>}
+
           </div>
         </div>
 
-        {/* ── Footer buttons ── */}
-        <div style={{
-          display: "flex", gap: 12, padding: "16px 28px",
-          borderTop: "1px solid #e8f0e4", flexShrink: 0, background: "#fff",
-        }}>
-          <button onClick={handleModalClose} disabled={loading} style={{
-            flex: 1, padding: 11, background: "#333", color: "#fff", border: "none",
-            borderRadius: 8, fontFamily: "Montserrat, sans-serif", fontWeight: 700,
-            fontSize: 13, cursor: "pointer",
-          }}>
+        {/* ── Footer ── */}
+        <div className={styles.addMemberBtns}>
+          <button
+            className={styles.addMemberCancelBtn}
+            onClick={handleModalClose}
+            disabled={loading}
+          >
             Cancel
           </button>
-          <button onClick={handleSubmit} disabled={loading} style={{
-            flex: 1, padding: 11, background: "#2e7d32", color: "#fff", border: "none",
-            borderRadius: 8, fontFamily: "Montserrat, sans-serif", fontWeight: 700,
-            fontSize: 13, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1,
-          }}>
-            {loading ? "Adding Member..." : "Add Member"}
+          <button
+            className={styles.addMemberSubmitBtn}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            <i className={`ti ${loading ? "ti-loader-2" : "ti-user-plus"}`} />
+            {loading ? "Adding Member…" : "Add Member"}
           </button>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function Field({ label, children }) {
-  return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
-      <label style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#5d6f53", letterSpacing: "0.28px", textTransform: "uppercase", fontFamily: "Montserrat, sans-serif" }}>
-        {label}
-      </label>
-      {children}
+      </div>
     </div>
   );
 }
