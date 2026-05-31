@@ -13,7 +13,15 @@ function getMemberId(m) { return m.member_id || m.memberId || m.id || "unknown";
 function getMemberName(m) { return m.full_name || m.name || getMemberId(m); }
 function getInitial(m) { return (getMemberName(m)[0] || "?").toUpperCase(); }
 
-
+const AVATAR_COLOURS = [
+  "#2e7d32","#1565c0","#6a1b9a","#ad1457","#e65100",
+  "#00838f","#4e342e","#37474f","#558b2f","#283593",
+];
+function avatarColour(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xffffffff;
+  return AVATAR_COLOURS[Math.abs(h) % AVATAR_COLOURS.length];
+}
 
 function PresentIcon() {
   return (
@@ -46,14 +54,6 @@ function PendingIcon() {
   );
 }
 
-function LegendItem({ icon, label, light = false }) {
-  return (
-    <span style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color: light ? "rgba(255,255,255,0.9)" : "#555", fontWeight:600 }}>
-      {icon} {label}
-    </span>
-  );
-}
-
 export default function AttendanceModal({ members = [], onClose }) {
   const now        = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -68,7 +68,7 @@ export default function AttendanceModal({ members = [], onClose }) {
   const [error,           setError]           = useState(null);
   const [search,          setSearch]          = useState("");
   const [showMonthPicker, setShowMonthPicker] = useState(false);
-  const [page,            setPage]            = useState(0);
+  const [page,            setPage]            = useState(0); // day-page index
 
   useEffect(() => {
     let mounted = true;
@@ -90,6 +90,7 @@ export default function AttendanceModal({ members = [], onClose }) {
     return () => { mounted = false; };
   }, [members, year, month]);
 
+  // Reset to first page when month/year changes
   useEffect(() => { setPage(0); }, [year, month]);
 
   const days = useMemo(
@@ -140,6 +141,7 @@ export default function AttendanceModal({ members = [], onClose }) {
 
   const yearOptions = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
       style={{
@@ -154,9 +156,9 @@ export default function AttendanceModal({ members = [], onClose }) {
       <div
         style={{
           background:"#fff",
-          borderRadius:12,
-          width:"min(97vw, 1200px)",
-          maxHeight:"88vh",
+          borderRadius:18,
+          width:"min(97vw, 1120px)",
+          maxHeight:"90vh",
           display:"flex", flexDirection:"column",
           boxShadow:"0 20px 60px rgba(0,0,0,0.22)",
           overflow:"hidden",
@@ -167,56 +169,46 @@ export default function AttendanceModal({ members = [], onClose }) {
 
         {/* ── TOP HEADER ── */}
         <div style={{
-          position:"relative",
-          display:"flex", flexDirection:"column", alignItems:"center",
-          padding:"32px 36px 24px",
-          background:"linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%)",
+          display:"flex", alignItems:"flex-start", justifyContent:"space-between",
+          padding:"20px 28px 14px",
+          borderBottom:"1px solid #eee",
           flexShrink:0,
         }}>
-          {/* Close button — absolute top right */}
-          <button onClick={onClose} style={{
-            position:"absolute", top:20, right:28,
-            display:"flex", alignItems:"center", gap:6,
-            border:"1.5px solid rgba(255,255,255,0.35)", borderRadius:9,
-            padding:"7px 15px", fontSize:12.5, fontWeight:700,
-            background:"rgba(255,255,255,0.12)", cursor:"pointer", color:"#fff",
-            fontFamily:"Montserrat, sans-serif",
-          }}>✕ Close</button>
-
-          {/* Centered title */}
-          <div style={{ textAlign:"center", marginBottom:16 }}>
-            <div style={{ fontSize:22, fontWeight:800, color:"#fff", letterSpacing:"-0.3px" }}>Attendance Records</div>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.65)", fontWeight:500, marginTop:5 }}>Track member attendance daily.</div>
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:"#1a1a1a", margin:0 }}>Attendance Records</div>
+            <div style={{ fontSize:12, color:"#999", fontWeight:500, marginTop:2 }}>Track member attendance daily.</div>
           </div>
-
-          {/* Legend centered below title */}
-          <div style={{
-            display:"flex", alignItems:"center", gap:16,
-            padding:"9px 22px",
-            background:"rgba(255,255,255,0.15)",
-            border:"1px solid rgba(255,255,255,0.25)",
-            borderRadius:12,
-          }}>
-            <LegendItem icon={<PresentIcon />} label="Present" light />
-            <LegendItem icon={<AbsentIcon />}  label="Absent" light />
-            <LegendItem icon={<PendingIcon />} label="Pending Record" light />
+          <div style={{ display:"flex", alignItems:"center", gap:20 }}>
+            {/* Legend */}
+            <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+              <LegendItem icon={<PresentIcon />} label="Present" />
+              <LegendItem icon={<AbsentIcon />}  label="Absent" />
+              <LegendItem icon={<PendingIcon />} label="Pending Record" />
+            </div>
+            {/* Close */}
+            <button onClick={onClose} style={{
+              display:"flex", alignItems:"center", gap:5,
+              border:"1.5px solid #ddd", borderRadius:8,
+              padding:"6px 14px", fontSize:13, fontWeight:700,
+              background:"#fafafa", cursor:"pointer", color:"#444",
+            }}>✕ Close</button>
           </div>
         </div>
 
         {/* ── TOOLBAR: search + month nav ── */}
         <div style={{
-          display:"flex", alignItems:"center", justifyContent:"space-between",
-          padding:"14px 36px",
-          borderBottom:"1px solid #f0f0f0",
+          display:"flex", alignItems:"center", gap:12,
+          padding:"12px 28px",
+          borderBottom:"1px solid #eee",
           flexShrink:0,
         }}>
           {/* Search */}
           <div style={{
             display:"flex", alignItems:"center", gap:8,
-            background:"#f8f8f8", border:"1.5px solid #ebebeb",
-            borderRadius:10, padding:"9px 14px", flex:"0 0 240px",
+            background:"#f8f8f8", border:"1.5px solid #e8e8e8",
+            borderRadius:10, padding:"8px 14px", flex:"0 0 260px",
           }}>
-            <span style={{ color:"#bbb", fontSize:15 }}>🔍</span>
+            <span style={{ color:"#aaa", fontSize:14 }}>🔍</span>
             <input
               style={{
                 border:"none", outline:"none", background:"transparent",
@@ -228,32 +220,29 @@ export default function AttendanceModal({ members = [], onClose }) {
             />
           </div>
 
-          {/* Divider */}
-          <div style={{ width:1, height:28, background:"#ebebeb", margin:"0 2px" }} />
-
           {/* Month navigator */}
-          <div style={{ display:"flex", alignItems:"center", gap:6, position:"relative" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, justifyContent:"flex-start" }}>
             <button onClick={prevMonth} style={iconBtn}>‹</button>
-            <div>
+            <div style={{ position:"relative" }}>
               <div
                 onClick={() => setShowMonthPicker(v => !v)}
                 style={{
-                  display:"flex", alignItems:"center", gap:7,
-                  border:"1.5px solid #e5e5e5", borderRadius:9,
+                  display:"flex", alignItems:"center", gap:6,
+                  border:"1.5px solid #ddd", borderRadius:8,
                   padding:"7px 14px", fontSize:13, fontWeight:700,
-                  background:"#fff", cursor:"pointer", color:"#222",
+                  background:"#fafafa", cursor:"pointer", color:"#222",
                   userSelect:"none", whiteSpace:"nowrap",
                 }}
               >
+                <span style={{ fontSize:14 }}>📅</span>
                 {MONTH_NAMES[month - 1].toUpperCase().slice(0,3)} {year}
-                <span style={{ fontSize:10, color:"#999" }}>▾</span>
+                <span style={{ fontSize:11, color:"#888" }}>▾</span>
               </div>
               {showMonthPicker && (
                 <div style={{
-                  position:"absolute", top:"calc(100% + 6px)", right:0,
-                  background:"rgba(255,255,255,0.65)", border:"1.5px solid rgba(0,0,0,0.12)", borderRadius:12,
-                  boxShadow:"0 8px 28px rgba(0,0,0,0.10)",
-                  backdropFilter:"blur(16px)",
+                  position:"absolute", top:"calc(100% + 6px)", left:0,
+                  background:"#fff", border:"1px solid #ddd", borderRadius:12,
+                  boxShadow:"0 8px 28px rgba(0,0,0,0.13)",
                   zIndex:200, padding:12, minWidth:200,
                 }}>
                   {yearOptions.map(y => (
@@ -286,28 +275,28 @@ export default function AttendanceModal({ members = [], onClose }) {
         </div>
 
         {error && (
-          <div style={{ color:"#c62828", padding:"8px 36px", background:"#ffebee", fontSize:12, flexShrink:0 }}>
+          <div style={{ color:"#c62828", padding:"8px 28px", background:"#ffebee", fontSize:12, flexShrink:0 }}>
             {error}
           </div>
         )}
 
         {/* ── TABLE ── */}
-        <div style={{ flex:1, overflowY:"auto", minHeight:0, padding:"0 16px 0 8px" }}>
+        <div style={{ flex:1, overflowY:"auto", minHeight:0 }}>
           <table style={{ borderCollapse:"collapse", width:"100%", fontSize:12, fontFamily:"Montserrat, sans-serif" }}>
             <thead>
-              <tr style={{ background:"#e8f5e9" }}>
-                <th style={{ ...thName, background:"#e8f5e9" }}>Member</th>
-                <th style={{ ...thSummary, background:"#e8f5e9" }}>Status Summary</th>
+              <tr style={{ background:"#fafafa" }}>
+                <th style={thName}>Member</th>
+                <th style={thSummary}>Status Summary</th>
                 {pageDays.map(d => {
                   const dow = DAY_ABBR[new Date(year, month - 1, d).getDay()];
                   const isWeekend = dow === "SAT" || dow === "SUN";
                   return (
                     <th key={d} style={{
                       ...thDay,
-                      background: isWeekend ? "#a5d6a7" : "#e8f5e9",
+                      background: isWeekend ? "#f0faf0" : "#fafafa",
                     }}>
-                      <div style={{ fontSize:9, fontWeight:700, color: isWeekend ? "#2e7d32" : "#666" }}>{dow}</div>
-                      <div style={{ fontSize:12, fontWeight:800, color: isWeekend ? "#1b5e20" : "#333" }}>{String(d).padStart(2,"0")}</div>
+                      <div style={{ fontSize:9, fontWeight:700, color:"#888" }}>{dow}</div>
+                      <div style={{ fontSize:12, fontWeight:800, color:"#333" }}>{String(d).padStart(2,"0")}</div>
                     </th>
                   );
                 })}
@@ -318,13 +307,14 @@ export default function AttendanceModal({ members = [], onClose }) {
                 const id       = getMemberId(m);
                 const attended = attendanceMap[id] || new Set();
                 const stat     = memberStats.find(s => s.id === id) || { presentCt:0, absentCt:0 };
+                const colour   = avatarColour(id);
                 return (
                   <tr key={id} style={{ background: rowIdx % 2 === 0 ? "#fff" : "#fafafa" }}>
                     <td style={tdName}>
                       <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                         <div style={{
                           width:28, height:28, borderRadius:"50%",
-                          background:"#c8e6c9", color:"#1b5e20",
+                          background:colour, color:"#fff",
                           display:"flex", alignItems:"center", justifyContent:"center",
                           fontSize:12, fontWeight:800, flexShrink:0,
                         }}>
@@ -383,12 +373,20 @@ export default function AttendanceModal({ members = [], onClose }) {
         {/* ── PAGINATION ── */}
         <div style={{
           display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-          padding:"14px 36px",
+          padding:"12px 28px",
           borderTop:"1px solid #eee",
           flexShrink:0,
         }}>
-          <button onClick={() => setPage(0)} disabled={page === 0} style={pageBtn(page === 0)}>«</button>
-          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} style={pageBtn(page === 0)}>‹</button>
+          <button
+            onClick={() => setPage(0)}
+            disabled={page === 0}
+            style={pageBtn(page === 0)}
+          >«</button>
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            style={pageBtn(page === 0)}
+          >‹</button>
 
           {Array.from({ length: totalPages }, (_, i) => (
             <button
@@ -407,14 +405,21 @@ export default function AttendanceModal({ members = [], onClose }) {
             </button>
           ))}
 
-          <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} style={pageBtn(page === totalPages - 1)}>›</button>
-          <button onClick={() => setPage(totalPages - 1)} disabled={page === totalPages - 1} style={pageBtn(page === totalPages - 1)}>»</button>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={page === totalPages - 1}
+            style={pageBtn(page === totalPages - 1)}
+          >›</button>
+          <button
+            onClick={() => setPage(totalPages - 1)}
+            disabled={page === totalPages - 1}
+            style={pageBtn(page === totalPages - 1)}
+          >»</button>
 
           <span style={{ fontSize:11, color:"#999", fontWeight:600, marginLeft:8 }}>
             Days {page * DAYS_PER_PAGE + 1}–{Math.min((page + 1) * DAYS_PER_PAGE, daysInMonth)} of {daysInMonth}
           </span>
         </div>
-
       </div>
     </div>
   );
@@ -424,9 +429,9 @@ export default function AttendanceModal({ members = [], onClose }) {
 
 const iconBtn = {
   width:32, height:32, borderRadius:8,
-  border:"1.5px solid #e5e5e5", background:"#fff",
+  border:"1.5px solid #ddd", background:"#fafafa",
   cursor:"pointer", fontSize:16, display:"flex",
-  alignItems:"center", justifyContent:"center", color:"#555",
+  alignItems:"center", justifyContent:"center", color:"#444",
 };
 
 function pageBtn(disabled) {
@@ -443,7 +448,7 @@ function pageBtn(disabled) {
 }
 
 const thName = {
-  textAlign:"left", padding:"10px 16px 10px 24px",
+  textAlign:"left", padding:"10px 16px 10px 20px",
   fontSize:11, fontWeight:700, color:"#666",
   borderBottom:"2px solid #e0e0e0",
   whiteSpace:"nowrap", minWidth:160, width:160,
@@ -467,7 +472,7 @@ const thDay = {
 };
 
 const tdName = {
-  padding:"10px 16px 10px 24px",
+  padding:"9px 16px 9px 20px",
   borderBottom:"1px solid #f0f0f0",
   whiteSpace:"nowrap",
 };
@@ -484,3 +489,11 @@ const tdDay = {
   borderRight:"1px solid #f8f8f8",
   textAlign:"center", verticalAlign:"middle",
 };
+
+function LegendItem({ icon, label }) {
+  return (
+    <span style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#555", fontWeight:600 }}>
+      {icon} {label}
+    </span>
+  );
+}
