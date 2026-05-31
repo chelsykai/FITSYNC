@@ -1046,7 +1046,6 @@
   flex-direction: column;
   box-shadow: 0 12px 48px rgba(0,0,0,0.22);
   font-family: "Montserrat", sans-serif;
-  margin: 20px;
 }
 
 /* ══ GREEN HEADER BANNER ══ */
@@ -1057,225 +1056,135 @@
   text-align: center;
   flex-shrink: 0;
 }
-
 .attBannerClose {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  top: 16px; right: 16px;
+  display: inline-flex; align-items: center; gap: 5px;
   background: transparent;
   border: 1px solid #ffffffa9;
   border-radius: 8px;
   padding: 7px 14px;
   font-family: "Montserrat", sans-serif;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 12px; font-weight: 700;
   color: rgba(255,255,255,0.9);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 .attBannerClose:hover { background: rgba(255,255,255,0.15); color: #fff; }
-
 .attBannerTitle {
-  font-size: 24px;
-  font-weight: 800;
-  color: #fff;
+  font-size: 24px; font-weight: 800; color: #fff;
   margin: 0 0 4px;
   font-family: "Montserrat", sans-serif;
   letter-spacing: 0.01em;
 }
-
 .attBannerSub {
-  font-size: 12px;
-  color: rgba(255,255,255,0.75);
-  font-weight: 500;
-  margin-bottom: 18px;
+  font-size: 12px; color: rgba(255,255,255,0.75);
+  font-weight: 500; margin-bottom: 18px;
   font-family: "Montserrat", sans-serif;
 }
 
-/* Legend pills row */
+/* Legend */
 .attBannerLegend {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  display: inline-flex; align-items: center; gap: 4px;
   background: rgba(0,0,0,0.18);
   border-radius: 999px;
   padding: 6px 16px;
 }
-
 .attLegendPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  display: inline-flex; align-items: center; gap: 7px;
   padding: 4px 16px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
+  font-size: 12px; font-weight: 700; color: #fff;
   font-family: "Montserrat", sans-serif;
 }
-.attLegendPill + .attLegendPill {
-  border-left: 1px solid rgba(255,255,255,0.25);
-}
+.attLegendPill + .attLegendPill { border-left: 1px solid rgba(255,255,255,0.25); }
 
-/* FIX 1: dedicated small-dot class for legend only */
+/* Small dots for legend only */
 .attDotLegend {
-  width: 18px !important;
-  height: 18px !important;
-  font-size: 9px !important;
-  flex-shrink: 0;
+  width: 18px !important; height: 18px !important;
+  font-size: 9px !important; flex-shrink: 0;
 }
 
 /* ══ WHITE BODY ══ */
 .attBody {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  background: #fff;
+  flex: 1; display: flex; flex-direction: column;
+  min-height: 0; background: #fff;
   border-radius: 0 0 16px 16px;
 }
 
 /* ── Toolbar ── */
 .attendanceToolbar {
-  display: flex;
-  align-items: center;
+  display: flex; align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 20px;
+  gap: 12px; padding: 14px 20px;
   border-bottom: 1px solid #eee;
   flex-shrink: 0;
 }
-
-/* ── Search ── */
-.attendanceSearch {
-  position: relative;
-  width: 240px;
-  flex-shrink: 0;
-}
+.attendanceSearch { position: relative; width: 240px; flex-shrink: 0; }
 .attendanceSearchInput {
-  width: 100%;
-  border: 1.5px solid #ddd;
-  border-radius: 10px;
+  width: 100%; border: 1.5px solid #ddd; border-radius: 10px;
   padding: 9px 12px 9px 36px;
-  font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  outline: none;
-  box-sizing: border-box;
-  color: #333;
+  font-family: "Montserrat", sans-serif; font-size: 13px;
+  outline: none; box-sizing: border-box; color: #333;
 }
 .attendanceSearchInput:focus { border-color: #7eba56; }
 .attendanceSearchIcon {
-  position: absolute;
-  left: 11px;
-  top: 50%;
+  position: absolute; left: 11px; top: 50%;
   transform: translateY(-50%);
-  color: #aaa;
-  font-size: 15px;
-  pointer-events: none;
+  color: #aaa; font-size: 15px; pointer-events: none;
 }
-
-/* ── Month nav ── */
-.attendanceNavGroup {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.attendanceNavGroup { display: flex; align-items: center; gap: 6px; }
 .attendanceNavBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  border: 1.5px solid #ddd;
-  color: #555;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; border: 1.5px solid #ddd; color: #555;
+  width: 32px; height: 32px; border-radius: 8px;
+  cursor: pointer; font-size: 14px;
   transition: border-color 0.15s, color 0.15s;
 }
 .attendanceNavBtn:hover { border-color: #7eba56; color: #3a7a1e; }
 .attendanceMonthBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #fff;
-  border: 1.5px solid #ddd;
-  border-radius: 8px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fff; border: 1.5px solid #ddd; border-radius: 8px;
   font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-  color: #1a1a1a;
-  cursor: pointer;
-  padding: 0 12px;
-  height: 32px;
-  letter-spacing: 0.03em;
-  transition: border-color 0.15s;
-  white-space: nowrap;
+  font-size: 13px; font-weight: 800; color: #1a1a1a;
+  cursor: pointer; padding: 0 12px; height: 32px;
+  letter-spacing: 0.03em; transition: border-color 0.15s; white-space: nowrap;
 }
 .attendanceMonthBtn:hover { border-color: #7eba56; }
 
 /* Dropdown */
 .attendanceMonthDrop {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 12px;
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: #fff; border: 1px solid #ddd; border-radius: 12px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.13);
-  z-index: 50;
-  padding: 12px;
-  min-width: 210px;
+  z-index: 50; padding: 12px; min-width: 210px;
 }
 .attendanceMonthDropYear { margin-bottom: 10px; }
 .attendanceMonthDropYear:last-child { margin-bottom: 0; }
 .attendanceMonthDropYearLabel {
-  font-size: 10px;
-  font-weight: 800;
-  color: #888;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 10px; font-weight: 800; color: #888;
+  letter-spacing: 0.06em; text-transform: uppercase;
   font-family: "Montserrat", sans-serif;
-  margin-bottom: 6px;
-  padding-left: 2px;
+  margin-bottom: 6px; padding-left: 2px;
 }
-.attendanceMonthDropGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-}
+.attendanceMonthDropGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .attendanceMonthOption {
-  border: none;
-  border-radius: 6px;
-  padding: 5px 4px;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  background: #f0f0f0;
-  color: #333;
+  border: none; border-radius: 6px; padding: 5px 4px;
+  font-size: 10px; font-weight: 700; cursor: pointer;
+  background: #f0f0f0; color: #333;
   font-family: "Montserrat", sans-serif;
   transition: background 0.15s, color 0.15s;
 }
 .attendanceMonthOption:hover { background: #e8f5e0; color: #3a7a1e; }
 .attendanceMonthOptionActive { background: #2e7d32 !important; color: #fff !important; }
 
-/* ── Error bar ── */
+/* Error */
 .attendanceError {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: #fff0f0;
-  color: #c62828;
-  padding: 9px 20px;
-  font-size: 12px;
-  font-weight: 600;
-  flex-shrink: 0;
+  display: flex; align-items: center; gap: 7px;
+  background: #fff0f0; color: #c62828;
+  padding: 9px 20px; font-size: 12px; font-weight: 600; flex-shrink: 0;
 }
 
-/* ── Table wrapper — pill scrollbar ── */
+/* ── Table wrapper ── */
 .attendanceTableWrap {
   flex: 1 1 auto;
   overflow: auto;
@@ -1289,79 +1198,66 @@
 .attendanceTableWrap::-webkit-scrollbar-thumb:hover { background: #999; }
 .attendanceTableWrap::-webkit-scrollbar-corner { background: transparent; }
 
-/* ── Table ── */
 .attendanceTable {
   border-collapse: collapse;
   font-size: 12px;
   font-family: "Montserrat", sans-serif;
-  table-layout: fixed;
-  min-width: max-content;
-  width: auto;
+  width: 100%;
 }
 
 .attendanceTable thead th {
-  position: sticky;
-  top: 0;
-  background: #eef7e8;
-  color: #3a6b1a;
+  position: sticky; top: 0;
+  background: #eef7e8; color: #3a6b1a;
   z-index: 3;
-  padding: 10px 4px;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 800;
+  padding: 10px 8px;
+  font-size: 10px; font-weight: 800;
   white-space: nowrap;
-  border-right: none;
+  border: none;
   border-bottom: 2px solid #d0e8bc;
   letter-spacing: 0.04em;
   vertical-align: middle;
 }
 
 .attThAvatar {
-  position: sticky !important;
-  left: 0;
-  z-index: 5 !important;
-  width: 48px;
-  min-width: 48px;
+  position: sticky !important; left: 0; z-index: 5 !important;
+  width: 52px; min-width: 52px;
   background: #eef7e8 !important;
-  border-right: none !important;
   padding: 0 !important;
+  border: none !important;
 }
 
 .attThName {
-  position: sticky !important;
-  left: 48px;
-  z-index: 5 !important;
-  min-width: 180px;
+  position: sticky !important; left: 52px; z-index: 5 !important;
+  width: 190px; min-width: 190px;
   text-align: left !important;
   padding-left: 0 !important;
   background: #eef7e8 !important;
-  border-right: none !important;
-  vertical-align: middle !important;
+  border: none !important;
 }
+
 .attThSummary {
-  position: sticky !important;
-  left: 228px;
-  z-index: 5 !important;
-  min-width: 160px;
+  position: sticky !important; left: 242px; z-index: 5 !important;
+  width: 170px; min-width: 170px;
   text-align: left !important;
   padding-left: 10px !important;
   background: #eef7e8 !important;
-  border-right: none !important;
-  vertical-align: middle !important;
+  border: none !important;
 }
-.attThDay { width: 44px; min-width: 44px; }
+
+/* Day columns */
+.attThDay {
+  width: 50px; min-width: 50px;
+  text-align: center !important;
+}
 .attThDay > div:last-child { font-size: 11px; font-weight: 800; }
 .attDayAbbr { font-size: 8px; margin-bottom: 2px; }
 
-/* lighter weekend green */
 .attThDayWeekend {
-  background: #7aba52 !important;
-  color: #fff !important;
-  border-right: none !important;
+  background: #7aba52 !important; color: #fff !important;
 }
 .attTdDayWeekend { background: #f4fbed; }
 
-/* ── Rows ── */
+/* ── Body rows ── */
 .attRow { border-bottom: 1px solid #f0f0f0; transition: background 0.12s; }
 .attRow:hover { background: #f8fcf5; }
 .attRow:hover .attTdAvatar,
@@ -1370,24 +1266,32 @@
 
 .attTdAvatar {
   position: sticky; left: 0; background: #fff; z-index: 2;
-  text-align: center; padding: 8px 4px; width: 48px; min-width: 48px; border-right: none;
-}
-.attTdName {
-  position: sticky; left: 48px; background: #fff; z-index: 2;
-  padding: 10px 14px; font-weight: 600; color: #1a1a1a;
-  min-width: 180px; white-space: nowrap; font-size: 13px; border-right: none;
-}
-.attTdSummary {
-  position: sticky; left: 228px; background: #fff; z-index: 2;
-  padding: 8px 10px; min-width: 160px; border-right: none;
-  display: flex; align-items: center; gap: 8px;
-}
-.attTdDay {
-  text-align: center; padding: 8px 4px;
-  width: 44px; min-width: 44px; border-right: none;
+  text-align: center;
+  padding: 8px 4px;
+  width: 52px; min-width: 52px;
 }
 
-/* ── Avatar ── */
+.attTdName {
+  position: sticky; left: 52px; background: #fff; z-index: 2;
+  padding: 10px 8px 10px 0;
+  font-weight: 600; color: #1a1a1a;
+  width: 190px; min-width: 190px;
+  white-space: nowrap; font-size: 13px;
+}
+
+.attTdSummary {
+  position: sticky; left: 242px; background: #fff; z-index: 2;
+  padding: 8px 10px;
+  width: 170px; min-width: 170px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.attTdDay {
+  text-align: center; padding: 8px 4px;
+  width: 50px; min-width: 50px;
+}
+
+/* ── Avatar circle ── */
 .attAvatar {
   width: 32px; height: 32px; border-radius: 50%;
   background: #4a9e2e; color: #fff;
@@ -1399,7 +1303,7 @@
 .attSummaryPresent { font-size: 11px; font-weight: 700; color: #2e7d32; white-space: nowrap; }
 .attSummaryAbsent  { font-size: 11px; font-weight: 700; color: #e53935; white-space: nowrap; }
 
-/* ── Attendance dots ── */
+/* ── Dots ── */
 .attDotPresent, .attDotAbsent, .attDotFuture {
   width: 26px; height: 26px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
@@ -1410,12 +1314,11 @@
 .attDotAbsent  { background: #fce4ec; border: 2px solid #ef5350; color: #c62828; }
 .attDotFuture  { background: #f5f5f5; border: 2px solid #ccc; cursor: default; width: 20px; height: 20px; }
 
-/* ── Totals row — natural bottom of table ── */
+/* ── Totals row ── */
 .attTotalsRow td {
   background: #f0f6ec !important;
   border-top: 2px solid #c8dac6;
   font-weight: 700;
-  border-right: none;
 }
 .attTotalsRow .attTdAvatar,
 .attTotalsRow .attTdName,
@@ -1432,21 +1335,18 @@
 
 /* ── Pagination ── */
 .attendancePagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 12px 20px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 5px; padding: 12px 20px;
   border-top: 1px solid #eee;
-  flex-shrink: 0;
-  flex-wrap: wrap;
+  flex-shrink: 0; flex-wrap: wrap;
 }
 .attPageBtn {
   min-width: 34px; height: 34px; border-radius: 8px;
   border: 1.5px solid #ddd;
   background: #fff; cursor: pointer; font-size: 13px; font-weight: 700; color: #444;
-  font-family: "Montserrat", sans-serif; display: inline-flex; align-items: center;
-  justify-content: center; padding: 0 8px; transition: all 0.15s;
+  font-family: "Montserrat", sans-serif;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 8px; transition: all 0.15s;
 }
 .attPageBtn:hover:not(:disabled) { background: #e8f5e0; border-color: #7eba56; color: #2e7d32; }
 .attPageBtn:disabled { opacity: 0.35; cursor: default; }
@@ -1454,16 +1354,12 @@
   background: #2e7d32 !important; color: #fff !important;
   border-color: #2e7d32 !important; font-weight: 800 !important;
 }
-
 .attPageInfo {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 11px; font-weight: 700;
   font-family: "Montserrat", sans-serif;
   white-space: nowrap;
-  background: #2e7d32;
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 999px;
+  background: #2e7d32; color: #fff;
+  padding: 6px 14px; border-radius: 999px;
   margin-left: 4px;
 }
 
