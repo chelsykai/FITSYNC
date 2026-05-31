@@ -24,12 +24,11 @@ export default function AttendanceModal({ members = [], onClose }) {
   const [daysInMonth,   setDaysInMonth]   = useState(
     new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
   );
-  const [error,        setError]        = useState(null);
-  const [search,       setSearch]       = useState("");
-  const [showMonthDrop,setShowMonthDrop]= useState(false);
-  const [page,         setPage]         = useState(0);
+  const [error,         setError]         = useState(null);
+  const [search,        setSearch]        = useState("");
+  const [showMonthDrop, setShowMonthDrop] = useState(false);
+  const [page,          setPage]          = useState(0);
 
-  /* ── Load data ── */
   useEffect(() => {
     let mounted = true;
     setError(null);
@@ -52,7 +51,6 @@ export default function AttendanceModal({ members = [], onClose }) {
 
   useEffect(() => { setPage(0); }, [year, month]);
 
-  /* ── Derived ── */
   const days = useMemo(
     () => Array.from({ length: daysInMonth }, (_, i) => i + 1),
     [daysInMonth]
@@ -71,7 +69,6 @@ export default function AttendanceModal({ members = [], onClose }) {
     });
   }, [members, attendanceMap, days, year, month]);
 
-  /* Column totals for the visible page */
   const colTotals = useMemo(() => {
     return pageDays.map((d) => {
       const cellDate = new Date(year, month - 1, d);
@@ -105,216 +102,215 @@ export default function AttendanceModal({ members = [], onClose }) {
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.attendanceModal} onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Top bar: title left | legend + close right ── */}
-        <div className={styles.attendanceTopBar}>
-          <div>
-            <div className={styles.attendanceTopBarTitle}>Attendance Records</div>
-            <div className={styles.attendanceTopBarSub}>Track member attendance daily.</div>
-          </div>
+        {/* ══ GREEN HEADER BANNER ══ */}
+        <div className={styles.attBanner}>
+          {/* Close — top right */}
+          <button className={styles.attBannerClose} onClick={onClose}>
+            <i className="ti ti-x" /> Close
+          </button>
 
-          <div className={styles.attendanceLegend}>
-            <span className={styles.legendItem}>
+          {/* Centered title */}
+          <div className={styles.attBannerTitle}>Attendance Records</div>
+          <div className={styles.attBannerSub}>Track member attendance daily.</div>
+
+          {/* Legend pill row — centered */}
+          <div className={styles.attBannerLegend}>
+            <span className={styles.attLegendPill}>
               <span className={styles.attDotPresent}><i className="ti ti-check" /></span>
               Present
             </span>
-            <span className={styles.legendSep} />
-            <span className={styles.legendItem}>
+            <span className={styles.attLegendPill}>
               <span className={styles.attDotAbsent}><i className="ti ti-x" /></span>
               Absent
             </span>
-            <span className={styles.legendSep} />
-            <span className={styles.legendItem}>
+            <span className={styles.attLegendPill}>
               <span className={styles.attDotFuture} />
               Pending Record
             </span>
-            <button className={styles.attendanceCloseBtn} onClick={onClose}>
-              <i className="ti ti-x" /> Close
-            </button>
           </div>
         </div>
 
-        {/* ── Toolbar: search left | month nav right ── */}
-        <div className={styles.attendanceToolbar}>
-          {/* Search */}
-          <div className={styles.attendanceSearch}>
-            <i className={`ti ti-search ${styles.attendanceSearchIcon}`} />
-            <input
-              className={styles.attendanceSearchInput}
-              type="text"
-              placeholder="Search member..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+        {/* ══ WHITE BODY ══ */}
+        <div className={styles.attBody}>
 
-          {/* Month navigator — right side */}
-          <div className={styles.attendanceNavGroup}>
-            <button className={styles.attendanceNavBtn} onClick={prevMonth}>
-              <i className="ti ti-chevron-left" />
-            </button>
-
-            <div style={{ position: "relative" }}>
-              <button
-                className={styles.attendanceMonthBtn}
-                onClick={() => setShowMonthDrop((v) => !v)}
-              >
-                <i className="ti ti-calendar" style={{ fontSize: 14 }} />
-                {MONTH_NAMES[month - 1].toUpperCase().slice(0, 3)} {year}
-                <i className="ti ti-chevron-down" style={{ fontSize: 12 }} />
-              </button>
-
-              {showMonthDrop && (
-                <div className={styles.attendanceMonthDrop}>
-                  {yearOptions.map((y) => (
-                    <div key={y} className={styles.attendanceMonthDropYear}>
-                      <div className={styles.attendanceMonthDropYearLabel}>{y}</div>
-                      <div className={styles.attendanceMonthDropGrid}>
-                        {MONTH_NAMES.map((mn, idx) => {
-                          const sel = y === year && idx + 1 === month;
-                          return (
-                            <button
-                              key={mn}
-                              className={`${styles.attendanceMonthOption} ${sel ? styles.attendanceMonthOptionActive : ""}`}
-                              onClick={() => { setYear(y); setMonth(idx + 1); setShowMonthDrop(false); }}
-                            >
-                              {mn.slice(0, 3)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* Toolbar: search left | month nav right */}
+          <div className={styles.attendanceToolbar}>
+            <div className={styles.attendanceSearch}>
+              <i className={`ti ti-search ${styles.attendanceSearchIcon}`} />
+              <input
+                className={styles.attendanceSearchInput}
+                type="text"
+                placeholder="Search member..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
 
-            <button className={styles.attendanceNavBtn} onClick={nextMonth}>
-              <i className="ti ti-chevron-right" />
-            </button>
-          </div>
-        </div>
+            <div className={styles.attendanceNavGroup}>
+              <button className={styles.attendanceNavBtn} onClick={prevMonth}>
+                <i className="ti ti-chevron-left" />
+              </button>
 
-        {error && (
-          <div className={styles.attendanceError}>
-            <i className="ti ti-alert-circle" /> {error}
-          </div>
-        )}
+              <div style={{ position: "relative" }}>
+                <button
+                  className={styles.attendanceMonthBtn}
+                  onClick={() => setShowMonthDrop((v) => !v)}
+                >
+                  {MONTH_NAMES[month - 1].toUpperCase().slice(0, 3)} {year}
+                  <i className="ti ti-chevron-down" style={{ fontSize: 11 }} />
+                </button>
 
-        {/* ── Table ── */}
-        <div className={styles.attendanceTableWrap}>
-          <table className={styles.attendanceTable}>
-            <thead>
-              <tr>
-                <th className={styles.attThAvatar}></th>
-                <th className={styles.attThName}>Member</th>
-                <th className={styles.attThSummary}>Status Summary</th>
-                {pageDays.map((d) => {
-                  const dow       = DAY_ABBR[new Date(year, month - 1, d).getDay()];
-                  const isWeekend = dow === "SAT" || dow === "SUN";
+                {showMonthDrop && (
+                  <div className={styles.attendanceMonthDrop}>
+                    {yearOptions.map((y) => (
+                      <div key={y} className={styles.attendanceMonthDropYear}>
+                        <div className={styles.attendanceMonthDropYearLabel}>{y}</div>
+                        <div className={styles.attendanceMonthDropGrid}>
+                          {MONTH_NAMES.map((mn, idx) => {
+                            const sel = y === year && idx + 1 === month;
+                            return (
+                              <button
+                                key={mn}
+                                className={`${styles.attendanceMonthOption} ${sel ? styles.attendanceMonthOptionActive : ""}`}
+                                onClick={() => { setYear(y); setMonth(idx + 1); setShowMonthDrop(false); }}
+                              >
+                                {mn.slice(0, 3)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button className={styles.attendanceNavBtn} onClick={nextMonth}>
+                <i className="ti ti-chevron-right" />
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div className={styles.attendanceError}>
+              <i className="ti ti-alert-circle" /> {error}
+            </div>
+          )}
+
+          {/* Table */}
+          <div className={styles.attendanceTableWrap}>
+            <table className={styles.attendanceTable}>
+              <thead>
+                <tr>
+                  <th className={styles.attThAvatar}></th>
+                  <th className={styles.attThName}>Member</th>
+                  <th className={styles.attThSummary}>Status Summary</th>
+                  {pageDays.map((d) => {
+                    const dow       = DAY_ABBR[new Date(year, month - 1, d).getDay()];
+                    const isWeekend = dow === "SAT" || dow === "SUN";
+                    return (
+                      <th
+                        key={d}
+                        className={`${styles.attThDay} ${isWeekend ? styles.attThDayWeekend : ""}`}
+                      >
+                        <div className={styles.attDayAbbr}>{dow.slice(0, 2)}</div>
+                        <div>{String(d).padStart(2, "0")}</div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredMembers.map((m) => {
+                  const id       = getMemberId(m);
+                  const attended = attendanceMap[id] || new Set();
+                  const stat     = memberStats.find((s) => s.id === id) || { presentCt: 0, absentCt: 0 };
                   return (
-                    <th
-                      key={d}
-                      className={styles.attThDay}
-                      style={{ background: isWeekend ? "#5fa83a" : undefined }}
-                    >
-                      <div className={styles.attDayAbbr}>{dow.slice(0, 2)}</div>
-                      <div>{String(d).padStart(2, "0")}</div>
-                    </th>
+                    <tr key={id} className={styles.attRow}>
+                      <td className={styles.attTdAvatar}>
+                        <div className={styles.attAvatar}>{getInitial(m)}</div>
+                      </td>
+                      <td className={styles.attTdName}>{getMemberName(m)}</td>
+                      <td className={styles.attTdSummary}>
+                        <span className={styles.attSummaryPresent}>{stat.presentCt} Present</span>
+                        <span className={styles.attSummaryAbsent}>{stat.absentCt} Absent</span>
+                      </td>
+                      {pageDays.map((d) => {
+                        const cellDate  = new Date(year, month - 1, d);
+                        const isFuture  = cellDate > todayStart;
+                        const isPresent = attended.has(d);
+                        const time      = timeMap[id]?.[d] || "";
+                        return (
+                          <td
+                            key={d}
+                            className={styles.attTdDay}
+                            title={!isFuture && isPresent && time ? `Attended at ${time}` : ""}
+                          >
+                            {isFuture ? (
+                              <span className={styles.attDotFuture} />
+                            ) : isPresent ? (
+                              <span className={styles.attDotPresent}>
+                                <i className="ti ti-check" />
+                              </span>
+                            ) : (
+                              <span className={styles.attDotAbsent}>
+                                <i className="ti ti-x" />
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
                   );
                 })}
-              </tr>
-            </thead>
 
-            <tbody>
-              {filteredMembers.map((m) => {
-                const id       = getMemberId(m);
-                const attended = attendanceMap[id] || new Set();
-                const stat     = memberStats.find((s) => s.id === id) || { presentCt: 0, absentCt: 0 };
-                return (
-                  <tr key={id} className={styles.attRow}>
-                    <td className={styles.attTdAvatar}>
-                      <div className={styles.attAvatar}>{getInitial(m)}</div>
+                {/* Daily Totals */}
+                <tr className={styles.attTotalsRow}>
+                  <td className={styles.attTdAvatar} />
+                  <td className={styles.attTdName} style={{ fontWeight: 800 }}>Daily Totals</td>
+                  <td className={styles.attTdSummary} />
+                  {colTotals.map((t, i) => (
+                    <td key={i} className={styles.attTdDay}>
+                      {t ? (
+                        <div className={styles.attTotalCell}>
+                          <span className={styles.attTotalP}>P:{t.p}</span>
+                          <span className={styles.attTotalA}>A:{t.a}</span>
+                        </div>
+                      ) : (
+                        <span className={styles.attFutureDash}>—</span>
+                      )}
                     </td>
-                    <td className={styles.attTdName}>{getMemberName(m)}</td>
-                    <td className={styles.attTdSummary}>
-                      <div className={styles.attSummaryBadge}>
-                        <span className={styles.attSummaryPresent}>{stat.presentCt} Present</span>
-                        <span className={styles.attSummaryDot} />
-                        <span className={styles.attSummaryAbsent}>{stat.absentCt} Absent</span>
-                      </div>
-                    </td>
-                    {pageDays.map((d) => {
-                      const cellDate  = new Date(year, month - 1, d);
-                      const isFuture  = cellDate > todayStart;
-                      const isPresent = attended.has(d);
-                      const time      = timeMap[id]?.[d] || "";
-                      return (
-                        <td
-                          key={d}
-                          className={styles.attTdDay}
-                          title={!isFuture && isPresent && time ? `Attended at ${time}` : ""}
-                        >
-                          <span className={
-                            isFuture  ? styles.attDotFuture  :
-                            isPresent ? styles.attDotPresent :
-                                        styles.attDotAbsent
-                          }>
-                            {!isFuture && (
-                              <i className={`ti ${isPresent ? "ti-check" : "ti-x"}`} />
-                            )}
-                          </span>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-              {/* ── Daily Totals row ── */}
-              <tr className={styles.attTotalsRow}>
-                <td className={styles.attTdAvatar} />
-                <td className={styles.attTdName} style={{ fontWeight: 800 }}>Daily Totals</td>
-                <td className={styles.attTdSummary} />
-                {colTotals.map((t, i) => (
-                  <td key={i} className={styles.attTdDay}>
-                    {t ? (
-                      <div className={styles.attTotalCell}>
-                        <span className={styles.attTotalP}>P:{t.p}</span>
-                        <span className={styles.attTotalA}>A:{t.a}</span>
-                      </div>
-                    ) : (
-                      <span className={styles.attFutureDash}>—</span>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          {/* Pagination */}
+          <div className={styles.attendancePagination}>
+            <button className={styles.attPageBtn} onClick={() => setPage(0)} disabled={page === 0}>«</button>
+            <button className={styles.attPageBtn} onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
 
-        {/* ── Pagination ── */}
-        <div className={styles.attendancePagination}>
-          <button className={styles.attPageBtn} onClick={() => setPage(0)} disabled={page === 0}>«</button>
-          <button className={styles.attPageBtn} onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                className={`${styles.attPageBtn} ${i === page ? styles.attPageBtnActive : ""}`}
+                onClick={() => setPage(i)}
+              >
+                {i + 1}
+              </button>
+            ))}
 
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              className={`${styles.attPageBtn} ${i === page ? styles.attPageBtnActive : ""}`}
-              onClick={() => setPage(i)}
-            >
-              {i + 1}
-            </button>
-          ))}
+            <button className={styles.attPageBtn} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}>›</button>
+            <button className={styles.attPageBtn} onClick={() => setPage(totalPages - 1)} disabled={page === totalPages - 1}>»</button>
 
-          <button className={styles.attPageBtn} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}>›</button>
-          <button className={styles.attPageBtn} onClick={() => setPage(totalPages - 1)} disabled={page === totalPages - 1}>»</button>
+            <span className={styles.attPageInfo}>
+              Days {page * DAYS_PER_PAGE + 1}–{Math.min((page + 1) * DAYS_PER_PAGE, daysInMonth)} of {daysInMonth}
+            </span>
+          </div>
 
-          <span className={styles.attPageInfo}>
-            Days {page * DAYS_PER_PAGE + 1}–{Math.min((page + 1) * DAYS_PER_PAGE, daysInMonth)} of {daysInMonth}
-          </span>
-        </div>
-
+        </div>{/* end attBody */}
       </div>
     </div>
   );

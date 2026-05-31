@@ -1029,96 +1029,112 @@
   padding-left: 44px;
 }
 
-
 /* ============================================================
    10. ATTENDANCE MODAL
    ============================================================ */
-
-/* ── Modal shell ── */
+/* ============================================================
+   10. ATTENDANCE MODAL
+   ============================================================ */
+/* ── Outer modal shell ── */
 .attendanceModal {
   background: #fff;
-  border-radius: 14px;
-  width: min(980px, calc(100vw - 24px));
-  max-height: 90vh;
+  border-radius: 16px;
+  width: min(1060px, calc(100vw - 24px));
+  max-height: 92vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.22);
   font-family: "Montserrat", sans-serif;
 }
 
-/* ── Top bar: title left | legend + close right ── */
-.attendanceTopBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e8e8e8;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.attendanceTopBarTitle {
-  font-size: 18px;
-  font-weight: 800;
-  color: #1a1a1a;
-  margin: 0;
-  font-family: "Montserrat", sans-serif;
-}
-
-.attendanceTopBarSub {
-  font-size: 11px;
-  color: #999;
-  font-weight: 500;
-  font-family: "Montserrat", sans-serif;
-  margin-top: 2px;
-}
-
-/* ── Legend (lives inside top bar) ── */
-.attendanceLegend {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+/* ══ GREEN HEADER BANNER ══ */
+.attBanner {
+  position: relative;
+  background: #2e7d32;
+  padding: 28px 24px 22px;
+  text-align: center;
   flex-shrink: 0;
 }
 
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: #555;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 600;
-}
-
-.legendSep {
-  width: 1px;
-  height: 14px;
-  background: #ddd;
-  flex-shrink: 0;
-}
-
-/* ── Close button ── */
-.attendanceCloseBtn {
+.attBannerClose {
+  position: absolute;
+  top: 16px;
+  right: 16px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  color: #555;
-  padding: 7px 16px;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid #ffffffa9;
   border-radius: 8px;
+  padding: 7px 14px;
   font-family: "Montserrat", sans-serif;
   font-size: 12px;
   font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  transition: background 0.15s;
-  margin-left: 8px;
+  transition: background 0.15s, color 0.15s;
 }
-.attendanceCloseBtn:hover { background: #e0e0e0; color: #222; }
+.attBannerClose:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+
+.attBannerTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 4px;
+  font-family: "Montserrat", sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.attBannerSub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+  margin-bottom: 18px;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Legend pills row */
+.attBannerLegend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0,0,0,0.18);
+  border-radius: 999px;
+  padding: 6px 16px;
+}
+
+.attLegendPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+}
+.attLegendPill + .attLegendPill {
+  border-left: 1px solid rgba(255,255,255,0.25);
+}
+
+/* Legend dots — scoped small via dedicated class */
+.attDotLegend {
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 9px !important;
+  flex-shrink: 0;
+}
+
+/* ══ WHITE BODY ══ */
+.attBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+  border-radius: 0 0 16px 16px;
+}
 
 /* ── Toolbar: search LEFT | month nav RIGHT ── */
 .attendanceToolbar {
@@ -1126,37 +1142,37 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid #eee;
   flex-shrink: 0;
-  flex-wrap: wrap;
 }
 
 /* ── Search ── */
 .attendanceSearch {
   position: relative;
-  width: 220px;
+  width: 240px;
   flex-shrink: 0;
 }
 
 .attendanceSearchInput {
   width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 8px 12px 8px 34px;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  padding: 9px 12px 9px 36px;
   font-family: "Montserrat", sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
   box-sizing: border-box;
+  color: #333;
 }
 .attendanceSearchInput:focus { border-color: #7eba56; }
 
 .attendanceSearchIcon {
   position: absolute;
-  left: 10px;
+  left: 11px;
   top: 50%;
   transform: translateY(-50%);
-  color: #7eba56;
+  color: #aaa;
   font-size: 15px;
   pointer-events: none;
 }
@@ -1172,40 +1188,39 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #f0f4ef;
-  border: 1.5px solid #d0dace;
-  color: #444;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  color: #555;
   width: 32px;
   height: 32px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  font-family: "Montserrat", sans-serif;
-  transition: background 0.15s, border-color 0.15s;
+  transition: border-color 0.15s, color 0.15s;
 }
-.attendanceNavBtn:hover { background: #dff0d4; border-color: #7eba56; color: #3a7a1e; }
+.attendanceNavBtn:hover { border-color: #7eba56; color: #3a7a1e; }
 
 .attendanceMonthBtn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: #fff;
-  border: 1.5px solid #d0dace;
+  border: 1.5px solid #ddd;
   border-radius: 8px;
   font-family: "Montserrat", sans-serif;
   font-size: 13px;
   font-weight: 800;
   color: #1a1a1a;
   cursor: pointer;
-  padding: 6px 14px;
+  padding: 0 12px;
   height: 32px;
-  letter-spacing: 0.02em;
-  transition: border-color 0.15s, background 0.15s;
+  letter-spacing: 0.03em;
+  transition: border-color 0.15s;
   white-space: nowrap;
 }
-.attendanceMonthBtn:hover { border-color: #7eba56; background: #f5fbee; }
+.attendanceMonthBtn:hover { border-color: #7eba56; }
 
-/* ── Month/year full picker dropdown ── */
+/* Month/year full picker dropdown */
 .attendanceMonthDrop {
   position: absolute;
   top: calc(100% + 6px);
@@ -1218,10 +1233,8 @@
   padding: 12px;
   min-width: 210px;
 }
-
 .attendanceMonthDropYear { margin-bottom: 10px; }
 .attendanceMonthDropYear:last-child { margin-bottom: 0; }
-
 .attendanceMonthDropYearLabel {
   font-size: 10px;
   font-weight: 800;
@@ -1232,13 +1245,11 @@
   margin-bottom: 6px;
   padding-left: 2px;
 }
-
 .attendanceMonthDropGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
 }
-
 .attendanceMonthOption {
   border: none;
   border-radius: 6px;
@@ -1252,7 +1263,7 @@
   transition: background 0.15s, color 0.15s;
 }
 .attendanceMonthOption:hover { background: #e8f5e0; color: #3a7a1e; }
-.attendanceMonthOptionActive { background: #7eba56 !important; color: #fff !important; }
+.attendanceMonthOptionActive { background: #2e7d32 !important; color: #fff !important; }
 
 /* ── Error bar ── */
 .attendanceError {
@@ -1267,18 +1278,30 @@
   flex-shrink: 0;
 }
 
-/* ── Member count ── */
-.attendanceMemberCount {
-  font-size: 12px;
-  font-weight: 600;
-  color: #888;
-  font-family: "Montserrat", sans-serif;
-}
-
-/* ── Table wrapper ── */
+/* ── Table wrapper — pill scrollbar ── */
 .attendanceTableWrap {
   flex: 1 1 auto;
   overflow: auto;
+  max-height: calc(92vh - 220px);
+  scrollbar-width: thin;
+  scrollbar-color: #bbb transparent;
+}
+.attendanceTableWrap::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.attendanceTableWrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+.attendanceTableWrap::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 999px;
+}
+.attendanceTableWrap::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+.attendanceTableWrap::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* ── Table ── */
@@ -1294,76 +1317,152 @@
 .attendanceTable thead th {
   position: sticky;
   top: 0;
-  background: #7eba56;
-  color: #fff;
+  background: #e8f5e0;
+  color: #2e5a14;
   z-index: 3;
   padding: 10px 4px;
   text-align: center;
   font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
-  border-right: 1px solid rgba(255,255,255,0.15);
-  letter-spacing: 0.03em;
+  border-right: none;
+  border-bottom: 2px solid #c8e0b8;
+  letter-spacing: 0.04em;
 }
 
-.attThAvatar  { position: sticky !important; left: 0;     z-index: 5 !important; width: 44px;  min-width: 44px; }
-.attThName    { position: sticky !important; left: 44px;  z-index: 5 !important; min-width: 160px; text-align: left !important; padding-left: 14px !important; }
-.attThSummary { position: sticky !important; left: 204px; z-index: 5 !important; min-width: 140px; }
-.attThDay     { width: 40px; min-width: 40px; }
-.attDayAbbr   { font-size: 8px; opacity: 0.8; margin-bottom: 2px; }
+.attThAvatar  {
+  position: sticky !important;
+  left: 0;
+  z-index: 5 !important;
+  width: 48px;
+  min-width: 48px;
+  background: #e8f5e0 !important;
+  border-right: none !important;
+}
+.attThName    {
+  position: sticky !important;
+  left: 48px;
+  z-index: 5 !important;
+  min-width: 180px;
+  text-align: left !important;
+  padding-left: 6px !important;
+  background: #e8f5e0 !important;
+  border-right: none !important;
+}
+.attThSummary {
+  position: sticky !important;
+  left: 228px;
+  z-index: 5 !important;
+  min-width: 160px;
+  text-align: left !important;
+  padding-left: 10px !important;
+  background: #e8f5e0 !important;
+  border-right: none !important;
+}
+.attThDay     { width: 44px; min-width: 44px; }
+.attThDay > div:last-child { font-size: 11px; font-weight: 800; }
+.attDayAbbr   { font-size: 8px; margin-bottom: 2px; }
 
-/* ── Rows ── */
-.attRow { border-bottom: 1px solid #eef1ee; transition: background 0.12s; }
-.attRow:hover { background: #f5f9f3; }
+/* Weekend header highlight */
+.attThDayWeekend {
+  background: #5fa83a !important;
+  color: #fff !important;
+  border-right: none !important;
+}
+
+/* Weekend body cell background */
+.attTdDayWeekend { background: #f2faed; }
+
+/* ── Rows — no vertical dividers ── */
+.attRow {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.12s;
+}
+.attRow:hover { background: #f8fcf5; }
 .attRow:hover .attTdAvatar,
 .attRow:hover .attTdName,
-.attRow:hover .attTdSummary { background: #f5f9f3; }
+.attRow:hover .attTdSummary { background: #f8fcf5 !important; }
 
-.attTdAvatar  { position: sticky; left: 0;     background: #fff; z-index: 2; text-align: center; padding: 8px 4px; width: 44px; min-width: 44px; }
-.attTdName    { position: sticky; left: 44px;  background: #fff; z-index: 2; padding: 10px 14px; font-weight: 700; color: #1a1a1a; min-width: 160px; white-space: nowrap; }
-.attTdSummary { position: sticky; left: 204px; background: #fff; z-index: 2; text-align: left;   padding: 8px 10px; min-width: 140px; border-right: 2px solid #e0e8dc; }
-.attTdDay     { text-align: center; padding: 7px 4px; width: 40px; min-width: 40px; }
+.attTdAvatar  {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 2;
+  text-align: center;
+  padding: 8px 4px;
+  width: 48px;
+  min-width: 48px;
+  border-right: none;
+}
+.attTdName    {
+  position: sticky;
+  left: 48px;
+  background: #fff;
+  z-index: 2;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  min-width: 180px;
+  white-space: nowrap;
+  font-size: 13px;
+  border-right: none;
+}
+.attTdSummary {
+  position: sticky;
+  left: 228px;
+  background: #fff;
+  z-index: 2;
+  padding: 8px 10px;
+  min-width: 160px;
+  border-right: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.attTdDay     {
+  text-align: center;
+  padding: 8px 4px;
+  width: 44px;
+  min-width: 44px;
+  border-right: none;
+}
 
 /* ── Avatar ── */
 .attAvatar {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: linear-gradient(135deg, #b8d498, #7eba56);
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #4a9e2e;
   color: #fff; display: inline-flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800; margin: 0 auto;
+  font-size: 13px; font-weight: 800; margin: 0 auto;
 }
 
-/* ── Summary badge ── */
-.attSummaryBadge   { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; }
-.attSummaryPresent { color: #4a8a28; }
-.attSummaryAbsent  { color: #e05050; }
-.attSummaryDot     { width: 3px; height: 3px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
+/* ── Summary ── */
+.attSummaryPresent { font-size: 11px; font-weight: 700; color: #2e7d32; white-space: nowrap; }
+.attSummaryAbsent  { font-size: 11px; font-weight: 700; color: #e53935; white-space: nowrap; }
 
 /* ── Attendance dots ── */
 .attDotPresent, .attDotAbsent, .attDotFuture {
   width: 26px; height: 26px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: 11px; transition: transform 0.13s;
+  font-size: 12px; transition: transform 0.13s;
 }
-.attDotPresent:hover, .attDotAbsent:hover { transform: scale(1.15); }
-.attDotPresent { background: #e8f5e0; border: 2px solid #7eba56; color: #3a7a1e; }
-.attDotAbsent  { background: #fde8e8; border: 2px solid #e05050; color: #c62828; }
-.attDotFuture  { background: #e0e4df; border: 2px solid #c8ccc7; cursor: default; }
+.attDotPresent:hover, .attDotAbsent:hover { transform: scale(1.12); }
+.attDotPresent { background: #e8f5e0; border: 2px solid #66bb6a; color: #2e7d32; }
+.attDotAbsent  { background: #fce4ec; border: 2px solid #ef5350; color: #c62828; }
+.attDotFuture  { background: #f5f5f5; border: 2px solid #ccc; cursor: default; width: 20px; height: 20px; }
 
-/* ── Totals row ── */
+/* ── Totals row — NOT sticky, lives at natural bottom of table ── */
 .attTotalsRow td {
   background: #f0f6ec !important;
   border-top: 2px solid #c8dac6;
   font-weight: 700;
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
+  border-right: none;
 }
 .attTotalsRow .attTdAvatar,
 .attTotalsRow .attTdName,
-.attTotalsRow .attTdSummary { background: #e4f0d8 !important; z-index: 3; }
-.attTotalCell  { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.3; }
-.attTotalP     { font-size: 9px; font-weight: 800; color: #4a8a28; }
-.attTotalA     { font-size: 9px; font-weight: 800; color: #e05050; }
+.attTotalsRow .attTdSummary { background: #e4f0d8 !important; z-index: 2; display: table-cell; }
+.attTotalCell  { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.4; }
+.attTotalP     { font-size: 9px; font-weight: 800; color: #2e7d32; }
+.attTotalA     { font-size: 9px; font-weight: 800; color: #e53935; }
 .attFutureDash { color: #ccc; font-size: 14px; }
 
 /* ── Pagination ── */
@@ -1378,15 +1477,16 @@
   flex-wrap: wrap;
 }
 .attPageBtn {
-  min-width: 32px; height: 32px; border-radius: 7px; border: 1.5px solid #e0e0e0;
-  background: #f5f5f5; cursor: pointer; font-size: 12px; font-weight: 700; color: #444;
+  min-width: 34px; height: 34px; border-radius: 8px;
+  border: 1.5px solid #ddd;
+  background: #fff; cursor: pointer; font-size: 13px; font-weight: 700; color: #444;
   font-family: "Montserrat", sans-serif; display: inline-flex; align-items: center;
-  justify-content: center; padding: 0 6px; transition: all 0.15s;
+  justify-content: center; padding: 0 8px; transition: all 0.15s;
 }
-.attPageBtn:hover:not(:disabled) { background: #e8f5e0; border-color: #7eba56; color: #3a7a1e; }
-.attPageBtn:disabled { opacity: 0.4; cursor: default; }
-.attPageBtnActive { background: #7eba56 !important; color: #fff !important; border-color: #7eba56 !important; font-weight: 800 !important; }
-.attPageInfo { font-size: 11px; color: #999; font-weight: 600; margin-left: 6px; font-family: "Montserrat", sans-serif; white-space: nowrap; }
+.attPageBtn:hover:not(:disabled) { background: #e8f5e0; border-color: #7eba56; color: #2e7d32; }
+.attPageBtn:disabled { opacity: 0.35; cursor: default; }
+.attPageBtnActive { background: #2e7d32 !important; color: #fff !important; border-color: #2e7d32 !important; font-weight: 800 !important; }
+.attPageInfo { font-size: 11px; color: #999; font-weight: 600; margin-left: 8px; font-family: "Montserrat", sans-serif; white-space: nowrap; }
 
 /* ============================================================
    11. MEMBER REGISTERED MODAL
@@ -1420,7 +1520,6 @@
   margin: 0 0 20px;
   line-height: 1.6;
 }
-
 
 /* ============================================================
    12. PAYMENTS — VIEW ALL & RECEIPT
