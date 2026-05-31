@@ -221,18 +221,6 @@ export default function AddMemberModal({ onClose, onSuccess }) {
     }
   };
 
-  const calculateAge = (birthdayStr) => {
-  if (!birthdayStr) return null;
-  const today = new Date();
-  const birth = new Date(birthdayStr);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age >= 0 ? age : null;
-};
-
   return (
     <div className={styles.overlay} onClick={handleModalClose}>
       <div
@@ -360,52 +348,85 @@ export default function AddMemberModal({ onClose, onSuccess }) {
           </div>
 
           {/* Right — form fields */}
-          <div className={styles.addMemberFields}>
-            <div className={styles.fieldRow}>
-              <div className={styles.labeledField}>
-                <label className={styles.modernLabel}>Full Name</label>
-                <input className={styles.formInput} placeholder="Enter full name"
-                  value={form.fullName} onChange={set("fullName")} />
-              </div>
-              <div className={styles.labeledField}>
-                <label className={styles.modernLabel}>Email Address</label>
-                <input className={styles.formInput} placeholder="name@email.com" type="email"
-                  value={form.email} onChange={set("email")} />
-              </div>
-            </div>
-            <div className={styles.fieldRow}>
-              <div className={styles.labeledField}>
-                <label className={styles.modernLabel}>Phone Number</label>
-                <div className={styles.phoneInputWrap}>
-                  <span className={styles.phonePrefix}>+63</span>
-                  <input className={styles.formInput} placeholder="9XX XXX XXXX" 
-                    value={form.phone} onChange={set("phone")} />
+          <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+            {/* Personal Info */}
+            <div>
+              <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 800, color: "#2e7d32", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Personal Information
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <Field label="Full Name">
+                    <input className={styles.formInput} placeholder="Enter full name" value={form.fullName} onChange={set("fullName")} />
+                  </Field>
+                  <Field label="Email Address">
+                    <input className={styles.formInput} placeholder="name@email.com" type="email" value={form.email} onChange={set("email")} />
+                  </Field>
+                </div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <Field label="Phone Number">
+                    <PhoneInput value={form.phone} onChange={(v) => setForm((p) => ({ ...p, phone: v }))} />
+                  </Field>
+                  <Field label="Address">
+                    <input className={styles.formInput} placeholder="Street, City" value={form.address} onChange={set("address")} />
+                  </Field>
+                </div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <Field label="Birthday">
+                    <input className={styles.formInput} type="date" value={form.birthday} onChange={set("birthday")} />
+                    {form.birthday && (() => {
+                      const today = new Date();
+                      const birth = new Date(form.birthday);
+                      let age = today.getFullYear() - birth.getFullYear();
+                      const m = today.getMonth() - birth.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                      return age >= 0 ? (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, color: "#2e7d32",
+                          background: "#e8f5e9", border: "1px solid #c8e6c9",
+                          borderRadius: 6, padding: "3px 10px", display: "inline-block", marginTop: 2,
+                        }}>
+                          {age} years old
+                        </span>
+                      ) : null;
+                    })()}
+                  </Field>
+                  <Field label="Gender">
+                    <div style={{ display: "flex", gap: 20, alignItems: "center", paddingTop: 6 }}>
+                      {["Male", "Female"].map((g) => (
+                        <label key={g} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#444", fontFamily: "Montserrat, sans-serif", cursor: "pointer" }}>
+                          <input type="radio" name="gender" value={g} checked={form.gender === g} onChange={set("gender")} style={{ accentColor: "#7eba56" }} />
+                          {g}
+                        </label>
+                      ))}
+                    </div>
+                  </Field>
                 </div>
               </div>
-              <div className={styles.labeledField}>
-                <label className={styles.modernLabel}>Address</label>
-                <input className={styles.formInput} placeholder="Street, City"
-                  value={form.address} onChange={set("address")} />
-              </div>
             </div>
-                <div className={styles.labeledField}>
-                  <label className={styles.modernLabel}>Birthday</label>
-                  <input className={styles.formInput} type="date"
-                   value={form.birthday} onChange={set("birthday")} />
-                   {form.birthday && calculateAge(form.birthday) !== null && (
-                  <span style={{fontSize: 11,fontWeight: 700,color: "#7eba56",marginTop: 4,display: "block"
-                     }}> Age: {calculateAge(form.birthday)} years old</span> )}
-                </div>
-            <div className={styles.membershipSettings}>
-              <p className={styles.membershipSettingsTitle}>Membership Settings</p>
-=              <div className={styles.fieldRow}>
-                <div className={styles.labeledField}>
-                  <label className={styles.modernLabel}>Member Type</label>
-                  <select className={styles.formInput} value={form.membershipType} onChange={set("membershipType")}>
-                    {["Student", "Regular", "Senior", "PWD"].map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+
+            {/* Divider */}
+            <div style={{ borderTop: "1px solid #e8f0e4" }} />
+
+            {/* Membership Settings */}
+            <div>
+              <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 800, color: "#2e7d32", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Membership Settings
+              </p>
+              <div style={{
+                border: "1px solid #d7e4cd", borderRadius: 10, padding: "14px 16px",
+                background: "linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(244,249,239,0.9) 100%)",
+                display: "flex", flexDirection: "column", gap: 10,
+              }}>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <Field label="Member Type">
+                    <select className={styles.formInput} value={form.membershipType} onChange={set("membershipType")}>
+                      {["Student", "Regular", "Senior", "PWD"].map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </Field>
                 </div>
                 <div style={{ display: "flex", gap: 12 }}>
                   <div className={styles.unitInputWrap}>
@@ -434,19 +455,18 @@ export default function AddMemberModal({ onClose, onSuccess }) {
             <div style={{ borderTop: "1px solid #e8f0e4" }} />
 
             {/* Emergency Contact */}
-            <div className={styles.fieldRow}>
-              <div className={styles.labeledField}>
-                <label className={styles.modernLabel}>Emergency Contact Name</label>
-                <input className={styles.formInput} placeholder="Contact person name"
-                  value={form.emergencyContactName} onChange={set("emergencyContactName")} />
-              </div>
-              <div className={styles.labeledField}>
-                <label className={styles.modernLabel}>Emergency Contact Number</label>
-                <div className={styles.phoneInputWrap}>
-                  <span className={styles.phonePrefix}>+63</span>
-                  <input className={styles.formInput} placeholder="9XX XXX XXXX" 
-                    value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} />
-                </div>
+            <div>
+              <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 800, color: "#2e7d32", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Emergency Contact
+              </p>
+              <div style={{ display: "flex", gap: 12 }}>
+                <Field label="Contact Name">
+                  <input className={styles.formInput} placeholder="Contact person name"
+                    value={form.emergencyContactName} onChange={set("emergencyContactName")} />
+                </Field>
+                <Field label="Contact Number">
+                  <PhoneInput value={form.emergencyContactNumber} onChange={(v) => setForm((p) => ({ ...p, emergencyContactNumber: v }))} />
+                </Field>
               </div>
             </div>
 
