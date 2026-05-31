@@ -660,13 +660,16 @@
 }
 
 .uploadLabel {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #4a7a38;
   font-family: "Montserrat", sans-serif;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  text-align: center;
+  width: 100%;
+  display: block;
 }
 
 /* Camera / Choose File buttons */
@@ -1032,9 +1035,6 @@
 /* ============================================================
    10. ATTENDANCE MODAL
    ============================================================ */
-/* ============================================================
-   10. ATTENDANCE MODAL
-   ============================================================ */
 /* ── Outer modal shell ── */
 .attendanceModal {
   background: #fff;
@@ -1046,6 +1046,7 @@
   flex-direction: column;
   box-shadow: 0 12px 48px rgba(0,0,0,0.22);
   font-family: "Montserrat", sans-serif;
+  margin: 20px;
 }
 
 /* ══ GREEN HEADER BANNER ══ */
@@ -1071,11 +1072,11 @@
   font-family: "Montserrat", sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255,255,255,0.9);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.attBannerClose:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+.attBannerClose:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
 .attBannerTitle {
   font-size: 24px;
@@ -1118,7 +1119,7 @@
   border-left: 1px solid rgba(255,255,255,0.25);
 }
 
-/* Legend dots — scoped small via dedicated class */
+/* FIX 1: dedicated small-dot class for legend only */
 .attDotLegend {
   width: 18px !important;
   height: 18px !important;
@@ -1136,7 +1137,7 @@
   border-radius: 0 0 16px 16px;
 }
 
-/* ── Toolbar: search LEFT | month nav RIGHT ── */
+/* ── Toolbar ── */
 .attendanceToolbar {
   display: flex;
   align-items: center;
@@ -1153,7 +1154,6 @@
   width: 240px;
   flex-shrink: 0;
 }
-
 .attendanceSearchInput {
   width: 100%;
   border: 1.5px solid #ddd;
@@ -1166,7 +1166,6 @@
   color: #333;
 }
 .attendanceSearchInput:focus { border-color: #7eba56; }
-
 .attendanceSearchIcon {
   position: absolute;
   left: 11px;
@@ -1177,13 +1176,12 @@
   pointer-events: none;
 }
 
-/* ── Month nav group ── */
+/* ── Month nav ── */
 .attendanceNavGroup {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-
 .attendanceNavBtn {
   display: inline-flex;
   align-items: center;
@@ -1199,7 +1197,6 @@
   transition: border-color 0.15s, color 0.15s;
 }
 .attendanceNavBtn:hover { border-color: #7eba56; color: #3a7a1e; }
-
 .attendanceMonthBtn {
   display: inline-flex;
   align-items: center;
@@ -1220,7 +1217,7 @@
 }
 .attendanceMonthBtn:hover { border-color: #7eba56; }
 
-/* Month/year full picker dropdown */
+/* Dropdown */
 .attendanceMonthDrop {
   position: absolute;
   top: calc(100% + 6px);
@@ -1286,23 +1283,11 @@
   scrollbar-width: thin;
   scrollbar-color: #bbb transparent;
 }
-.attendanceTableWrap::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.attendanceTableWrap::-webkit-scrollbar-track {
-  background: transparent;
-}
-.attendanceTableWrap::-webkit-scrollbar-thumb {
-  background: #bbb;
-  border-radius: 999px;
-}
-.attendanceTableWrap::-webkit-scrollbar-thumb:hover {
-  background: #999;
-}
-.attendanceTableWrap::-webkit-scrollbar-corner {
-  background: transparent;
-}
+.attendanceTableWrap::-webkit-scrollbar { width: 6px; height: 6px; }
+.attendanceTableWrap::-webkit-scrollbar-track { background: transparent; }
+.attendanceTableWrap::-webkit-scrollbar-thumb { background: #bbb; border-radius: 999px; }
+.attendanceTableWrap::-webkit-scrollbar-thumb:hover { background: #999; }
+.attendanceTableWrap::-webkit-scrollbar-corner { background: transparent; }
 
 /* ── Table ── */
 .attendanceTable {
@@ -1311,14 +1296,14 @@
   font-family: "Montserrat", sans-serif;
   table-layout: fixed;
   min-width: max-content;
-  width: 100%;
+  width: auto;
 }
 
 .attendanceTable thead th {
   position: sticky;
   top: 0;
-  background: #e8f5e0;
-  color: #2e5a14;
+  background: #eef7e8;
+  color: #3a6b1a;
   z-index: 3;
   padding: 10px 4px;
   text-align: center;
@@ -1326,28 +1311,32 @@
   font-weight: 800;
   white-space: nowrap;
   border-right: none;
-  border-bottom: 2px solid #c8e0b8;
+  border-bottom: 2px solid #d0e8bc;
   letter-spacing: 0.04em;
+  vertical-align: middle;
 }
 
-.attThAvatar  {
+.attThAvatar {
   position: sticky !important;
   left: 0;
   z-index: 5 !important;
   width: 48px;
   min-width: 48px;
-  background: #e8f5e0 !important;
+  background: #eef7e8 !important;
   border-right: none !important;
+  padding: 0 !important;
 }
-.attThName    {
+
+.attThName {
   position: sticky !important;
   left: 48px;
   z-index: 5 !important;
   min-width: 180px;
   text-align: left !important;
-  padding-left: 6px !important;
-  background: #e8f5e0 !important;
+  padding-left: 0 !important;
+  background: #eef7e8 !important;
   border-right: none !important;
+  vertical-align: middle !important;
 }
 .attThSummary {
   position: sticky !important;
@@ -1356,86 +1345,57 @@
   min-width: 160px;
   text-align: left !important;
   padding-left: 10px !important;
-  background: #e8f5e0 !important;
+  background: #eef7e8 !important;
   border-right: none !important;
+  vertical-align: middle !important;
 }
-.attThDay     { width: 44px; min-width: 44px; }
+.attThDay { width: 44px; min-width: 44px; }
 .attThDay > div:last-child { font-size: 11px; font-weight: 800; }
-.attDayAbbr   { font-size: 8px; margin-bottom: 2px; }
+.attDayAbbr { font-size: 8px; margin-bottom: 2px; }
 
-/* Weekend header highlight */
+/* lighter weekend green */
 .attThDayWeekend {
-  background: #5fa83a !important;
+  background: #7aba52 !important;
   color: #fff !important;
   border-right: none !important;
 }
+.attTdDayWeekend { background: #f4fbed; }
 
-/* Weekend body cell background */
-.attTdDayWeekend { background: #f2faed; }
-
-/* ── Rows — no vertical dividers ── */
-.attRow {
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.12s;
-}
+/* ── Rows ── */
+.attRow { border-bottom: 1px solid #f0f0f0; transition: background 0.12s; }
 .attRow:hover { background: #f8fcf5; }
 .attRow:hover .attTdAvatar,
 .attRow:hover .attTdName,
 .attRow:hover .attTdSummary { background: #f8fcf5 !important; }
 
-.attTdAvatar  {
-  position: sticky;
-  left: 0;
-  background: #fff;
-  z-index: 2;
-  text-align: center;
-  padding: 8px 4px;
-  width: 48px;
-  min-width: 48px;
-  border-right: none;
+.attTdAvatar {
+  position: sticky; left: 0; background: #fff; z-index: 2;
+  text-align: center; padding: 8px 4px; width: 48px; min-width: 48px; border-right: none;
 }
-.attTdName    {
-  position: sticky;
-  left: 48px;
-  background: #fff;
-  z-index: 2;
-  padding: 10px 14px;
-  font-weight: 600;
-  color: #1a1a1a;
-  min-width: 180px;
-  white-space: nowrap;
-  font-size: 13px;
-  border-right: none;
+.attTdName {
+  position: sticky; left: 48px; background: #fff; z-index: 2;
+  padding: 10px 14px; font-weight: 600; color: #1a1a1a;
+  min-width: 180px; white-space: nowrap; font-size: 13px; border-right: none;
 }
 .attTdSummary {
-  position: sticky;
-  left: 228px;
-  background: #fff;
-  z-index: 2;
-  padding: 8px 10px;
-  min-width: 160px;
-  border-right: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  position: sticky; left: 228px; background: #fff; z-index: 2;
+  padding: 8px 10px; min-width: 160px; border-right: none;
+  display: flex; align-items: center; gap: 8px;
 }
-.attTdDay     {
-  text-align: center;
-  padding: 8px 4px;
-  width: 44px;
-  min-width: 44px;
-  border-right: none;
+.attTdDay {
+  text-align: center; padding: 8px 4px;
+  width: 44px; min-width: 44px; border-right: none;
 }
 
 /* ── Avatar ── */
 .attAvatar {
   width: 32px; height: 32px; border-radius: 50%;
-  background: #4a9e2e;
-  color: #fff; display: inline-flex; align-items: center; justify-content: center;
+  background: #4a9e2e; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 800; margin: 0 auto;
 }
 
-/* ── Summary ── */
+/* ── Summary text ── */
 .attSummaryPresent { font-size: 11px; font-weight: 700; color: #2e7d32; white-space: nowrap; }
 .attSummaryAbsent  { font-size: 11px; font-weight: 700; color: #e53935; white-space: nowrap; }
 
@@ -1450,7 +1410,7 @@
 .attDotAbsent  { background: #fce4ec; border: 2px solid #ef5350; color: #c62828; }
 .attDotFuture  { background: #f5f5f5; border: 2px solid #ccc; cursor: default; width: 20px; height: 20px; }
 
-/* ── Totals row — NOT sticky, lives at natural bottom of table ── */
+/* ── Totals row — natural bottom of table ── */
 .attTotalsRow td {
   background: #f0f6ec !important;
   border-top: 2px solid #c8dac6;
@@ -1459,7 +1419,12 @@
 }
 .attTotalsRow .attTdAvatar,
 .attTotalsRow .attTdName,
-.attTotalsRow .attTdSummary { background: #e4f0d8 !important; z-index: 2; display: table-cell; }
+.attTotalsRow .attTdSummary {
+  background: #e4f0d8 !important;
+  z-index: 2;
+  display: table-cell;
+  vertical-align: middle;
+}
 .attTotalCell  { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.4; }
 .attTotalP     { font-size: 9px; font-weight: 800; color: #2e7d32; }
 .attTotalA     { font-size: 9px; font-weight: 800; color: #e53935; }
@@ -1485,8 +1450,22 @@
 }
 .attPageBtn:hover:not(:disabled) { background: #e8f5e0; border-color: #7eba56; color: #2e7d32; }
 .attPageBtn:disabled { opacity: 0.35; cursor: default; }
-.attPageBtnActive { background: #2e7d32 !important; color: #fff !important; border-color: #2e7d32 !important; font-weight: 800 !important; }
-.attPageInfo { font-size: 11px; color: #999; font-weight: 600; margin-left: 8px; font-family: "Montserrat", sans-serif; white-space: nowrap; }
+.attPageBtnActive {
+  background: #2e7d32 !important; color: #fff !important;
+  border-color: #2e7d32 !important; font-weight: 800 !important;
+}
+
+.attPageInfo {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  white-space: nowrap;
+  background: #2e7d32;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-left: 4px;
+}
 
 /* ============================================================
    11. MEMBER REGISTERED MODAL

@@ -116,15 +116,15 @@ export default function AttendanceModal({ members = [], onClose }) {
           {/* Legend pill row — centered */}
           <div className={styles.attBannerLegend}>
             <span className={styles.attLegendPill}>
-              <span className={styles.attDotPresent}><i className="ti ti-check" /></span>
+              <span className={`${styles.attDotPresent} ${styles.attDotLegend}`}><i className="ti ti-check" /></span>
               Present
             </span>
             <span className={styles.attLegendPill}>
-              <span className={styles.attDotAbsent}><i className="ti ti-x" /></span>
+              <span className={`${styles.attDotAbsent} ${styles.attDotLegend}`}><i className="ti ti-x" /></span>
               Absent
             </span>
             <span className={styles.attLegendPill}>
-              <span className={styles.attDotFuture} />
+              <span className={`${styles.attDotFuture} ${styles.attDotLegend}`} />
               Pending Record
             </span>
           </div>
@@ -202,7 +202,7 @@ export default function AttendanceModal({ members = [], onClose }) {
             <table className={styles.attendanceTable}>
               <thead>
                 <tr>
-                  <th className={styles.attThAvatar}></th>
+                  <th className={`${styles.attThAvatar} ${styles.attThAvatarHeader}`}></th>
                   <th className={styles.attThName}>Member</th>
                   <th className={styles.attThSummary}>Status Summary</th>
                   {pageDays.map((d) => {
