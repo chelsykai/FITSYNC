@@ -100,8 +100,6 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100%;
-  max-width: 640px;
 }
 
 /* ── Search ── */
@@ -394,7 +392,6 @@
   display: flex;
   gap: 10px;
   margin-top: 4px;
-  justify-content: flex-end;
 }
 
 /* ── Responsive ── */
@@ -422,3 +419,158 @@
   .tabBar   { flex-direction: column; border-radius: 10px 10px 0 0; }
   .tabBtn:not(:last-child) { border-right: none; border-bottom: 1px solid #d4e8c0; }
 }
+
+
+/* ============================================================
+   RENEWAL PANEL — appended additions
+   ============================================================ */
+
+/* Expiry text colours inside member details */
+.expiryExpired  { color: #c0392b; font-weight: 700; }
+.expiryWarn     { color: #c07800; font-weight: 700; }
+
+/* Toggle button that shows/hides the renewal panel */
+.renewalToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 14px;
+  border: 1.5px solid #c4ddb0;
+  border-radius: 8px;
+  background: #f5f9f1;
+  color: #3a6b1e;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+  align-self: flex-start;
+}
+
+.renewalToggleBtn:hover { background: #e8f2de; border-color: #7eba56; }
+
+.renewalToggleBtnActive {
+  background: #e8f2de;
+  border-color: #7eba56;
+  color: #2a5a14;
+}
+
+/* Renewal panel box */
+.renewalPanel {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1.5px solid #b8d898;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #f5fbee 0%, #eef7e4 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.renewalPanelTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #2d4a1e;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Month + Year inputs row */
+.renewalInputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.renewalInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 80px;
+}
+
+.renewalInputLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #5a7a48;
+}
+
+.renewalInputWrap { position: relative; }
+
+.renewalInput {
+  width: 100%;
+  border: 1.5px solid #c4ddb0;
+  border-radius: 8px;
+  padding: 9px 36px 9px 12px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f311b;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.renewalInput:focus {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.13);
+}
+
+.renewalInput::placeholder { color: #b8ceac; font-size: 12px; }
+
+.renewalUnit {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #5a8a3c;
+  background: #dff0cc;
+  border-radius: 5px;
+  padding: 2px 6px;
+  pointer-events: none;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Confirm button */
+.renewalSubmitBtn {
+  padding: 10px 20px;
+  background: linear-gradient(180deg, #7eba56 0%, #6aa947 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.18s, transform 0.15s;
+  align-self: flex-end;
+}
+
+.renewalSubmitBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.renewalSubmitBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Hint text below inputs */
+.renewalHint {
+  margin: 0;
+  font-size: 11px;
+  color: #6a8a58;
+  line-height: 1.5;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Inline feedback messages */
+.renewalError   { margin: 0; font-size: 12px; color: #c0392b; font-weight: 600; }
+.renewalSuccess { margin: 0; font-size: 12px; color: #2a6e10; font-weight: 600; } 
