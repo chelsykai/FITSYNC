@@ -4,28 +4,26 @@ import Sidebar from "../../components/sidebar/sidebar";
 import { supabase } from "../../lib/supabaseClient";
 import { getAuditActorRole } from "../../services/auditService";
 import { updateMemberMembership } from "../../services/memberService";
+import { addWalkInRecord, fetchWalkIns } from "../../services/walkInService";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 const getTodayDateString = () => new Date().toISOString().split("T")[0];
 
 const formatExpiry = (dateStr) => {
   if (!dateStr) return "N/A";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return "N/A";
-  return d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
 };
 
-/** Returns days until expiry (negative = already expired) */
 const daysUntilExpiry = (dateStr) => {
   if (!dateStr) return null;
   const expiry = new Date(dateStr);
-  if (isNaN(expiry.getTime())) return null;
-  const today  = new Date();
+  if (Number.isNaN(expiry.getTime())) return null;
+  const today = new Date();
   today.setHours(0, 0, 0, 0);
   return Math.ceil((expiry - today) / 86400000);
 };
 
-// ── Default form states ───────────────────────────────────────────────────────
 const defaultExistingForm = {
   memberName: "",
   memberId: "",
@@ -43,14 +41,15 @@ const defaultRenewalForm = {
 };
 
 const defaultWalkInForm = {
-  description: "",
+  name: "",
+  planType: "Daily",
   modeOfPayment: "Cash",
   referenceNumber: "",
+  date: getTodayDateString(),
   status: "Paid",
   total: "",
 };
 
-// ── Fetch members ─────────────────────────────────────────────────────────────
 const fetchMembers = async () => {
   try {
     const { data, error } = await supabase
@@ -59,101 +58,128 @@ const fetchMembers = async () => {
       .order("full_name");
     if (error) throw error;
     return data || [];
-  } catch (err) {
-    console.error("Error fetching members:", err);
+  } catch (error) {
+    console.error("Error fetching members:", error);
     return [];
   }
 };
 
-// ── Record payment (existing member) ──────────────────────────────────────────
 const add_record = async (formData) => {
   try {
     if (!formData.memberId) throw new Error("Please select a valid member");
     const requiresRef = ["GCash", "Bank Transfer", "Credit Card"].includes(formData.modeOfPayment);
     const refNum = requiresRef && String(formData.referenceNumber || "").trim()
-      ? String(formData.referenceNumber).trim() : null;
+      ? String(formData.referenceNumber).trim()
+      : null;
 
     const { error } = await supabase.from("record_payment").insert([{
-      member_id:   formData.memberId,
-      date:        formData.date,
-      mop:         formData.modeOfPayment,
-      ref_number:  refNum,
-      status:      formData.status,
-      amount_paid: parseInt(formData.total) || 0,
+      member_id: formData.memberId,
+      date: formData.date,
+      mop: formData.modeOfPayment,
+      ref_number: refNum,
+      status: formData.status,
+      amount_paid: Number.parseInt(formData.total, 10) || 0,
     }]);
+
     if (error) throw new Error(error.message);
 
-    // Audit log
     try {
       const currentUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
       const actorName = currentUser?.username || currentUser?.name || "system";
       const actorRole = await getAuditActorRole();
       await supabase.from("audit_trail").insert([{
-        user_name: actorName, user_role: actorRole,
-        action_performed: "Recorded payment", affected_module: "Payments",
+        user_name: actorName,
+        user_role: actorRole,
+        action_performed: "Recorded payment",
+        affected_module: "Payments",
         affected_data: {
-          memberId: formData.memberId, memberName: formData.memberName,
-          amount: parseInt(formData.total) || 0, date: formData.date,
-          mop: formData.modeOfPayment, ref_number: refNum, status: formData.status,
+          memberId: formData.memberId,
+          memberName: formData.memberName,
+          amount: Number.parseInt(formData.total, 10) || 0,
+          date: formData.date,
+          mop: formData.modeOfPayment,
+          ref_number: refNum,
+          status: formData.status,
         },
         created_at: new Date().toISOString(),
       }]);
-    } catch (logErr) { console.warn("Audit log failed:", logErr); }
+    } catch (logErr) {
+      console.warn("Audit log failed:", logErr);
+    }
 
     return { success: true };
-  } catch (err) { return { success: false, error: err.message }; }
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 };
 
-// ── Tabs config ───────────────────────────────────────────────────────────────
 const TABS = [
   { id: "existing", label: "1. Existing Member Payment", icon: "ti-user-check" },
-  { id: "walkin",   label: "2. Walk-in Payment",          icon: "ti-walk"       },
+  { id: "walkin", label: "2. Walk-in Payment", icon: "ti-walk" },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
 export default function RecordPaymentPage({ onNavigate, activePage = "payments" }) {
-  const [activeTab,       setActiveTab]       = useState("existing");
-  const [form,            setForm]            = useState(defaultExistingForm);
-  const [renewalForm,     setRenewalForm]     = useState(defaultRenewalForm);
-  const [walkInForm,      setWalkInForm]      = useState(defaultWalkInForm);
-  const [members,         setMembers]         = useState([]);
-  const [selectedMember,  setSelectedMember]  = useState(null);
-  const [error,           setError]           = useState("");
-  const [walkInError,     setWalkInError]     = useState("");
-  const [renewalError,    setRenewalError]    = useState("");
-  const [loading,         setLoading]         = useState(false);
-  const [renewalLoading,  setRenewalLoading]  = useState(false);
-  const [walkInLoading,   setWalkInLoading]   = useState(false);
-  const [successMsg,      setSuccessMsg]      = useState("");
-  const [renewalSuccess,  setRenewalSuccess]  = useState("");
-  const [walkInSuccess,   setWalkInSuccess]   = useState("");
-  const [membersLoading,  setMembersLoading]  = useState(true);
-  const [showDropdown,    setShowDropdown]    = useState(false);
-  const [showRenewal,     setShowRenewal]     = useState(false);
+  const [activeTab, setActiveTab] = useState("existing");
+  const [form, setForm] = useState(defaultExistingForm);
+  const [renewalForm, setRenewalForm] = useState(defaultRenewalForm);
+  const [walkInForm, setWalkInForm] = useState(defaultWalkInForm);
+  const [members, setMembers] = useState([]);
+  const [walkIns, setWalkIns] = useState([]);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedWalkIn, setSelectedWalkIn] = useState(null);
+  const [error, setError] = useState("");
+  const [walkInError, setWalkInError] = useState("");
+  const [renewalError, setRenewalError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [renewalLoading, setRenewalLoading] = useState(false);
+  const [walkInLoading, setWalkInLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [renewalSuccess, setRenewalSuccess] = useState("");
+  const [walkInSuccess, setWalkInSuccess] = useState("");
+  const [membersLoading, setMembersLoading] = useState(true);
+  const [walkInsLoading, setWalkInsLoading] = useState(true);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showWalkInDropdown, setShowWalkInDropdown] = useState(false);
+  const [showRenewal, setShowRenewal] = useState(false);
   const dropdownRef = useRef(null);
+  const walkInDropdownRef = useRef(null);
 
-  // Load members on mount
   useEffect(() => {
     (async () => {
       setMembersLoading(true);
       setMembers(await fetchMembers());
       setMembersLoading(false);
     })();
+
+    (async () => {
+      try {
+        setWalkInsLoading(true);
+        setWalkIns(await fetchWalkIns());
+      } catch (err) {
+        console.error("Error fetching walk-ins:", err);
+        setWalkIns([]);
+      } finally {
+        setWalkInsLoading(false);
+      }
+    })();
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+    const handler = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
+      }
+      if (walkInDropdownRef.current && !walkInDropdownRef.current.contains(event.target)) {
+        setShowWalkInDropdown(false);
+      }
     };
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Member selection ────────────────────────────────────────────────────────
-  const handleMemberInputChange = (e) => {
-    setForm((prev) => ({ ...prev, memberName: e.target.value, memberId: "" }));
+  const handleMemberInputChange = (event) => {
+    setForm((prev) => ({ ...prev, memberName: event.target.value, memberId: "" }));
     setSelectedMember(null);
     setShowRenewal(false);
     setShowDropdown(true);
@@ -161,59 +187,109 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
 
   const handleSelectMember = (member) => {
     const days = daysUntilExpiry(member.expiration_date);
-    // Auto-fill description and flag expiring/expired members
-    const autoDesc = days !== null && days <= 7 ? "Monthly Renewal" : "";
     setForm((prev) => ({
       ...prev,
       memberName: member.full_name,
-      memberId:   member.member_id,
-      description: autoDesc,
+      memberId: member.member_id,
+      description: days !== null && days <= 7 ? "Monthly Renewal" : "",
     }));
     setSelectedMember(member);
     setShowDropdown(false);
-    // Auto-open renewal panel if expiring within 7 days or already expired
     setShowRenewal(days !== null && days <= 7);
     setRenewalForm(defaultRenewalForm);
     setRenewalError("");
     setRenewalSuccess("");
   };
 
-  // ── Form field setters ──────────────────────────────────────────────────────
-  const set = (field) => (e) => {
-    const value = e.target.value;
+  const handleWalkInInputChange = (event) => {
+    const value = event.target.value;
+    setWalkInForm((prev) => ({ ...prev, name: value }));
+    setSelectedWalkIn(null);
+    setShowWalkInDropdown(true);
+  };
+
+  const handleSelectWalkIn = (walkIn) => {
+    setSelectedWalkIn(walkIn);
+    setWalkInForm((prev) => ({
+      ...prev,
+      name: walkIn.name,
+      planType: walkIn.planType || "Daily",
+      date: walkIn.paymentDate || getTodayDateString(),
+      total: String(walkIn.total || ""),
+    }));
+    setShowWalkInDropdown(false);
+    setWalkInError("");
+    setWalkInSuccess("");
+  };
+
+  const set = (field) => (event) => {
+    const value = event.target.value;
     if (field === "modeOfPayment") {
-      const req = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
-      setForm({ ...form, modeOfPayment: value, referenceNumber: req ? form.referenceNumber : "" });
+      const requiresRef = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
+      setForm({
+        ...form,
+        modeOfPayment: value,
+        referenceNumber: requiresRef ? form.referenceNumber : "",
+      });
       return;
     }
     setForm({ ...form, [field]: value });
   };
 
-  const setWI = (field) => (e) => {
-    const value = e.target.value;
+  const setWI = (field) => (event) => {
+    const value = event.target.value;
     if (field === "modeOfPayment") {
-      const req = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
-      setWalkInForm({ ...walkInForm, modeOfPayment: value, referenceNumber: req ? walkInForm.referenceNumber : "" });
+      const requiresRef = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
+      setWalkInForm({
+        ...walkInForm,
+        modeOfPayment: value,
+        referenceNumber: requiresRef ? walkInForm.referenceNumber : "",
+      });
       return;
     }
     setWalkInForm({ ...walkInForm, [field]: value });
   };
 
   const filteredMembers = form.memberName
-    ? members.filter((m) =>
-        m.full_name.toLowerCase().includes(form.memberName.toLowerCase()) ||
-        String(m.member_id).includes(form.memberName))
+    ? members.filter((member) =>
+        member.full_name.toLowerCase().includes(form.memberName.toLowerCase()) ||
+        String(member.member_id).includes(form.memberName)
+      )
     : members;
 
-  // ── Submit: existing member payment ────────────────────────────────────────
+  const filteredWalkIns = walkInForm.name
+    ? walkIns.filter((record) =>
+        record.name.toLowerCase().includes(walkInForm.name.toLowerCase()) ||
+        String(record.paymentDate).includes(walkInForm.name) ||
+        String(record.planType).toLowerCase().includes(walkInForm.name.toLowerCase())
+      )
+    : walkIns;
+
   const handleSubmit = async () => {
-    setError(""); setSuccessMsg("");
-    if (!form.memberName.trim()) { setError("Member Info is required"); return; }
-    if (!form.memberId)          { setError("Please select a valid member from the list"); return; }
-    if (!form.date)              { setError("Date is required"); return; }
-    if (!form.total)             { setError("Total is required"); return; }
-    const reqRef = ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment);
-    if (reqRef && !form.referenceNumber.trim()) { setError("Reference Number is required"); return; }
+    setError("");
+    setSuccessMsg("");
+
+    if (!form.memberName.trim()) {
+      setError("Member Info is required");
+      return;
+    }
+    if (!form.memberId) {
+      setError("Please select a valid member from the list");
+      return;
+    }
+    if (!form.date) {
+      setError("Date is required");
+      return;
+    }
+    if (!form.total) {
+      setError("Total is required");
+      return;
+    }
+    const requiresRef = ["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment);
+    if (requiresRef && !form.referenceNumber.trim()) {
+      setError("Reference Number is required");
+      return;
+    }
 
     setLoading(true);
     const result = await add_record(form);
@@ -229,13 +305,14 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
     setLoading(false);
   };
 
-  // ── Submit: renewal ─────────────────────────────────────────────────────────
   const handleRenewalSubmit = async () => {
-    setRenewalError(""); setRenewalSuccess("");
-    const months = parseInt(renewalForm.months, 10);
-    const years  = parseInt(renewalForm.years,  10);
+    setRenewalError("");
+    setRenewalSuccess("");
+
+    const months = Number.parseInt(renewalForm.months, 10);
+    const years = Number.parseInt(renewalForm.years, 10);
     const hasMonths = Number.isInteger(months) && months > 0;
-    const hasYears  = Number.isInteger(years)  && years  > 0;
+    const hasYears = Number.isInteger(years) && years > 0;
 
     if (!hasMonths && !hasYears) {
       setRenewalError("Please enter months or years to renew.");
@@ -248,67 +325,78 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
 
     setRenewalLoading(true);
     try {
-      // TODO: backend dev — also record a payment row for the renewal fee if needed
       await updateMemberMembership(selectedMember.member_id, {
-        monthlyValidity:    hasMonths ? `${months} Month${months === 1 ? "" : "s"}` : selectedMember.monthly_validity    || "",
-        membershipValidity: hasYears  ? `${years} Year${years   === 1 ? "" : "s"}`  : selectedMember.membership_validity || "",
-        joinDate: getTodayDateString(), // extend from today
+        monthlyValidity: hasMonths ? `${months} Month${months === 1 ? "" : "s"}` : selectedMember.monthly_validity || "",
+        membershipValidity: hasYears ? `${years} Year${years === 1 ? "" : "s"}` : selectedMember.membership_validity || "",
+        joinDate: getTodayDateString(),
       });
 
-      // Refresh member list so expiry reflects the update
       const refreshed = await fetchMembers();
       setMembers(refreshed);
-      const updated = refreshed.find(m => m.member_id === selectedMember.member_id);
+      const updated = refreshed.find((member) => member.member_id === selectedMember.member_id);
       if (updated) setSelectedMember(updated);
 
-      setRenewalSuccess(
-        `Renewed! New expiry: ${formatExpiry(updated?.expiration_date)}`
-      );
+      setRenewalSuccess(`Renewed! New expiry: ${formatExpiry(updated?.expiration_date)}`);
       setRenewalForm(defaultRenewalForm);
-    } catch (err) {
-      setRenewalError(err.message || "Renewal failed. Please try again.");
+    } catch (error) {
+      setRenewalError(error.message || "Renewal failed. Please try again.");
     } finally {
       setRenewalLoading(false);
     }
   };
 
-  // ── Submit: walk-in payment (UI stub) ───────────────────────────────────────
   const handleWalkInSubmit = async () => {
-    setWalkInError(""); setWalkInSuccess("");
-    if (!walkInForm.total) { setWalkInError("Total is required"); return; }
+    setWalkInError("");
+    setWalkInSuccess("");
+
+    if (!selectedWalkIn?.name && !walkInForm.name.trim()) {
+      setWalkInError("Please search and select a recorded walk-in first.");
+      return;
+    }
+    if (!walkInForm.total) {
+      setWalkInError("Total is required");
+      return;
+    }
+
     setWalkInLoading(true);
-    // TODO: backend dev — wire up walk-in payment API here
-    setTimeout(() => {
-      setWalkInSuccess("Walk-in payment recorded! (UI only — backend pending)");
+    try {
+      await addWalkInRecord({
+        name: selectedWalkIn?.name || walkInForm.name,
+        paymentDate: walkInForm.date || getTodayDateString(),
+        planType: walkInForm.planType || selectedWalkIn?.planType || "Daily",
+        total: walkInForm.total,
+        status: walkInForm.status,
+      });
+
+      const refreshed = await fetchWalkIns();
+      setWalkIns(refreshed);
+      setWalkInSuccess("Walk-in payment recorded successfully!");
       setWalkInForm(defaultWalkInForm);
+      setSelectedWalkIn(null);
+      setShowWalkInDropdown(false);
+    } catch (error) {
+      setWalkInError(error.message || "Walk-in payment failed. Please try again.");
+    } finally {
       setWalkInLoading(false);
-    }, 800);
+    }
   };
 
-  // ── Expiry status helpers ───────────────────────────────────────────────────
-  const expiryDays    = daysUntilExpiry(selectedMember?.expiration_date);
-  const isExpired     = expiryDays !== null && expiryDays < 0;
+  const expiryDays = daysUntilExpiry(selectedMember?.expiration_date);
+  const isExpired = expiryDays !== null && expiryDays < 0;
   const isExpiringSoon = expiryDays !== null && expiryDays >= 0 && expiryDays <= 7;
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className={styles.layout}>
       <Sidebar activePage={activePage} onNavigate={onNavigate} />
 
       <div className={`${styles.content} tab-slide-animation`}>
-
-        {/* Title */}
         <div className={styles.titleRow}>
           <span className={styles.titleIcon}>🗂️</span>
           <h1 className={styles.title}>Record Payment</h1>
         </div>
 
         <div className={styles.mainLayout}>
-
-          {/* ── LEFT — tabbed panel ── */}
           <div className={styles.leftPanel}>
-
-            {/* Tab bar */}
             <div className={styles.tabBar}>
               {TABS.map((tab) => (
                 <button
@@ -322,19 +410,16 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
               ))}
             </div>
 
-            {/* ── Tab 1: Existing Member Payment ── */}
             {activeTab === "existing" && (
               <div className={styles.formCard}>
-
-                {error      && <div className={styles.alertError}>{error}</div>}
+                {error && <div className={styles.alertError}>{error}</div>}
                 {successMsg && <div className={styles.alertSuccess}>{successMsg}</div>}
                 {membersLoading && <div className={styles.alertInfo}>Loading members…</div>}
 
-                {/* Search */}
                 <div className={styles.formGroup} ref={dropdownRef}>
                   <label className={styles.formLabel}>Search Member</label>
                   <div className={styles.searchWrap}>
-                    <span className="ti ti-search" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#aaa", fontSize:15 }} aria-hidden="true" />
+                    <span className="ti ti-search" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 15 }} aria-hidden="true" />
                     <input
                       className={styles.searchInput}
                       placeholder="Search member name or ID"
@@ -347,10 +432,10 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                   </div>
                   {showDropdown && !membersLoading && (
                     <div className={styles.dropdown}>
-                      {filteredMembers.length > 0 ? filteredMembers.map((m) => (
-                        <div key={m.member_id} className={styles.dropdownItem} onClick={() => handleSelectMember(m)}>
-                          <span className={styles.dropdownName}>{m.full_name}</span>
-                          <span className={styles.dropdownId}>ID: {m.member_id}</span>
+                      {filteredMembers.length > 0 ? filteredMembers.map((member) => (
+                        <div key={member.member_id} className={styles.dropdownItem} onClick={() => handleSelectMember(member)}>
+                          <span className={styles.dropdownName}>{member.full_name}</span>
+                          <span className={styles.dropdownId}>ID: {member.member_id}</span>
                         </div>
                       )) : (
                         <div className={styles.dropdownEmpty}>
@@ -361,7 +446,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                   )}
                 </div>
 
-                {/* Member details */}
                 <div className={styles.memberDetails}>
                   <p className={styles.memberDetailsTitle}>Member Details</p>
                   <p className={styles.memberDetailsRow}>
@@ -376,64 +460,65 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                     <span className={styles.memberDetailsKey}>Expiration:</span>
                     <span className={isExpired ? styles.expiryExpired : isExpiringSoon ? styles.expiryWarn : undefined}>
                       {selectedMember ? formatExpiry(selectedMember.expiration_date) : "[Auto-populated]"}
-                      {isExpired      && " (Expired)"}
+                      {isExpired && " (Expired)"}
                       {isExpiringSoon && ` (${expiryDays === 0 ? "Today" : `${expiryDays}d left`})`}
                     </span>
                   </p>
-
                 </div>
 
-                {/* ── Renewal toggle button — outside member details, always visible after selection ── */}
                 {selectedMember && (
                   <button
+                    type="button"
                     className={`${styles.renewalToggleBtn} ${showRenewal ? styles.renewalToggleBtnActive : ""}`}
-                    onClick={() => { setShowRenewal(v => !v); setRenewalError(""); setRenewalSuccess(""); }}
+                    onClick={() => { setShowRenewal((value) => !value); setRenewalError(""); setRenewalSuccess(""); }}
                   >
                     <span className="ti ti-refresh" aria-hidden="true" />
                     {showRenewal ? "▲ Hide Renewal" : (isExpired || isExpiringSoon) ? " Renew Membership ⚠️" : " Renew Membership"}
                   </button>
                 )}
 
-                {/* ── Renewal panel ── */}
                 {showRenewal && selectedMember && (
                   <div className={styles.renewalPanel}>
                     <p className={styles.renewalPanelTitle}>
                       <span className="ti ti-refresh" aria-hidden="true" />
                       Renewal — extends expiry from today
                     </p>
-
-                    {renewalError   && <p className={styles.renewalError}>{renewalError}</p>}
+                    {renewalError && <p className={styles.renewalError}>{renewalError}</p>}
                     {renewalSuccess && <p className={styles.renewalSuccess}>{renewalSuccess}</p>}
 
                     <div className={styles.renewalInputRow}>
-                      {/* Months */}
                       <div className={styles.renewalInputGroup}>
                         <label className={styles.renewalInputLabel}>Months</label>
                         <div className={styles.renewalInputWrap}>
                           <input
                             className={styles.renewalInput}
-                            type="number" min="1" step="1" placeholder="0"
+                            type="number"
+                            min="1"
+                            step="1"
+                            placeholder="0"
                             value={renewalForm.months}
-                            onChange={e => setRenewalForm(p => ({ ...p, months: e.target.value.replace(/[^\d]/g, "") }))}
+                            onChange={(event) => setRenewalForm((prev) => ({ ...prev, months: event.target.value.replace(/[^\d]/g, "") }))}
                           />
                           <span className={styles.renewalUnit}>mo</span>
                         </div>
                       </div>
-                      {/* Years */}
                       <div className={styles.renewalInputGroup}>
                         <label className={styles.renewalInputLabel}>Years</label>
                         <div className={styles.renewalInputWrap}>
                           <input
                             className={styles.renewalInput}
-                            type="number" min="1" step="1" placeholder="0"
+                            type="number"
+                            min="1"
+                            step="1"
+                            placeholder="0"
                             value={renewalForm.years}
-                            onChange={e => setRenewalForm(p => ({ ...p, years: e.target.value.replace(/[^\d]/g, "") }))}
+                            onChange={(event) => setRenewalForm((prev) => ({ ...prev, years: event.target.value.replace(/[^\d]/g, "") }))}
                           />
                           <span className={styles.renewalUnit}>yr</span>
                         </div>
                       </div>
-                      {/* Confirm */}
                       <button
+                        type="button"
                         className={styles.renewalSubmitBtn}
                         onClick={handleRenewalSubmit}
                         disabled={renewalLoading || (!renewalForm.months && !renewalForm.years)}
@@ -443,13 +528,11 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                     </div>
 
                     <p className={styles.renewalHint}>
-                      This updates the member's expiration date in the database.
-                      To also record a payment, fill in the form below and click "Add Record".
+                      This updates the member&apos;s expiration date in the database.
                     </p>
                   </div>
                 )}
 
-                {/* Date + Payment Details */}
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>Date</label>
@@ -457,48 +540,40 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                   </div>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>Payment Details</label>
-                    <input className={styles.formInput} placeholder="e.g. Monthly Renewal"
-                      value={form.description} onChange={set("description")} />
+                    <input className={styles.formInput} placeholder="e.g. Monthly Renewal" value={form.description} onChange={set("description")} />
                   </div>
                 </div>
 
-                {/* Mode of Payment */}
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>Mode Of Payment</label>
                     <select className={styles.formInput} value={form.modeOfPayment} onChange={set("modeOfPayment")}>
-                      {["Cash","GCash","Bank Transfer","Credit Card"].map((m) => (
-                        <option key={m} value={m}>{m}</option>
+                      {["Cash", "GCash", "Bank Transfer", "Credit Card"].map((mode) => (
+                        <option key={mode} value={mode}>{mode}</option>
                       ))}
                     </select>
                   </div>
-                  {["GCash","Bank Transfer","Credit Card"].includes(form.modeOfPayment) && (
+                  {["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment) && (
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>Reference Number</label>
-                      <input className={styles.formInput} placeholder="Enter Reference Number"
-                        value={form.referenceNumber} onChange={set("referenceNumber")} />
+                      <input className={styles.formInput} placeholder="Enter Reference Number" value={form.referenceNumber} onChange={set("referenceNumber")} />
                     </div>
                   )}
                 </div>
 
-                {/* Total */}
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Total</label>
-                  <input className={styles.formInput} type="number" placeholder="Enter Total Amount"
-                    value={form.total} onChange={set("total")} />
+                  <input className={styles.formInput} type="number" placeholder="Enter Total Amount" value={form.total} onChange={set("total")} />
                 </div>
 
-                {/* Status + actions */}
                 <div className={styles.formRowStatus}>
                   <div className={styles.statusGroup}>
                     <label className={styles.formLabel}>Status</label>
                     <div className={styles.radioRow}>
-                      {["Paid","Unpaid"].map((s) => (
-                        <label key={s} className={styles.radioOption}>
-                          <input type="radio" name="status" value={s}
-                            checked={form.status === s} onChange={set("status")}
-                            style={{ accentColor:"#7eba56" }} />
-                          {s}
+                      {["Paid", "Unpaid"].map((status) => (
+                        <label key={status} className={styles.radioOption}>
+                          <input type="radio" name="status" value={status} checked={form.status === status} onChange={set("status")} style={{ accentColor: "#7eba56" }} />
+                          {status}
                         </label>
                       ))}
                     </div>
@@ -507,49 +582,53 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                     <button className={styles.addRecordBtn} onClick={handleSubmit} disabled={loading}>
                       {loading ? "Adding…" : "Add Record"}
                     </button>
-                    <button className={styles.cancelBtn}
-                      onClick={() => { setForm({ ...defaultExistingForm, date: getTodayDateString() }); setSelectedMember(null); setShowRenewal(false); setError(""); }}
-                      disabled={loading}>
+                    <button
+                      className={styles.cancelBtn}
+                      onClick={() => {
+                        setForm({ ...defaultExistingForm, date: getTodayDateString() });
+                        setSelectedMember(null);
+                        setShowRenewal(false);
+                        setError("");
+                      }}
+                      disabled={loading}
+                    >
                       Clear
                     </button>
                   </div>
                 </div>
-
               </div>
             )}
 
-            {/* ── Tab 2: Walk-in Payment ── */}
             {activeTab === "walkin" && (
               <div className={styles.formCard}>
-
-                {walkInError   && <div className={styles.alertError}>{walkInError}</div>}
+                {walkInError && <div className={styles.alertError}>{walkInError}</div>}
                 {walkInSuccess && <div className={styles.alertSuccess}>{walkInSuccess}</div>}
+                {walkInsLoading && <div className={styles.alertInfo}>Loading walk-in records…</div>}
 
-                {/* Member search */}
-                <div className={styles.formGroup} ref={dropdownRef}>
-                  <label className={styles.formLabel}>Search Member</label>
+                <div className={styles.formGroup} ref={walkInDropdownRef}>
+                  <label className={styles.formLabel}>Search Walk-in</label>
                   <div className={styles.searchWrap}>
-                    <span className="ti ti-search" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#aaa", fontSize:15 }} aria-hidden="true" />
+                    <span className="ti ti-search" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 15 }} aria-hidden="true" />
                     <input
                       className={styles.searchInput}
-                      placeholder="Search member name or ID"
-                      value={form.memberName}
-                      onChange={handleMemberInputChange}
-                      onFocus={() => setShowDropdown(true)}
-                      disabled={membersLoading}
+                      placeholder="Search recorded walk-in name"
+                      value={walkInForm.name}
+                      onChange={handleWalkInInputChange}
+                      onFocus={() => setShowWalkInDropdown(true)}
+                      disabled={walkInsLoading}
                       autoComplete="off"
                     />
                   </div>
-                  {showDropdown && !membersLoading && (
+                  {showWalkInDropdown && !walkInsLoading && (
                     <div className={styles.dropdown}>
-                      {filteredMembers.length > 0 ? filteredMembers.map((m) => (
-                        <div key={m.member_id} className={styles.dropdownItem} onClick={() => handleSelectMember(m)}>
-                          <span className={styles.dropdownName}>{m.full_name}</span>
-                          <span className={styles.dropdownId}>ID: {m.member_id}</span>
+                      {filteredWalkIns.length > 0 ? filteredWalkIns.map((record) => (
+                        <div key={`${record.id}-${record.name}`} className={styles.dropdownItem} onClick={() => handleSelectWalkIn(record)}>
+                          <span className={styles.dropdownName}>{record.name}</span>
+                          <span className={styles.dropdownId}>{record.planType} · {record.paymentDate}</span>
                         </div>
                       )) : (
                         <div className={styles.dropdownEmpty}>
-                          {form.memberName ? `No members found matching "${form.memberName}"` : "Start typing to see members"}
+                          {walkInForm.name ? `No walk-in records found matching "${walkInForm.name}"` : "Start typing to see recorded walk-ins"}
                         </div>
                       )}
                     </div>
@@ -558,44 +637,53 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Mode Of Payment</label>
-                    <select className={styles.formInput} value={walkInForm.modeOfPayment} onChange={setWI("modeOfPayment")}>
-                      {["Cash","GCash","Bank Transfer","Credit Card"].map((m) => (
-                        <option key={m} value={m}>{m}</option>
+                    <label className={styles.formLabel}>Plan Type</label>
+                    <select className={styles.formInput} value={walkInForm.planType} onChange={setWI("planType")}>
+                      {["Daily", "Monthly"].map((plan) => (
+                        <option key={plan} value={plan}>{plan}</option>
                       ))}
                     </select>
                   </div>
-                  {["GCash","Bank Transfer","Credit Card"].includes(walkInForm.modeOfPayment) && (
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Mode Of Payment</label>
+                    <select className={styles.formInput} value={walkInForm.modeOfPayment} onChange={setWI("modeOfPayment")}>
+                      {["Cash", "GCash", "Bank Transfer", "Credit Card"].map((mode) => (
+                        <option key={mode} value={mode}>{mode}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {["GCash", "Bank Transfer", "Credit Card"].includes(walkInForm.modeOfPayment) && (
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>Reference Number</label>
-                      <input className={styles.formInput} placeholder="Enter Reference Number"
-                        value={walkInForm.referenceNumber} onChange={setWI("referenceNumber")} />
+                      <input className={styles.formInput} placeholder="Enter Reference Number" value={walkInForm.referenceNumber} onChange={setWI("referenceNumber")} />
                     </div>
                   )}
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Payment Details</label>
-                  <input className={styles.formInput} placeholder="e.g. Day Pass"
-                    value={walkInForm.description} onChange={setWI("description")} />
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Date</label>
+                    <input className={styles.formInput} type="date" value={walkInForm.date} onChange={setWI("date")} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Selected Walk-in</label>
+                    <input className={styles.formInput} value={selectedWalkIn?.name || walkInForm.name || "None selected"} readOnly />
+                  </div>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Total</label>
-                  <input className={styles.formInput} type="number" placeholder="Enter Total Amount"
-                    value={walkInForm.total} onChange={setWI("total")} />
+                  <input className={styles.formInput} type="number" placeholder="Enter Total Amount" value={walkInForm.total} onChange={setWI("total")} />
                 </div>
 
                 <div className={styles.formRowStatus}>
                   <div className={styles.statusGroup}>
                     <label className={styles.formLabel}>Status</label>
                     <div className={styles.radioRow}>
-                      {["Paid","Unpaid"].map((s) => (
-                        <label key={s} className={styles.radioOption}>
-                          <input type="radio" name="wi-status" value={s}
-                            checked={walkInForm.status === s} onChange={setWI("status")}
-                            style={{ accentColor:"#7eba56" }} />
-                          {s}
+                      {["Paid", "Unpaid"].map((status) => (
+                        <label key={status} className={styles.radioOption}>
+                          <input type="radio" name="wi-status" value={status} checked={walkInForm.status === status} onChange={setWI("status")} style={{ accentColor: "#7eba56" }} />
+                          {status}
                         </label>
                       ))}
                     </div>
@@ -604,14 +692,21 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                     <button className={styles.addRecordBtn} onClick={handleWalkInSubmit} disabled={walkInLoading}>
                       {walkInLoading ? "Adding…" : "Add Record"}
                     </button>
-                    <button className={styles.cancelBtn}
-                      onClick={() => { setWalkInForm(defaultWalkInForm); setWalkInError(""); }}
-                      disabled={walkInLoading}>
+                    <button
+                      className={styles.cancelBtn}
+                      onClick={() => {
+                        setWalkInForm(defaultWalkInForm);
+                        setSelectedWalkIn(null);
+                        setShowWalkInDropdown(false);
+                        setWalkInError("");
+                        setWalkInSuccess("");
+                      }}
+                      disabled={walkInLoading}
+                    >
                       Clear
                     </button>
                   </div>
                 </div>
-
               </div>
             )}
 
@@ -619,7 +714,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
               <button className={styles.closePageBtn} onClick={() => onNavigate("payments")}>Close</button>
             </div>
           </div>
-
         </div>
       </div>
     </div>

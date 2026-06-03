@@ -5,7 +5,7 @@ import ConfirmModal from "../../components/modals/ConfirmModal";
 import { supabase } from "../../lib/supabaseClient";
 
 // ── Validation ────────────────────────────────────────────────────────────────
-const SPECIAL_CHAR_RE = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+const SPECIAL_CHAR_RE = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/;
 
 function validate(current, next, confirm) {
   if (!current) return "Please enter your current password.";

@@ -9,7 +9,9 @@ import MemberRegisteredModal from "../../components/modals/members/MemberRegiste
 import MembersExportModal from "../../components/modals/members/MembersExportModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers, deleteMember } from "../../services/memberService";
+import { fetchTodayAttendanceRecords } from "../../services/attendanceService";
 import { formatMMDDYYYY } from "../../utils/dateFormat";
+import { getMembershipExpiryDate, isMembershipExpiringSoon } from "../../utils/membershipUtils";
 
 export default function MembersPage({ onNavigate, activePage = "members", isAdmin = false }) {
   const [members, setMembers] = useState([]);
@@ -23,6 +25,7 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
   const [showViewAll, setShowViewAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [registeredMember, setRegisteredMember] = useState(null);
+  const [todayAttendanceRecords, setTodayAttendanceRecords] = useState([]);
 
   const loadMembers = useCallback(async (showLoader = false) => {
     try {
@@ -41,6 +44,15 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
   // Fetch members on component mount and subscribe to realtime member changes
   useEffect(() => {
     loadMembers(true);
+
+    (async () => {
+      try {
+        setTodayAttendanceRecords(await fetchTodayAttendanceRecords());
+      } catch (err) {
+        console.error("Error fetching today attendance records:", err);
+        setTodayAttendanceRecords([]);
+      }
+    })();
 
     const memberChannel = supabase
       .channel("members-realtime")
@@ -68,61 +80,8 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
   }, [loadMembers]);
 
   // Calculate stats from members data
-  const calculateActiveToday = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Start of today
-
-    return members.filter((m) => {
-      // Check if member visited today
-      if (m.last_visit) {
-        const lastVisit = new Date(m.last_visit);
-        lastVisit.setHours(0, 0, 0, 0);
-        if (lastVisit.getTime() === today.getTime()) {
-          return true;
-        }
-      }
-
-      // Check if member's membership is still active (hasn't expired)
-      if (m.join_date && m.monthly_validity) {
-        const joinDate = new Date(m.join_date);
-        let expiryDate = new Date(joinDate);
-
-        // Parse monthly_validity (e.g., "2 Months")
-        const validityMatch = m.monthly_validity.match(/(\d+)\s*(month)s?/i);
-        if (validityMatch) {
-          const amount = parseInt(validityMatch[1]);
-          expiryDate.setMonth(expiryDate.getMonth() + amount);
-
-          // Member is active if expiry date is in the future
-          if (expiryDate > today) {
-            return true;
-          }
-        }
-      }
-
-      return false;
-    }).length;
-  };
-
   const calculateExpiringMembers = () => {
-    const today = new Date();
-    const thirtyDaysAhead = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-    return members.filter((m) => {
-      if (!m.join_date || !m.monthly_validity) return false;
-
-      const joinDate = new Date(m.join_date);
-      let expiryDate = new Date(joinDate);
-
-      // Parse monthly_validity (e.g., "2 Months")
-      const validityMatch = m.monthly_validity.match(/(\d+)\s*(month)s?/i);
-      if (validityMatch) {
-        const amount = parseInt(validityMatch[1]);
-        expiryDate.setMonth(expiryDate.getMonth() + amount);
-      }
-
-      return expiryDate >= today && expiryDate <= thirtyDaysAhead;
-    }).length;
+    return members.filter((member) => isMembershipExpiringSoon(member, 30)).length;
   };
 
   const calculateNewThisMonth = () => {
@@ -137,33 +96,9 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
 
   const stats = {
     totalMembers: members.length,
-    activeToday: calculateActiveToday(),
+    activeToday: new Set(todayAttendanceRecords.map((record) => record.member_id)).size,
     expiringSoon: calculateExpiringMembers(),
     newThisMonth: calculateNewThisMonth(),
-  };
-
-  const getMemberExpiryDate = (member) => {
-    if (member?.expiration_date) {
-      const storedExpiry = new Date(member.expiration_date);
-      if (!Number.isNaN(storedExpiry.getTime())) return storedExpiry;
-    }
-
-    if (!member?.join_date) return null;
-    const joinDate = new Date(member.join_date);
-    if (Number.isNaN(joinDate.getTime())) return null;
-
-    const monthlyRaw = String(member.monthly_validity || "").trim();
-    if (monthlyRaw) {
-      const monthlyMatch = monthlyRaw.match(/(\d+)/);
-      if (!monthlyMatch) return null;
-      const months = Number.parseInt(monthlyMatch[1], 10);
-      if (!Number.isInteger(months) || months <= 0) return null;
-      const expiryDate = new Date(joinDate);
-      expiryDate.setMonth(expiryDate.getMonth() + months);
-      return expiryDate;
-    }
-
-    return null;
   };
 
   const filtered = members.filter((m) => {
@@ -177,7 +112,7 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
     if (quickFilter === "students") return (m.membership_type || "").toLowerCase() === "student";
     if (quickFilter === "seniors") return (m.membership_type || "").toLowerCase() === "senior";
     if (quickFilter === "expired") {
-      const expiryDate = getMemberExpiryDate(m);
+      const expiryDate = getMembershipExpiryDate(m);
       if (!expiryDate) return false;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -366,7 +301,7 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
                 <tbody>
                   {filtered.map((m) => {
                     const membershipPlan = getMembershipPlanParts(m.membership_validity);
-                    const expiryDate = getMemberExpiryDate(m);
+                    const expiryDate = getMembershipExpiryDate(m);
                     return (
                       <tr key={m.member_id} className={styles.clickableRow}
                         onClick={() => setShowProfile(m)}>

@@ -23,8 +23,8 @@ export default function EditMembershipModal({ member, onClose, onSaved }) {
     const hasMonthly = Number.isInteger(monthlyValue) && monthlyValue > 0;
     const hasYearly = Number.isInteger(yearlyValue) && yearlyValue > 0;
 
-    if (hasMonthly === hasYearly) {
-      setError("Set either months or years.");
+    if (!hasMonthly && !hasYearly) {
+      setError("Enter at least one validity value.");
       return;
     }
 
@@ -89,7 +89,6 @@ export default function EditMembershipModal({ member, onClose, onSaved }) {
                 step="1"
                 value={monthly}
                 onChange={setNumber(setMonthly)}
-                disabled={Boolean(yearly)}
               />
               <span className={styles.unitSuffix}>Months</span>
               <p className={styles.inputContextLabel}>Use months for short-term monthly pay plans.</p>
@@ -104,7 +103,6 @@ export default function EditMembershipModal({ member, onClose, onSaved }) {
                 step="1"
                 value={yearly}
                 onChange={setNumber(setYearly)}
-                disabled={Boolean(monthly)}
               />
               <span className={styles.unitSuffix}>Years</span>
               <p className={styles.inputContextLabel}>Use years for long-term memberships.</p>

@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
 import WalkInTable from "./WalkInTable";
+import { isMembershipActive } from "../../utils/membershipUtils";
 
 /**
  * Fetch total count of members from the database
@@ -330,7 +331,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
               <span className={styles.statIcon}>👥</span>
               <div>
                 <p className={styles.statLabel}>Active Memberships</p>
-                <p className={styles.statValue}>{loadingMembers ? "..." : members.length}</p>
+                <p className={styles.statValue}>{loadingMembers ? "..." : members.filter((member) => isMembershipActive(member)).length}</p>
               </div>
             </div>
           </div>
