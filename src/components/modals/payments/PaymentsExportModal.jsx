@@ -214,7 +214,7 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div className={`${styles.modal} ${styles.paymentExportModal}`} onClick={(e) => e.stopPropagation()}>
         <h2 className={styles.modalTitle}>Export Data</h2>
 
         <p className={styles.sectionLabel}>File Format</p>
@@ -298,6 +298,7 @@ export default function PaymentsExportModal({ payments = [], members = [], onClo
          } setShowReAuth(true);}} disabled={loading}>
         {loading ? "Exporting..." : "Export"}
         </button>
+        <button className={styles.closeBtn} onClick={onClose} disabled={loading}>Close</button>
       </div>
       {showReAuth && (
         <ReAuthModal
