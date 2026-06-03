@@ -10,6 +10,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted,
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
+  const [search, setSearch] = useState("");
 
   // Keep display list in sync with parent `members` for realtime updates
   useEffect(() => {
@@ -24,11 +25,42 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted,
     onMemberDeleted?.(deletedMember);
   };
 
+  const filteredMembers = displayMembers.filter((member) => {
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+
+    return [
+      member.member_id,
+      member.full_name,
+      member.join_date ? formatMMDDYYYY(member.join_date) : "",
+      member.membership_type,
+      member.membership_validity,
+      member.monthly_validity,
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query));
+  });
+
   return (
     <>
       <div className={styles.overlay} onClick={onClose}>
-        <div className={styles.wideModal} onClick={(e) => e.stopPropagation()}>
-          <h2 className={styles.modalTitle}>Membership List</h2>
+        <div className={styles.viewAllMembersModal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.paymentModalHeader}>
+            <h2 className={styles.paymentModalTitle}>Membership List</h2>
+            <button className={styles.modalCloseX} onClick={onClose}>✕</button>
+          </div>
+
+          <div className={styles.paymentModalSearch}>
+            <span>☰</span>
+            <input
+              type="text"
+              placeholder="Search...."
+              className={styles.modalSearchInput}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
           <table className={styles.modalTable}>
             <thead>
               <tr>
@@ -42,7 +74,7 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted,
               </tr>
             </thead>
             <tbody>
-              {displayMembers.map((m) => {
+              {filteredMembers.map((m) => {
                 const formatValidity = (value, unit) => {
                   const raw = String(value || "").trim();
                   if (!raw) return "N/A";
@@ -111,13 +143,14 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted,
                   </tr>
                 );
               })}
-              {displayMembers.length === 0 && (
-                <tr><td colSpan={isAdmin ? 7 : 6} style={{ textAlign: "center", padding: "20px", color: "#999" }}>No members found.</td></tr>
+              {filteredMembers.length === 0 && (
+                <tr><td colSpan={isAdmin ? 7 : 6} className={styles.noResults}>No members found.</td></tr>
               )}
             </tbody>
           </table>
-          <div className={styles.viewAllWrapper}>
-            <button className={styles.viewAllBtn} onClick={onClose}>Close</button>
+          <div className={styles.paymentModalFooter}>
+            <div />
+            <button className={styles.addRecordBtn} onClick={onClose}>Close</button>
           </div>
         </div>
       </div>

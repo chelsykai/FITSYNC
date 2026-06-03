@@ -80,7 +80,7 @@
 .viewAllModal {
   background: #fff;
   border-radius: 14px;
-  width: min(960px, calc(100vw - 24px));
+  width: min(1200px, calc(100vw - 24px));
   max-height: 90vh;
   overflow: hidden;
   display: flex;
@@ -1861,7 +1861,8 @@
    ============================================================ */
 
 /* Shared payment modal header */
-.viewAllPaymentsModal {
+.viewAllPaymentsModal,
+.viewAllMembersModal {
   background: #fff;
   border-radius: 14px;
   width: min(1080px, calc(100vw - 24px));
@@ -1918,7 +1919,8 @@
   width: min(600px, calc(100% - 48px));
 }
 
-.viewAllPaymentsModal .modalTable {
+.viewAllPaymentsModal .modalTable,
+.viewAllMembersModal .modalTable {
   display: block;
   overflow: auto;
   margin: 8px 24px 18px;
@@ -1929,27 +1931,55 @@
 
 .viewAllPaymentsModal .modalTable thead,
 .viewAllPaymentsModal .modalTable tbody,
-.viewAllPaymentsModal .modalTable tr {
+.viewAllPaymentsModal .modalTable tr,
+.viewAllMembersModal .modalTable thead,
+.viewAllMembersModal .modalTable tbody,
+.viewAllMembersModal .modalTable tr {
   display: table;
   width: 100%;
   table-layout: fixed;
+  font-size: 16px;
 }
 
-.viewAllPaymentsModal .modalTable thead {
+.viewAllPaymentsModal .modalTable thead,
+.viewAllMembersModal .modalTable thead {
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-.viewAllPaymentsModal .modalTable th {
+.viewAllPaymentsModal .modalTable th,
+.viewAllMembersModal .modalTable th {
   color: #5f9f36;
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 
 .viewAllPaymentsModal .modalTable th,
-.viewAllPaymentsModal .modalTable td {
+.viewAllPaymentsModal .modalTable td,
+.viewAllMembersModal .modalTable th,
+.viewAllMembersModal .modalTable td {
   padding: 7px 9px;
+}
+
+.viewAllMembersModal .modalTable td {
+  font-size: 12px;
+}
+
+.viewAllMembersModal .membershipPlanCol {
+  min-width: 0;
+}
+
+.viewAllMembersModal .actionBtns {
+  gap: 10px;
+}
+
+.viewAllMembersModal .editBtn,
+.viewAllMembersModal .deleteBtn {
+  min-width: 48px;
+  justify-content: center;
+  border-radius: 6px;
+  padding: 5px 10px;
 }
 
 /* Clickable name link */
