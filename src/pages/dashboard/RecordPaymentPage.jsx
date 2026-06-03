@@ -50,14 +50,6 @@ const defaultWalkInForm = {
   total: "",
 };
 
-const defaultRegForm = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  plan: "",
-};
-
 // ── Fetch members ─────────────────────────────────────────────────────────────
 const fetchMembers = async () => {
   try {
@@ -124,21 +116,17 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
   const [form,            setForm]            = useState(defaultExistingForm);
   const [renewalForm,     setRenewalForm]     = useState(defaultRenewalForm);
   const [walkInForm,      setWalkInForm]      = useState(defaultWalkInForm);
-  const [regForm,         setRegForm]         = useState(defaultRegForm);
   const [members,         setMembers]         = useState([]);
   const [selectedMember,  setSelectedMember]  = useState(null);
   const [error,           setError]           = useState("");
   const [walkInError,     setWalkInError]     = useState("");
-  const [regError,        setRegError]        = useState("");
   const [renewalError,    setRenewalError]    = useState("");
   const [loading,         setLoading]         = useState(false);
   const [renewalLoading,  setRenewalLoading]  = useState(false);
   const [walkInLoading,   setWalkInLoading]   = useState(false);
-  const [regLoading,      setRegLoading]      = useState(false);
   const [successMsg,      setSuccessMsg]      = useState("");
   const [renewalSuccess,  setRenewalSuccess]  = useState("");
   const [walkInSuccess,   setWalkInSuccess]   = useState("");
-  const [regSuccess,      setRegSuccess]      = useState("");
   const [membersLoading,  setMembersLoading]  = useState(true);
   const [showDropdown,    setShowDropdown]    = useState(false);
   const [showRenewal,     setShowRenewal]     = useState(false);
@@ -294,22 +282,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
       setWalkInSuccess("Walk-in payment recorded! (UI only — backend pending)");
       setWalkInForm(defaultWalkInForm);
       setWalkInLoading(false);
-    }, 800);
-  };
-
-  // ── Submit: walk-in registration (UI stub) ──────────────────────────────────
-  const handleRegSubmit = async () => {
-    setRegError(""); setRegSuccess("");
-    if (!regForm.firstName.trim() || !regForm.lastName.trim()) {
-      setRegError("First and last name are required"); return;
-    }
-    if (!regForm.plan) { setRegError("Please select a plan"); return; }
-    setRegLoading(true);
-    // TODO: backend dev — wire up walk-in registration API here
-    setTimeout(() => {
-      setRegSuccess("Walk-in registration submitted! (UI only — backend pending)");
-      setRegForm(defaultRegForm);
-      setRegLoading(false);
     }, 800);
   };
 
@@ -642,68 +614,8 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
 
               </div>
             )}
-          </div>
 
-          {/* ── RIGHT — Walk-in Registration ── */}
-          <div className={styles.rightPanel}>
-            <div className={styles.regCard}>
-              <div className={styles.regHeader}>
-                <span className="ti ti-clipboard-plus" style={{ fontSize:18 }} aria-hidden="true" />
-                <h2 className={styles.regTitle}>3. Walk-in Registration</h2>
-              </div>
-
-              {regError   && <div className={styles.alertError}>{regError}</div>}
-              {regSuccess && <div className={styles.alertSuccess}>{regSuccess}</div>}
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>First Name</label>
-                <input className={styles.formInput} placeholder="First Name"
-                  value={regForm.firstName} onChange={e => setRegForm({ ...regForm, firstName: e.target.value })} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Last Name</label>
-                <input className={styles.formInput} placeholder="Last Name"
-                  value={regForm.lastName} onChange={e => setRegForm({ ...regForm, lastName: e.target.value })} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Email Address</label>
-                <input className={styles.formInput} placeholder="Email Address" type="email"
-                  value={regForm.email} onChange={e => setRegForm({ ...regForm, email: e.target.value })} />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Phone Number</label>
-                <input className={styles.formInput} placeholder="Phone Number"
-                  value={regForm.phone} onChange={e => setRegForm({ ...regForm, phone: e.target.value })} />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Select a Plan</label>
-                <div className={styles.planList}>
-                  {["Day Pass", "7-Day Pass", "Monthly"].map((plan) => (
-                    <label key={plan} className={styles.planOption}>
-                      <input type="radio" name="reg-plan" value={plan}
-                        checked={regForm.plan === plan}
-                        onChange={e => setRegForm({ ...regForm, plan: e.target.value })}
-                        style={{ accentColor:"#7eba56" }} />
-                      {plan}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.regActions}>
-                <button className={styles.addRecordBtn} onClick={handleRegSubmit} disabled={regLoading}>
-                  {regLoading ? "Registering…" : "Register"}
-                </button>
-                <button className={styles.cancelBtn}
-                  onClick={() => { setRegForm(defaultRegForm); setRegError(""); }}
-                  disabled={regLoading}>
-                  Clear
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.regCloseRow}>
+            <div className={styles.closeRow}>
               <button className={styles.closePageBtn} onClick={() => onNavigate("payments")}>Close</button>
             </div>
           </div>
