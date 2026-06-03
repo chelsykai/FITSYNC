@@ -193,7 +193,7 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
     return `${raw} ${unit}${raw === "1" ? "" : "s"}`;
   };
 
-  const getMembershipPlanParts = (membershipValidity, monthlyValidity) => {
+  const getMembershipPlanParts = (membershipValidity) => {
     const yearlyRaw = String(membershipValidity || "").trim();
 
     return {
@@ -365,12 +365,14 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
                 </thead>
                 <tbody>
                   {filtered.map((m) => {
-                    const membershipPlan = getMembershipPlanParts(m.membership_validity, m.monthly_validity);
+                    const membershipPlan = getMembershipPlanParts(m.membership_validity);
                     const expiryDate = getMemberExpiryDate(m);
                     return (
                       <tr key={m.member_id} className={styles.clickableRow}
                         onClick={() => setShowProfile(m)}>
-                        <td>{m.member_id}</td>
+                        <td>
+                          <span className={styles.memberIdCell}>{m.member_id}</span>
+                        </td>
                         <td>{m.full_name}</td>
                         <td>{m.birthday ? formatMMDDYYYY(m.birthday) : "N/A"}</td>
                         <td>{m.membership_type}</td>

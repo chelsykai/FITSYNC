@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styles from "../Modal.module.css";
 import EditMemberModal from "./EditMemberModal";
 import DeleteMemberModal from "./DeleteMemberModal";
@@ -6,24 +6,22 @@ import MemberProfileModal from "./MemberProfileModal";
 import { formatMMDDYYYY } from "../../../utils/dateFormat";
 
 export default function ViewAllMembersModal({ members, onClose, onMemberDeleted, isAdmin = false }) {
-  const [displayMembers, setDisplayMembers] = useState(members);
+  const [removedMemberIds, setRemovedMemberIds] = useState([]);
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
   const [search, setSearch] = useState("");
 
-  // Keep display list in sync with parent `members` for realtime updates
-  useEffect(() => {
-    setDisplayMembers(members || []);
-  }, [members]);
-
   const handleMemberDeleted = (deletedMember) => {
-    // Remove the deleted member from the display list
-    setDisplayMembers(prev => prev.filter(m => m.member_id !== deletedMember.member_id));
+    setRemovedMemberIds((prev) => [...prev, deletedMember.member_id]);
     setDeleteTarget(null);
     // Call parent callback if provided
     onMemberDeleted?.(deletedMember);
   };
+
+  const displayMembers = (members || []).filter(
+    (member) => !removedMemberIds.includes(member.member_id)
+  );
 
   const filteredMembers = displayMembers.filter((member) => {
     const query = search.trim().toLowerCase();
@@ -114,7 +112,9 @@ export default function ViewAllMembersModal({ members, onClose, onMemberDeleted,
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f5f5f5"}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
                   >
-                    <td>{m.member_id}</td>
+                    <td>
+                      <span className={styles.viewAllMemberIdCell}>{m.member_id}</span>
+                    </td>
                     <td>{m.full_name}</td>
                     <td>{m.join_date ? formatMMDDYYYY(m.join_date) : "N/A"}</td>
                     <td>{m.membership_type}</td>

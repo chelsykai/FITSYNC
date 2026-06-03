@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import styles from "./PaymentsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
+import PaymentReceiptModal from "../../components/modals/payments/PaymentReceiptModal";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import AddWalkInModal from "../../components/modals/payments/AddWalkInModal";
 import { supabase } from "../../lib/supabaseClient";
@@ -193,6 +194,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
   const [showViewAll, setShowViewAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showAddWalkIn, setShowAddWalkIn] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [members, setMembers] = useState([]);
 
   const loadMembers = useCallback(async (showLoader = false) => {
@@ -335,7 +337,6 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
 
           {/* Search */}
           <div className={styles.searchWrapper}>
-            <span className={styles.searchIcon}>🔍</span>
             <input
               type="text"
               placeholder="Search"
@@ -432,9 +433,24 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
                       </td></tr>
                     ) : (
                       filtered.map((p, index) => (
-                        <tr key={`${p.memberId}-${p.date}-${index}`}>
+                        <tr
+                          key={`${p.id || p.memberId}-${p.date}-${index}`}
+                          className={styles.clickableRow}
+                          onClick={() => setSelectedPayment(p)}
+                        >
                           <td>{p.memberId}</td>
-                          <td>{p.name}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className={styles.paymentNameBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPayment(p);
+                              }}
+                            >
+                              {p.name}
+                            </button>
+                          </td>
                           <td>{p.date}</td>
                           <td>{p.type}</td>
                           <td>{p.total.toLocaleString()}</td>
@@ -472,6 +488,16 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
           payments={payments}
           onClose={() => setShowViewAll(false)}
           onAddPayment={() => { setShowViewAll(false); onNavigate("recordPayment"); }}
+        />
+      )}
+      {selectedPayment && (
+        <PaymentReceiptModal
+          payment={selectedPayment}
+          onClose={() => setSelectedPayment(null)}
+          onAddPayment={() => {
+            setSelectedPayment(null);
+            onNavigate("recordPayment");
+          }}
         />
       )}
       {showExport && isAdmin && (
