@@ -294,7 +294,7 @@ export default function ExportModal({ members = [], attendanceRecords = [], onCl
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.exportModal} onClick={(e) => e.stopPropagation()}>
+      <div className={`${styles.exportModal} ${styles.paymentExportModal}`} onClick={(e) => e.stopPropagation()}>
         <h2 className={styles.modalTitle}>Export Data</h2>
 
         <p className={styles.exportSectionLabel}>File Format</p>

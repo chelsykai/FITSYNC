@@ -53,6 +53,17 @@
   overflow: hidden;
 }
 
+.wideModal {
+  background: #fff;
+  border-radius: 14px;
+  width: min(960px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: auto;
+  padding: 24px;
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
+}
+
 .modalTitle {
   font-size: 18px;
   font-weight: 700;
@@ -156,6 +167,74 @@
   border-color: #7eba56;
 }
 
+.modalTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.modalTable th {
+  text-align: left;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  font-weight: 700;
+  color: #444;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.modalTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  vertical-align: middle;
+}
+
+.modalTable tr:hover td {
+  background: #fafafa;
+}
+
+.viewAllWrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.viewAllBtn {
+  padding: 10px 22px;
+  background: #7eba56;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.viewAllBtn:hover {
+  background: #6aa947;
+}
+
+.membershipPlanCol {
+  min-width: 150px;
+}
+
+.membershipPlanTerm {
+  font-weight: 600;
+}
+
+.membershipPlanFrequency {
+  color: #666;
+  font-size: 12px;
+}
+
+.actionBtns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 
 /* ============================================================
    3. EXPORT MODAL
@@ -215,6 +294,139 @@
   background: #f0f9e8;
 }
 
+.sectionLabel,
+.exportSectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+  margin: 18px 0 10px;
+}
+
+.radioRow,
+.exportRadioRow,
+.checkRow,
+.exportCheckRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #333;
+  font-family: "Montserrat", sans-serif;
+}
+
+.radioRow,
+.exportRadioRow {
+  margin-bottom: 8px;
+}
+
+.modalSearch,
+.exportSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+.modalSearchInput,
+.exportSearchInput {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+}
+
+.clearBtn,
+.exportSearchClear {
+  border: none;
+  background: transparent;
+  color: #777;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.clearBtn:disabled,
+.exportSearchClear:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.checkList,
+.exportCheckList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px 0 12px;
+}
+
+.checkRow,
+.exportCheckRow {
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.checkRow:hover,
+.exportCheckRow:hover {
+  border-color: #7eba56;
+  background: #f8fcf5;
+}
+
+.memberIcon {
+  color: #6aa947;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.exportSubmitBtn {
+  width: 100%;
+  padding: 12px;
+  background: #7eba56;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 8px 0 10px;
+}
+
+.exportSubmitBtn:hover {
+  background: #6aa947;
+}
+
+.exportSubmitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.exportCloseBtn {
+  width: 100%;
+  padding: 11px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.exportCloseBtn:hover {
+  background: #f5f5f5;
+}
+
 
 /* ============================================================
    4. MEMBERS EXPORT / SHARED FORM
@@ -247,6 +459,20 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.dateGroup {
+  display: flex;
+  flex: 1;
+  min-width: 150px;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dateLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
 }
 
 .dateSep {
@@ -360,6 +586,100 @@
 .closeBtn:hover    { background: #f5f5f5; }
 .closeBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+.paymentExportModal {
+  width: min(468px, calc(100vw - 32px));
+  padding: 34px 36px 32px;
+  border-radius: 26px;
+  background: #eaf6e4;
+}
+
+.paymentExportModal .modalTitle {
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 24px;
+}
+
+.paymentExportModal .sectionLabel,
+.paymentExportModal .exportSectionLabel {
+  font-size: 15px;
+  margin: 16px 0 8px;
+}
+
+.paymentExportModal .radioRow,
+.paymentExportModal .exportRadioRow,
+.paymentExportModal .checkRow,
+.paymentExportModal .exportCheckRow {
+  color: #6f6f6f;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.paymentExportModal .dateRow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+}
+
+.paymentExportModal .dateInput {
+  width: 100%;
+  min-width: 0;
+  min-height: 39px;
+  background: #fff;
+  border-color: #e5e5e5;
+  border-radius: 8px;
+}
+
+.paymentExportModal .modalSearch,
+.paymentExportModal .exportSearch {
+  background: #d1d1d1;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.paymentExportModal .modalSearchInput,
+.paymentExportModal .exportSearchInput {
+  background: transparent;
+  font-size: 15px;
+}
+
+.paymentExportModal .checkList,
+.paymentExportModal .exportCheckList {
+  gap: 0;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+}
+
+.paymentExportModal .checkRow,
+.paymentExportModal .exportCheckRow {
+  border: none;
+  border-radius: 0;
+  padding: 4px 0;
+}
+
+.paymentExportModal .submitBtn,
+.paymentExportModal .exportSubmitBtn,
+.paymentExportModal .closeBtn,
+.paymentExportModal .exportCloseBtn {
+  min-height: 40px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.paymentExportModal .closeBtn,
+.paymentExportModal .exportCloseBtn {
+  background: #333;
+  color: #fff;
+  border-color: #333;
+}
+
+.paymentExportModal .closeBtn:hover,
+.paymentExportModal .exportCloseBtn:hover {
+  background: #262626;
+}
+
 /* ── Walk-in Modal ── */
 .walkInModal {
   display: flex;
@@ -422,12 +742,19 @@
   font-family: "Montserrat", sans-serif;
 }
 
+.profileHero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid #eee;
+}
+
 .profileTopRow {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 24px 28px 20px;
-  border-bottom: 1px solid #eee;
+  padding: 0;
 }
 
 .profileAvatar {
@@ -437,6 +764,46 @@
   object-fit: cover;
   border: 2px solid #d0e8c0;
   flex-shrink: 0;
+  overflow: hidden;
+  background: #eef6e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileIdentity {
+  min-width: 0;
+}
+
+.profileName {
+  color: #222;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+
+.profileIdText {
+  color: #555;
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+
+.profileBadge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e8f5d8;
+  color: #3a7a1e;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .profileGrid {
@@ -446,26 +813,82 @@
   padding: 20px 28px;
 }
 
+.profileItem {
+  min-width: 0;
+}
+
+.profileLabel {
+  color: #555;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 3px;
+}
+
+.profileValue {
+  color: #222;
+  font-size: 13px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.profileQrBlock {
+  padding: 0 28px 18px;
+  border-top: 1px solid #f0f0f0;
+}
+
 .profileQrCanvas {
   display: block;
-  margin: 0 auto 12px;
+  width: fit-content;
+  margin: 16px 0 8px;
   border: 1px solid #eee;
   border-radius: 8px;
 }
 
+.profileQrLabel {
+  color: #555;
+  font-size: 12px;
+  margin: 0;
+}
+
+.profileActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 28px;
+  border-top: 1px solid #eee;
+  flex-wrap: wrap;
+}
+
+.profileEmailBtn,
+.profileCloseBtn {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.profileEmailBtn:hover,
+.profileCloseBtn:hover {
+  background: #f5f5f5;
+}
+
 /* Profile action buttons */
 .profileDeleteBtn {
-  width: 100%;
-  padding: 11px;
+  padding: 9px 14px;
   background: #e05555;
   color: #fff;
   border: none;
   border-radius: 8px;
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
-  margin-bottom: 10px;
   transition: background 0.2s;
 }
 
@@ -1438,6 +1861,18 @@
    ============================================================ */
 
 /* Shared payment modal header */
+.viewAllPaymentsModal {
+  background: #fff;
+  border-radius: 14px;
+  width: min(1080px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
+}
+
 .paymentModalHeader {
   display: flex;
   align-items: center;
@@ -1474,6 +1909,49 @@
 
 .paymentSearchInput:focus { border-color: #7eba56; }
 
+.paymentModalSearch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  flex-shrink: 0;
+  width: min(600px, calc(100% - 48px));
+}
+
+.viewAllPaymentsModal .modalTable {
+  display: block;
+  overflow: auto;
+  margin: 8px 24px 18px;
+  padding: 0;
+  width: auto;
+  font-size: 11px;
+}
+
+.viewAllPaymentsModal .modalTable thead,
+.viewAllPaymentsModal .modalTable tbody,
+.viewAllPaymentsModal .modalTable tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.viewAllPaymentsModal .modalTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.viewAllPaymentsModal .modalTable th {
+  color: #5f9f36;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.viewAllPaymentsModal .modalTable th,
+.viewAllPaymentsModal .modalTable td {
+  padding: 7px 9px;
+}
+
 /* Clickable name link */
 .paymentNameLink {
   color: #2a6e10;
@@ -1497,7 +1975,72 @@
   flex-wrap: wrap;
 }
 
+.paymentModalFooterLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exportSheetsBtn,
+.addRecordBtn,
+.receiptLinkBtn {
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.exportSheetsBtn,
+.addRecordBtn {
+  padding: 10px 16px;
+  border: 1px solid #7eba56;
+}
+
+.exportSheetsBtn {
+  background: #fff;
+  color: #2f6f19;
+}
+
+.exportSheetsBtn:hover {
+  background: #f0f9e8;
+}
+
+.exportSheetsBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.addRecordBtn {
+  background: #7eba56;
+  color: #fff;
+}
+
+.addRecordBtn:hover {
+  background: #6aa947;
+}
+
+.receiptLinkBtn {
+  padding: 7px 12px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+}
+
+.receiptLinkBtn:hover {
+  background: #f5f5f5;
+}
+
 /* Badge variants */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .badgePaid {
   display: inline-block;
   padding: 3px 10px;
@@ -1516,6 +2059,34 @@
   color: #b42318;
   font-size: 11px;
   font-weight: 700;
+}
+
+.badgePending {
+  background: #fff4d6;
+  color: #9a6200;
+}
+
+.noResults {
+  text-align: center;
+  padding: 24px;
+  color: #999;
+}
+
+.modalCloseX {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #222;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modalCloseX:hover {
+  background: #111;
 }
 
 /* Receipt */
@@ -1727,7 +2298,8 @@
    14. CREATE / EDIT ACCOUNT MODAL
    ============================================================ */
 
-.accountModal {
+.accountModal,
+.createAccountModal {
   background: #fff;
   border-radius: 14px;
   padding: 28px 32px;
@@ -1736,9 +2308,11 @@
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
   font-family: "Montserrat", sans-serif;
+  position: relative;
 }
 
-.accountModalTitle {
+.accountModalTitle,
+.createAccountTitle {
   font-size: 17px;
   font-weight: 700;
   color: #222;
@@ -1751,21 +2325,25 @@
   gap: 14px;
 }
 
-.accountStaffIdRow {
+.accountStaffIdRow,
+.staffIdRow {
   display: flex;
   align-items: flex-end;
   gap: 10px;
 }
 
-.accountPasswordRow {
+.accountPasswordRow,
+.passwordWrapper {
   position: relative;
 }
 
-.accountPasswordRow .formInput {
+.accountPasswordRow .formInput,
+.passwordWrapper .accountInput {
   padding-right: 42px;
 }
 
-.accountEyeBtn {
+.accountEyeBtn,
+.eyeBtn {
   position: absolute;
   right: 12px;
   top: 50%;
@@ -1779,11 +2357,121 @@
   align-items: center;
 }
 
-.accountFooter {
+.accountFooter,
+.createAccountFooter {
   display: flex;
   gap: 10px;
   margin-top: 20px;
   justify-content: flex-end;
+}
+
+.accountFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.accountLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+}
+
+.staffIdBadge {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #e8f5d8;
+  color: #2f6f19;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.staffIdInput,
+.accountInput,
+.accountSelect {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.staffIdInput:disabled {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.accountInput:focus,
+.accountSelect:focus {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.12);
+}
+
+.nameRow,
+.passwordRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.nameRow {
+  grid-template-columns: 1fr 1fr 90px;
+}
+
+.initialInput {
+  min-width: 0;
+}
+
+.selectWrapper {
+  position: relative;
+}
+
+.accountCancelBtn,
+.accountCreateBtn {
+  min-width: 110px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.accountCancelBtn {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.accountCancelBtn:hover {
+  background: #f5f5f5;
+}
+
+.accountCreateBtn {
+  background: #7eba56;
+  color: #fff;
+  border: 1px solid #7eba56;
+}
+
+.accountCreateBtn:hover {
+  background: #6aa947;
+}
+
+.accountCancelBtn:disabled,
+.accountCreateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 
