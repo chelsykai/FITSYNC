@@ -104,15 +104,18 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
           </div>
           <div className={styles.profileIdentity}>
             <h2 className={styles.profileName}>{displayName}</h2>
-            <p className={styles.profileIdText}>ID: {memberId}</p>
+            <p className={styles.profileIdText}>
+              <span className={styles.profileIdLabel}>ID</span>
+              <span className={styles.profileIdCode}>{memberId}</span>
+            </p>
             <span className={styles.profileBadge}>{memberType}</span>
           </div>
         </div>
 
         <div className={styles.profileGrid}>
-          <div className={styles.profileItem}>
+          <div className={`${styles.profileItem} ${styles.profileMemberIdItem}`}>
             <p className={styles.profileLabel}>Member ID:</p>
-            <p className={styles.profileValue}>{memberId}</p>
+            <p className={`${styles.profileValue} ${styles.profileMemberIdValue}`}>{memberId}</p>
           </div>
 
           {details.map((item) => (
@@ -150,7 +153,6 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
                 };
                 await generateMemberIDPDF(memberForPDF);
               } catch (err) {
-                // eslint-disable-next-line no-console
                 console.error("Failed to generate PDF:", err);
               }
             }}

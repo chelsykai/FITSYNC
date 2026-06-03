@@ -258,6 +258,34 @@
 .table tr:last-child td { border-bottom: none; }
 .table tbody tr:hover td { background-color: rgba(255,255,255,0.4); }
 
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:focus-within td,
+.clickableRow:hover td {
+  background-color: #f7fcf3;
+}
+
+.paymentNameBtn {
+  border: none;
+  background: transparent;
+  color: #2f6f19;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.paymentNameBtn:hover,
+.paymentNameBtn:focus-visible {
+  color: #5f9f36;
+  outline: none;
+}
+
 /* STATUS BADGES */
 .badge {
   padding: 4px 14px;

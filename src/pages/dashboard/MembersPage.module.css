@@ -267,6 +267,21 @@
   background: transparent;
 }
 
+.memberIdCell {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: #eef7e8;
+  color: #2f6f19;
+  border: 1px solid #d8ebcc;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .membershipPlanCol {
   text-align: left;
 }
