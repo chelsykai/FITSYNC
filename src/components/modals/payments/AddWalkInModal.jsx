@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
-import { supabase } from "../../../lib/supabaseClient";
+import { addWalkInRecord } from "../../../services/walkInService";
 import { toISODateString } from "../../../utils/dateFormat";
 
 export default function AddWalkInModal({ onClose, onSaved }) {
@@ -29,21 +29,19 @@ export default function AddWalkInModal({ onClose, onSaved }) {
       setSaving(true);
       setError("");
 
-      const { error: insertError } = await supabase.from("walk_in").insert([{
+      await addWalkInRecord({
         name: name.trim() || "Guest",
-        payment_date: date,
-        plan_type: planType,
+        paymentDate: date,
+        planType,
         total,
         status: "Paid",
-      }]);
-
-      if (insertError) throw insertError;
+      });
 
       await onSaved?.();
       onClose();
     } catch (err) {
       console.error("Error adding walk-in record:", err);
-      setError("Unable to save walk-in record right now. Please try again.");
+      setError(err.message || "Unable to save walk-in record right now. Please try again.");
     } finally {
       setSaving(false);
     }

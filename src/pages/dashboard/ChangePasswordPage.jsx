@@ -17,36 +17,42 @@ function validate(current, next, confirm) {
   return null;
 }
 
-// ── Placeholder API call — backend dev: replace this function ─────────────────
-async function changePasswordApi(userId, currentPassword, newPassword) {
-  // TODO: replace with real endpoint, e.g.:
-  // const res = await fetch("/api/users/change-password", {
-  //   method: "PUT",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify({ userId, currentPassword, newPassword }),
-  // });
-  // if (!res.ok) throw new Error((await res.json()).message || "Failed.");
+// ── Password change with proper auth ───────────────────────────────────────
+async function changePasswordApi(currentPassword, newPassword) {
+  try {
+    // Get current user's email for verification
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user?.email) {
+      throw new Error("Could not verify current user.");
+    }
 
-  // ── Supabase placeholder ──────────────────────────────────────────────────
-  const { data, error: fetchError } = await supabase
-    .from("system_user")
-    .select("password")
-    .eq("user_id", userId)
-    .single();
+    // Verify current password by attempting to sign in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
 
-  if (fetchError || !data) throw new Error("Could not verify current password.");
-  if (data.password !== currentPassword) throw new Error("Current password is incorrect.");
+    if (signInError) {
+      if (signInError.message.includes("Invalid login credentials")) {
+        throw new Error("Current password is incorrect.");
+      }
+      throw new Error("Failed to verify current password. Please try again.");
+    }
 
-  const { error: updateError } = await supabase
-    .from("system_user")
-    .update({
+    // Update password
+    const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
-      password_change_required: false,
-      password_change_deadline: null,
-    })
-    .eq("user_id", userId);
+    });
 
-  if (updateError) throw new Error("Failed to update password. Please try again.");
+    if (updateError) {
+      throw new Error("Failed to update password. Please try again.");
+    }
+
+    return { success: true };
+  } catch (err) {
+    throw new Error(err.message || "Password change failed.");
+  }
 }
 
 // ── Eye icon SVG ──────────────────────────────────────────────────────────────
@@ -137,7 +143,7 @@ export default function ChangePasswordPage({ onNavigate, userRole = "staff", isA
     setLoading(true);
     setModalError("");
     try {
-      await changePasswordApi(currentUser.user_id, current, next);
+      await changePasswordApi(current, next);
 
       // Update session so password_change_required is cleared
       const updated = { ...currentUser, password: next, password_change_required: false, password_change_deadline: null };
