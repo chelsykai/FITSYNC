@@ -1,140 +1,126 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
-import { updateMemberMembership } from "../../../services/memberService";
+import { updateMember } from "../../../services/memberService";
+import ReAuthModal from "../../ReAuthModal";
 
 export default function EditMembershipModal({ member, onClose, onSaved }) {
-  const [monthly, setMonthly] = useState("");
-  const [yearly, setYearly] = useState("");
+  const [form, setForm] = useState({
+    membership_type: member.membership_type || "",
+    expiration_date: member.expiration_date || "",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showReAuth, setShowReAuth] = useState(false);
 
-  const setNumber = (setter) => (e) => {
-    const nextValue = e.target.value;
-    if (nextValue === "") {
-      setter("");
-      return;
-    }
-    setter(nextValue.replace(/[^\d]/g, ""));
-  };
+  const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
-  const saveMembership = async () => {
-    const monthlyValue = Number.parseInt(monthly, 10);
-    const yearlyValue = Number.parseInt(yearly, 10);
-    const hasMonthly = Number.isInteger(monthlyValue) && monthlyValue > 0;
-    const hasYearly = Number.isInteger(yearlyValue) && yearlyValue > 0;
+  const handleSaveClick = () => setShowReAuth(true);
 
-    if (!hasMonthly && !hasYearly) {
-      setError("Enter at least one validity value.");
-      return;
-    }
-
+  const handleReAuthSuccess = async () => {
+    setShowReAuth(false);
     try {
       setLoading(true);
       setError(null);
-      const updated = await updateMemberMembership(member.member_id, {
-        joinDate: member.join_date,
-        monthlyValidity: hasMonthly ? `${monthlyValue} Month${monthlyValue === 1 ? "" : "s"}` : "",
-        membershipValidity: hasYearly ? `${yearlyValue} Year${yearlyValue === 1 ? "" : "s"}` : "",
-        cancelMembership: false,
-      });
-      onSaved?.(updated);
-      onClose?.();
-    } catch (err) {
-      setError(err.message || "Failed to update membership.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const cancelMembership = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const updated = await updateMemberMembership(member.member_id, {
-        joinDate: member.join_date,
-        monthlyValidity: "",
-        membershipValidity: "",
-        cancelMembership: true,
-      });
-      onSaved?.(updated);
-      onClose?.();
+      const updates = {};
+
+      if (form.membership_type !== member.membership_type) {
+        updates.membership_type = form.membership_type;
+      }
+      if (form.expiration_date !== member.expiration_date) {
+        updates.expiration_date = form.expiration_date || null;
+      }
+
+      // Only call updateMember if there are actual changes
+      if (Object.keys(updates).length === 0) {
+        alert("No changes made");
+        onClose();
+        return;
+      }
+
+      const updatedMember = await updateMember(member.member_id, updates);
+      onSaved?.(updatedMember);
+      onClose();
     } catch (err) {
-      setError(err.message || "Failed to cancel membership.");
+      setError(err.message || "Failed to save changes");
+      console.error("Error saving membership:", err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.addMemberModal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.paymentModalHeader}>
-          <h2 className={styles.modalTitle} style={{ textAlign: "left", marginBottom: 0 }}>Edit Membership</h2>
-          <button className={styles.modalCloseX} onClick={onClose} disabled={loading}>✕</button>
-        </div>
+    <>
+      <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.profileModal} onClick={(e) => e.stopPropagation()}>
+          <h2 className={styles.modalTitle} style={{ padding: "20px 28px 0", marginBottom: "16px" }}>
+            Edit Membership
+          </h2>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
-          <p className={styles.inputContextLabel} style={{ textAlign: "center", marginTop: 6 }}>Adjust the member&apos;s plan — choose either months or years.</p>
-        </div>
-
-        <div className={styles.membershipSettings} style={{ marginTop: 12 }}>
-          <div className={styles.fieldRow}>
-            <div className={styles.unitInputWrap}>
-              <p className={styles.modernLabel}>Plan Duration</p>
-              <input
-                className={styles.formInput}
-                placeholder="Plan Duration"
-                type="number"
-                min="1"
-                step="1"
-                value={monthly}
-                onChange={setNumber(setMonthly)}
-              />
-              <span className={styles.unitSuffix}>Months</span>
-              <p className={styles.inputContextLabel}>Use months for short-term monthly pay plans.</p>
+          {error && (
+            <div style={{ color: "#d32f2f", backgroundColor: "#ffebee", padding: "12px", borderRadius: "4px", marginBottom: "16px", fontSize: "14px", margin: "0 28px 16px" }}>
+              {error}
             </div>
-            <div className={styles.unitInputWrap}>
-              <p className={styles.modernLabel}>Membership Term</p>
-              <input
-                className={styles.formInput}
-                placeholder="Membership Term"
-                type="number"
-                min="1"
-                step="1"
-                value={yearly}
-                onChange={setNumber(setYearly)}
-              />
-              <span className={styles.unitSuffix}>Years</span>
-              <p className={styles.inputContextLabel}>Use years for long-term memberships.</p>
+          )}
+
+          <div style={{ padding: "0 28px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className={styles.formLabel} style={{ margin: 0 }}>
+                  Membership Type
+                </label>
+                <select className={styles.formInput} value={form.membership_type} onChange={set("membership_type")}>
+                  <option value="">Select Type</option>
+                  {["Student", "Regular", "Senior", "PWD"].map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label className={styles.formLabel} style={{ margin: 0 }}>
+                  Expiration Date
+                </label>
+                <input
+                  className={styles.formInput}
+                  type="date"
+                  value={form.expiration_date}
+                  onChange={set("expiration_date")}
+                />
+              </div>
             </div>
           </div>
-          <div className={styles.fieldRow}>
+
+          <div style={{ display: "flex", gap: "8px", padding: "16px 28px", borderTop: "1px solid #eee", flexWrap: "wrap" }}>
             <button
-              type="button"
-              className={styles.planResetBtn}
-              onClick={() => { setMonthly(""); setYearly(""); }}
-              disabled={!monthly && !yearly}
+              className={styles.submitBtn}
+              onClick={handleSaveClick}
+              disabled={loading}
+              style={{ flex: 1, minWidth: "140px", margin: 0 }}
             >
-              Reset Plan Selection
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+            <button
+              className={styles.closeBtn}
+              onClick={onClose}
+              disabled={loading}
+              style={{ flex: 1, minWidth: "140px", margin: 0 }}
+            >
+              Cancel
             </button>
           </div>
         </div>
-
-        {error && (
-          <div style={{ color: "#d32f2f", marginTop: 12, fontSize: 13 }}>
-            {error}
-          </div>
-        )}
-
-        <div className={styles.modalFooter} style={{ marginTop: 16 }}>
-          <button className={styles.submitBtn} onClick={saveMembership} disabled={loading}>
-            {loading ? "Saving..." : "Save Membership"}
-          </button>
-          <button className={styles.profileDeleteBtn} onClick={cancelMembership} disabled={loading}>
-            Cancel Membership
-          </button>
-        </div>
       </div>
-    </div>
+
+      {showReAuth && (
+        <ReAuthModal
+          actionLabel="save membership changes"
+          onSuccess={handleReAuthSuccess}
+          onClose={() => setShowReAuth(false)}
+        />
+      )}
+    </>
   );
 }

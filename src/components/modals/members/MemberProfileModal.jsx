@@ -126,11 +126,6 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
           ))}
         </div>
 
-        <div className={styles.profileQrBlock}>
-          <div ref={qrContainerRef} className={styles.profileQrCanvas} />
-          <p className={styles.profileQrLabel}>Member QR</p>
-        </div>
-
         <div className={styles.profileActions}>
           <a
             className={styles.profileEmailBtn}
@@ -166,12 +161,6 @@ export default function MemberProfileModal({ member, onClose, onDelete, onMember
                 onClick={() => setShowEditMember(true)}
               >
                 Edit Member
-              </button>
-              <button
-                className={styles.profileEmailBtn}
-                onClick={() => setShowEditMembership(true)}
-              >
-                Edit Membership
               </button>
               <button
                 className={styles.profileDeleteBtn}
