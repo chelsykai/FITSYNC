@@ -45,33 +45,25 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
 
     setLoading(true);
     try {
-      // Get the authenticated user's email
-      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+      const userId = user?.user_id || user?.id;
       
-      if (userError || !authUser?.email) {
-        throw new Error("Could not verify current user.");
+      if (!userId) {
+        throw new Error("Could not verify current user. Missing user ID.");
       }
 
-      // Verify current password by attempting to sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: authUser.email,
-        password: form.currentPassword,
-      });
+      // Fetch user from system_user table to verify current password
+      const { data: userData, error: fetchError } = await supabase
+        .from("system_user")
+        .select("password")
+        .eq("user_id", userId)
+        .single();
 
-      if (signInError) {
-        if (signInError.message.includes("Invalid login credentials")) {
-          throw new Error("Current password is incorrect.");
-        }
-        throw new Error("Failed to verify current password. Please try again.");
+      if (fetchError || !userData) {
+        throw new Error("Failed to verify current user.");
       }
 
-      // Update password in Supabase Auth
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: form.newPassword,
-      });
-
-      if (updateError) {
-        throw new Error("Failed to update password. Please try again.");
+      if (userData.password !== form.currentPassword) {
+        throw new Error("Current password is incorrect.");
       }
 
       // Update system_user table to clear the password change requirement
@@ -79,15 +71,11 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
         .from("system_user")
         .update({
           password: form.newPassword,
-          password_change_required: false,
-          password_change_deadline: null,
-          password_changed_at: new Date().toISOString(),
         })
-        .eq("user_id", user.user_id);
+        .eq("user_id", userId);
 
       if (tableError) {
-        console.warn("Failed to update system_user table:", tableError);
-        // Still consider it a success since auth password was updated
+        throw new Error(tableError.message || "Failed to update password. Please try again.");
       }
 
       // Update session storage
@@ -95,8 +83,6 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
       sessionStorage.setItem("currentUser", JSON.stringify({
         ...stored,
         password: form.newPassword,
-        password_change_required: false,
-        password_change_deadline: null,
       }));
 
       setSuccess("Password changed successfully!");
