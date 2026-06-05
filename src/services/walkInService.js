@@ -3,48 +3,54 @@ import { supabase } from "../lib/supabaseClient";
 const todayDateString = () => new Date().toISOString().split("T")[0];
 
 export const fetchWalkIns = async () => {
+  console.log("[fetchWalkIns] Fetching walk-in records from walkin_records table...");
   const { data, error } = await supabase
-    .from("walk_in")
-    .select("id, name, payment_date, plan_type, total, status, created_at")
-    .order("payment_date", { ascending: false })
-    .order("created_at", { ascending: false });
+    .from("walkin_records")
+    .select("walkin_transac_id, name, date, plan_type, amount")
+    .order("date", { ascending: false })
+    .order("walkin_transac_id", { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error("[fetchWalkIns] Supabase error:", error);
+    throw error;
+  }
 
-  return (data || []).map((record) => ({
-    id: record.id,
+  console.log("[fetchWalkIns] Raw data from Supabase:", data);
+  
+  const mapped = (data || []).map((record) => ({
+    id: record.walkin_transac_id,
     name: record.name || "Guest",
-    paymentDate: record.payment_date || todayDateString(),
+    paymentDate: record.date || todayDateString(),
     planType: record.plan_type || "Daily",
-    total: Number(record.total) || 0,
-    status: record.status || "Paid",
-    created_at: record.created_at || null,
+    total: Number(record.amount) || 0,
   }));
+  
+  console.log("[fetchWalkIns] Mapped data:", mapped);
+  return mapped;
 };
 
 export const fetchTodayWalkInCount = async () => {
   const today = todayDateString();
 
   const { count, error } = await supabase
-    .from("walk_in")
-    .select("id", { count: "exact", head: true })
-    .eq("payment_date", today);
+    .from("walkin_records")
+    .select("walkin_transac_id", { count: "exact", head: true })
+    .eq("date", today);
 
   if (error) throw error;
   return count || 0;
 };
 
-export const addWalkInRecord = async ({ name, paymentDate, planType, total, status = "Paid" }) => {
+export const addWalkInRecord = async ({ name, paymentDate, planType, total }) => {
   const payload = {
     name: name?.trim() || "Guest",
-    payment_date: paymentDate || todayDateString(),
+    date: paymentDate || todayDateString(),
     plan_type: planType || "Daily",
-    total: Number(total) || 0,
-    status,
+    amount: Number(total) || 0,
   };
 
   const { data, error } = await supabase
-    .from("walk_in")
+    .from("walkin_records")
     .insert([payload])
     .select()
     .single();

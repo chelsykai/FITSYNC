@@ -28,19 +28,31 @@ export default function AddWalkInModal({ onClose, onSaved }) {
     try {
       setSaving(true);
       setError("");
+      console.log("[AddWalkInModal] Adding walk-in record with data:", { name: name.trim() || "Guest", paymentDate: date, planType, total });
 
-      await addWalkInRecord({
+      const result = await addWalkInRecord({
         name: name.trim() || "Guest",
         paymentDate: date,
         planType,
         total,
-        status: "Paid",
       });
+      console.log("[AddWalkInModal] Walk-in record added successfully:", result);
 
-      await onSaved?.();
+      console.log("[AddWalkInModal] Calling onSaved callback...");
+      if (onSaved) {
+        await onSaved();
+      }
+      console.log("[AddWalkInModal] onSaved callback completed, closing modal");
+      
+      // Clear form before closing
+      setName("");
+      setAmount("");
+      setPlanType("Daily");
+      setDate(toISODateString());
+      
       onClose();
     } catch (err) {
-      console.error("Error adding walk-in record:", err);
+      console.error("[AddWalkInModal] Error adding walk-in record:", err);
       setError(err.message || "Unable to save walk-in record right now. Please try again.");
     } finally {
       setSaving(false);

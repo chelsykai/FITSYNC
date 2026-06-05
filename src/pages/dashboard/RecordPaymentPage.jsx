@@ -46,7 +46,6 @@ const defaultWalkInForm = {
   modeOfPayment: "Cash",
   referenceNumber: "",
   date: getTodayDateString(),
-  status: "Paid",
   total: "",
 };
 
@@ -365,7 +364,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
         paymentDate: walkInForm.date || getTodayDateString(),
         planType: walkInForm.planType || selectedWalkIn?.planType || "Daily",
         total: walkInForm.total,
-        status: walkInForm.status,
       });
 
       const refreshed = await fetchWalkIns();
@@ -676,22 +674,10 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                   <input className={styles.formInput} type="number" placeholder="Enter Total Amount" value={walkInForm.total} onChange={setWI("total")} />
                 </div>
 
-                <div className={styles.formRowStatus}>
-                  <div className={styles.statusGroup}>
-                    <label className={styles.formLabel}>Status</label>
-                    <div className={styles.radioRow}>
-                      {["Paid", "Unpaid"].map((status) => (
-                        <label key={status} className={styles.radioOption}>
-                          <input type="radio" name="wi-status" value={status} checked={walkInForm.status === status} onChange={setWI("status")} style={{ accentColor: "#7eba56" }} />
-                          {status}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={styles.actionBtns}>
-                    <button className={styles.addRecordBtn} onClick={handleWalkInSubmit} disabled={walkInLoading}>
-                      {walkInLoading ? "Adding…" : "Add Record"}
-                    </button>
+                <div className={styles.actionBtns}>
+                  <button className={styles.addRecordBtn} onClick={handleWalkInSubmit} disabled={walkInLoading}>
+                    {walkInLoading ? "Adding…" : "Add Record"}
+                  </button>
                     <button
                       className={styles.cancelBtn}
                       onClick={() => {
@@ -707,7 +693,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                     </button>
                   </div>
                 </div>
-              </div>
             )}
 
             <div className={styles.closeRow}>
