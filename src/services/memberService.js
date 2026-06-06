@@ -120,7 +120,7 @@ export const uploadMemberPhoto = async (file, memberId) => {
  * Add a new member to the database
  */
 export const addMember = async (memberData) => {
-  requireAdminRole("add a member");
+  //requireAdminRole("add a member");
 
   const {
     fullName,
