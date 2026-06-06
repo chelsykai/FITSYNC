@@ -22,64 +22,94 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
     setError("");
     setSuccess("");
 
+    // Validation
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
-      setError("All fields are required."); return;
+      setError("All fields are required.");
+      return;
     }
+
     if (form.newPassword.length < 8) {
-      setError("New password must be at least 8 characters."); return;
+      setError("New password must be at least 8 characters.");
+      return;
     }
+
     if (form.newPassword !== form.confirmPassword) {
-      setError("Passwords do not match."); return;
+      setError("New password and confirm password do not match.");
+      return;
     }
+
     if (form.currentPassword === form.newPassword) {
-      setError("New password must be different from current password."); return;
+      setError("New password must be different from current password.");
+      return;
     }
 
     setLoading(true);
     try {
-      // 1. Verify current password against system_user table
-      const { data, error: authErr } = await supabase
-        .from("system_user")
-        .select("*")
-        .eq("user_id", user.user_id)
-        .eq("password", form.currentPassword.trim())
-        .single();
-
-      if (authErr || !data) {
-        setError("Current password is incorrect.");
-        setLoading(false);
-        return;
+      const userId = user?.user_id || user?.id;
+      
+      if (!userId) {
+        throw new Error("Could not verify current user. Missing user ID.");
       }
 
-      // 2. Update password in system_user table
-      const { error: updateErr } = await supabase
+      // Fetch user from system_user table to verify current password
+      const { data: userData, error: fetchError } = await supabase
+        .from("system_user")
+        .select("password")
+        .eq("user_id", userId)
+        .single();
+
+      if (fetchError || !userData) {
+        throw new Error("Failed to verify current user.");
+      }
+
+      if (userData.password !== form.currentPassword) {
+        throw new Error("Current password is incorrect.");
+      }
+
+      // Update system_user table to clear the password change requirement
+      const { error: tableError } = await supabase
         .from("system_user")
         .update({
-          password:                  form.newPassword.trim(),
-          password_change_required:  false,
-          password_change_deadline:  null,
-          password_changed_at:       new Date().toISOString(),
+          password: form.newPassword,
         })
-        .eq("user_id", user.user_id);
+        .eq("user_id", userId);
 
-      if (updateErr) throw new Error(updateErr.message);
+      if (tableError) {
+        throw new Error(tableError.message || "Failed to update password. Please try again.");
+      }
 
-      // 3. Update localStorage
+      // Update session storage
       const stored = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
       sessionStorage.setItem("currentUser", JSON.stringify({
         ...stored,
-        password:                 form.newPassword.trim(),
-        password_change_required: false,
-        password_change_deadline: null,
+        password: form.newPassword,
       }));
 
       setSuccess("Password changed successfully!");
+      setForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
       setTimeout(() => onSuccess?.(), 1200);
     } catch (err) {
       setError(err.message || "Failed to change password. Try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    // Close without making any network requests
+    setForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setError("");
+    setSuccess("");
+    // Modal closing is handled by parent component
   };
 
   const EyeOff = () => (
@@ -149,10 +179,15 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
                   onChange={set("currentPassword")}
                   disabled={loading}
                   style={{ paddingRight: 40 }}
+                  autoComplete="current-password"
                 />
-                <button onClick={() => setShowCurrent(!showCurrent)}
+                <button 
+                  type="button"
+                  onClick={() => setShowCurrent(!showCurrent)}
                   style={{ position:"absolute", right:10, background:"none", border:"none", cursor:"pointer", padding:0 }}
-                  tabIndex={-1}>
+                  tabIndex={-1}
+                  disabled={loading}
+                >
                   {showCurrent ? <EyeOff /> : <EyeOn />}
                 </button>
               </div>
@@ -170,10 +205,15 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
                   onChange={set("newPassword")}
                   disabled={loading}
                   style={{ paddingRight: 40 }}
+                  autoComplete="new-password"
                 />
-                <button onClick={() => setShowNew(!showNew)}
+                <button 
+                  type="button"
+                  onClick={() => setShowNew(!showNew)}
                   style={{ position:"absolute", right:10, background:"none", border:"none", cursor:"pointer", padding:0 }}
-                  tabIndex={-1}>
+                  tabIndex={-1}
+                  disabled={loading}
+                >
                   {showNew ? <EyeOff /> : <EyeOn />}
                 </button>
               </div>
@@ -192,10 +232,15 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
                   disabled={loading}
                   onKeyDown={(e) => e.key === "Enter" && !loading && handleSubmit()}
                   style={{ paddingRight: 40 }}
+                  autoComplete="new-password"
                 />
-                <button onClick={() => setShowConfirm(!showConfirm)}
+                <button 
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
                   style={{ position:"absolute", right:10, background:"none", border:"none", cursor:"pointer", padding:0 }}
-                  tabIndex={-1}>
+                  tabIndex={-1}
+                  disabled={loading}
+                >
                   {showConfirm ? <EyeOff /> : <EyeOn />}
                 </button>
               </div>
@@ -213,9 +258,26 @@ export default function ForcePasswordChangeModal({ user, daysLeft, onSuccess }) 
               </p>
             )}
 
-            <button className={styles.submitBtn} onClick={handleSubmit} disabled={loading}>
-              {loading ? "Changing..." : "Change Password"}
-            </button>
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button 
+                className={styles.addMemberCancelBtn} 
+                onClick={handleCancel}
+                disabled={loading}
+                type="button"
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.addMemberSubmitBtn}
+                onClick={handleSubmit} 
+                disabled={loading}
+                type="button"
+                style={{ flex: 1 }}
+              >
+                {loading ? "Changing..." : "Change Password"}
+              </button>
+            </div>
           </>
         )}
       </div>

@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { sendMemberNotificationEmail } from "../../services/notificationEmailService";
 import { formatMMDDYYYY } from "../../utils/dateFormat";
+import { getMembershipDaysRemaining, getMembershipExpiryDate } from "../../utils/membershipUtils";
 
 const FILTER_STATUS = ["Pending", "Sent", "Failed"];
 const STATUS_STORAGE_KEY = "fitsync.notificationStatuses";
@@ -25,66 +26,18 @@ const dotColor = {
   red:    "#e05555",
 };
 
-function parseMembershipValidity(yearlyValidity, monthlyValidity) {
-  const yearly = String(yearlyValidity || "").trim();
-  const monthly = String(monthlyValidity || "").trim();
-
-  if (yearly) {
-    const yearlyMatch = yearly.match(/(\d+)/);
-    if (!yearlyMatch) return null;
-    return {
-      amount: Number(yearlyMatch[1]),
-      unit: "year",
-    };
-  }
-
-  if (!monthly) return null;
-  const validityMatch = monthly.match(/(\d+)\s*(month|day|week)?s?/i);
-  if (!validityMatch) return null;
-
-  return {
-    amount: Number(validityMatch[1]),
-    unit: (validityMatch[2] || "month").toLowerCase(),
-  };
-}
-
-function calculateExpiryDate(joinDate, yearlyValidity, monthlyValidity) {
-  if (yearlyValidity instanceof Date) return yearlyValidity;
-  const parsed = parseMembershipValidity(yearlyValidity, monthlyValidity);
-  if (!joinDate || !parsed) return null;
-
-  const expiryDate = new Date(joinDate);
-  if (Number.isNaN(expiryDate.getTime())) return null;
-
-  if (parsed.unit === "year") {
-    expiryDate.setFullYear(expiryDate.getFullYear() + parsed.amount);
-  } else if (parsed.unit === "month") {
-    expiryDate.setMonth(expiryDate.getMonth() + parsed.amount);
-  } else if (parsed.unit === "week") {
-    expiryDate.setDate(expiryDate.getDate() + parsed.amount * 7);
-  } else {
-    expiryDate.setDate(expiryDate.getDate() + parsed.amount);
-  }
-
-  return expiryDate;
-}
-
 function buildNotificationsFromMembers(members) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   return members
     .flatMap((member) => {
       const results = [];
-      const storedExpiry = member.expiration_date ? new Date(member.expiration_date) : null;
-      const expiryDate = storedExpiry && !Number.isNaN(storedExpiry.getTime())
-        ? storedExpiry
-        : calculateExpiryDate(member.join_date, member.membership_validity, member.monthly_validity);
+      const expiryDate = getMembershipExpiryDate(member);
 
       if (expiryDate) {
-        const oneDay = 1000 * 60 * 60 * 24;
-        const dayDiff = Math.ceil((expiryDate.getTime() - today.getTime()) / oneDay);
+        const dayDiff = getMembershipDaysRemaining(member);
         const expiryText = formatMMDDYYYY(expiryDate);
+        if (dayDiff === null) {
+          return results;
+        }
         if (dayDiff < 0) {
           results.push({
             key: `${member.member_id}-overdue`,
@@ -281,7 +234,6 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
 
     for (const notification of targets) {
       // Keep sequence simple to avoid EmailJS rate limits.
-      // eslint-disable-next-line no-await-in-loop
       await handleNotify(notification);
     }
   };

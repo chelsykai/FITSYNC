@@ -7,8 +7,10 @@ import PaymentsExportModal from "../../components/modals/payments/PaymentsExport
 import AddWalkInModal from "../../components/modals/payments/AddWalkInModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
+import { fetchWalkIns as fetchWalkInsService } from "../../services/walkInService";
 import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
 import WalkInTable from "./WalkInTable";
+import { isMembershipActive } from "../../utils/membershipUtils";
 
 /**
  * Fetch total count of members from the database
@@ -109,25 +111,15 @@ const fetchPayments = async () => {
 
 const fetchWalkIns = async () => {
   try {
-    const { data, error } = await supabase
-      .from("walk_in")
-      .select("*")
-      .order("payment_date", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching walk-in records:", error);
-      throw error;
-    }
-
+    const data = await fetchWalkInsService();
+    console.log("Fetched walk-ins:", data);
     return (data || []).map((record) => ({
       id: record.id,
-      name: record.name || "Guest",
-      date: formatMMDDYYYY(record.payment_date),
-      rawDate: parseLocalISODate(record.payment_date),
-      planType: record.plan_type || "Daily",
-      total: Number(record.total) || 0,
-      status: record.status || "Paid",
+      name: record.name,
+      date: formatMMDDYYYY(record.paymentDate),
+      rawDate: parseLocalISODate(record.paymentDate),
+      planType: record.planType,
+      total: record.total,
     }));
   } catch (err) {
     console.error("Error in fetchWalkIns:", err);
@@ -240,10 +232,14 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
   const loadWalkIns = useCallback(async (showLoader = false) => {
     try {
       if (showLoader) setLoadingWalkIns(true);
+      console.log("[loadWalkIns] Starting to fetch walk-in records...");
       const walkInData = await fetchWalkIns();
+      console.log("[loadWalkIns] Fetched walk-in data:", walkInData);
+      console.log("[loadWalkIns] Total records:", walkInData.length);
+      console.log("[loadWalkIns] Setting walkIns state to:", walkInData);
       setWalkIns(walkInData);
     } catch (err) {
-      console.error("Error loading walk-in records:", err);
+      console.error("[loadWalkIns] Error loading walk-in records:", err);
       setWalkIns([]);
     } finally {
       if (showLoader) setLoadingWalkIns(false);
@@ -260,7 +256,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
       .on("postgres_changes", { event: "*", schema: "public", table: "record_payment" }, () => {
         loadPayments();
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "walk_in" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "walkin_records" }, () => {
         loadWalkIns();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
@@ -330,7 +326,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
               <span className={styles.statIcon}>👥</span>
               <div>
                 <p className={styles.statLabel}>Active Memberships</p>
-                <p className={styles.statValue}>{loadingMembers ? "..." : members.length}</p>
+                <p className={styles.statValue}>{loadingMembers ? "..." : members.filter((member) => isMembershipActive(member)).length}</p>
               </div>
             </div>
           </div>

@@ -735,9 +735,9 @@
 .profileModal {
   background: #fff;
   border-radius: 14px;
-  width: min(640px, calc(100vw - 32px));
-  max-height: min(86vh, 720px);
-  overflow: auto;
+  width: min(680px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 8px 36px rgba(0, 0, 0, 0.15);
   font-family: "Montserrat", sans-serif;
 }
@@ -746,7 +746,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 22px 24px 16px;
+  padding: 24px 28px 18px;
   border-bottom: 1px solid #eee;
 }
 
@@ -789,35 +789,9 @@
 }
 
 .profileIdText {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   color: #555;
-  font-size: 12px;
-  margin: 0 0 7px;
-}
-
-.profileIdLabel {
-  color: #6f7f67;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.profileIdCode {
-  display: inline-flex;
-  align-items: center;
-  min-height: 22px;
-  padding: 3px 8px;
-  border: 1px solid #d8ebcc;
-  border-radius: 7px;
-  background: #eef7e8;
-  color: #2f6f19;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.2;
-  white-space: nowrap;
+  font-size: 13px;
+  margin: 0 0 6px;
 }
 
 .profileBadge {
@@ -835,19 +809,12 @@
 .profileGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px 24px;
-  padding: 18px 24px;
+  gap: 14px;
+  padding: 20px 28px;
 }
 
 .profileItem {
   min-width: 0;
-}
-
-.profileMemberIdItem {
-  padding: 10px 12px;
-  border: 1px solid #dcefd0;
-  border-radius: 10px;
-  background: #f7fcf3;
 }
 
 .profileLabel {
@@ -864,36 +831,11 @@
   overflow-wrap: anywhere;
 }
 
-.profileMemberIdValue {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  max-width: 100%;
-  padding: 4px 9px;
-  border-radius: 7px;
-  background: #eef7e8;
-  color: #2f6f19;
-  border: 1px solid #d8ebcc;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.2;
-  overflow-wrap: normal;
-  white-space: nowrap;
-}
-
 .profileQrBlock {
-  padding: 16px 24px;
+  padding: 0 28px 18px;
   border-top: 1px solid #f0f0f0;
 }
 
-.profileQrCanvas {
-  display: block;
-  width: fit-content;
-  margin: 0 0 8px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  overflow: hidden;
-}
 
 .profileQrLabel {
   color: #555;
@@ -902,17 +844,15 @@
 }
 
 .profileActions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 24px;
+  padding: 16px 28px;
   border-top: 1px solid #eee;
+  flex-wrap: wrap;
 }
 
-.profileEmailBtn,
-.profileCloseBtn {
-  min-height: 36px;
+.profileEmailBtn{
   padding: 9px 14px;
   border-radius: 8px;
   border: 1px solid #ddd;
@@ -923,10 +863,19 @@
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
+}
+
+.profileCloseBtn {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #333;
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .profileEmailBtn:hover,
@@ -936,7 +885,6 @@
 
 /* Profile action buttons */
 .profileDeleteBtn {
-  min-height: 36px;
   padding: 9px 14px;
   background: #e05555;
   color: #fff;
@@ -947,7 +895,6 @@
   font-size: 12px;
   cursor: pointer;
   transition: background 0.2s;
-  white-space: nowrap;
 }
 
 .profileDeleteBtn:hover { background: #c94444; }
@@ -1915,6 +1862,79 @@
 }
 
 /* ============================================================
+   MEMBER REGISTERED MODAL  (MemberRegisteredModal.jsx)
+   ============================================================ */
+ 
+.registeredModal {
+  background: #fff;
+  border-radius: 16px;
+  width: min(420px, calc(100vw - 32px));
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.16);
+  font-family: "Montserrat", sans-serif;
+}
+ 
+/* Green header band */
+.registeredHeader {
+  background: linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+ 
+.registeredCheck {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+}
+ 
+.registeredTitle {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+}
+ 
+/* Info block */
+.registeredInfo {
+  padding: 20px 24px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+ 
+.registeredInfoRow {
+  margin: 0;
+  font-size: 13px;
+  color: #444;
+  font-family: "Montserrat", sans-serif;
+  line-height: 1.5;
+}
+ 
+.registeredInfoRow strong {
+  color: #2d4a1e;
+  font-weight: 700;
+}
+ 
+/* Footer buttons */
+.registeredBtns {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px 20px;
+}
+
+/* ============================================================
    12. PAYMENTS — VIEW ALL & RECEIPT
    ============================================================ */
 
@@ -1975,20 +1995,6 @@
   padding: 12px 24px;
   flex-shrink: 0;
   width: min(600px, calc(100% - 48px));
-}
-
-.paymentModalSearch span {
-  color: #5f9f36;
-  font-size: 14px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.paymentModalSearch .modalSearchInput {
-  min-height: 38px;
-  padding: 9px 12px;
-  border: 1px solid #dfe8d8;
-  border-radius: 8px;
 }
 
 .viewAllPaymentsModal .modalTable,
@@ -2052,21 +2058,6 @@
   justify-content: center;
   border-radius: 6px;
   padding: 5px 10px;
-}
-
-.viewAllMemberIdCell {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  padding: 4px 8px;
-  border-radius: 7px;
-  background: #eef7e8;
-  color: #2f6f19;
-  border: 1px solid #d8ebcc;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.2;
-  white-space: nowrap;
 }
 
 /* Clickable name link */
@@ -2210,11 +2201,9 @@
 .receiptModal {
   background: #fff;
   border-radius: 14px;
-  width: min(760px, calc(100vw - 32px));
-  max-height: min(88vh, 720px);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  width: min(480px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
   font-family: "Montserrat", sans-serif;
 }
@@ -2259,17 +2248,15 @@
   background: #f5f9f2;
   border: 1px solid #d4e8c0;
   border-radius: 10px;
-  margin: 16px 24px 12px;
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  align-items: center;
+  gap: 12px;
 }
 
-.receiptAvatar,
 .receiptMemberAvatar {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
   background: #d0e8c0;
@@ -2278,84 +2265,6 @@
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
-}
-
-.receiptMemberInfo {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px 18px;
-}
-
-.receiptInfoCol {
-  min-width: 0;
-}
-
-.receiptInfoLabel {
-  color: #4f6047;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.2;
-  margin: 0 0 2px;
-}
-
-.receiptInfoValue {
-  color: #222;
-  font-size: 12px;
-  line-height: 1.35;
-  margin: 0 0 8px;
-  overflow-wrap: anywhere;
-}
-
-.receiptModal .modalTable {
-  display: block;
-  width: auto;
-  min-height: 0;
-  margin: 0 24px 14px;
-  overflow: auto;
-  font-size: 12px;
-  border: 1px solid #edf0ea;
-  border-radius: 10px;
-}
-
-.receiptModal .modalTable thead,
-.receiptModal .modalTable tbody,
-.receiptModal .modalTable tr {
-  display: table;
-  width: 100%;
-  min-width: 690px;
-  table-layout: fixed;
-}
-
-.receiptModal .modalTable thead {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.receiptModal .modalTable th {
-  color: #3d7221;
-  font-size: 11px;
-  text-transform: none;
-}
-
-.receiptModal .modalTable th,
-.receiptModal .modalTable td {
-  padding: 10px 9px;
-}
-
-.receiptModal .modalTable th:nth-child(1),
-.receiptModal .modalTable td:nth-child(1) { width: 86px; }
-
-.receiptModal .modalTable th:nth-child(2),
-.receiptModal .modalTable td:nth-child(2) { width: 110px; }
-
-.receiptModal .modalTable th:nth-child(5),
-.receiptModal .modalTable td:nth-child(5) { width: 84px; text-align: right; }
-
-.receiptModal .paymentModalFooter {
-  margin-top: auto;
 }
 
 .receiptMemberName {
@@ -2677,46 +2586,10 @@
   .overlay { align-items: flex-end; }
 
   .attendanceModal,
-  .viewAllModal,
-  .viewAllPaymentsModal,
-  .viewAllMembersModal,
-  .profileModal,
-  .receiptModal {
+  .viewAllModal {
     width: 100%;
     max-height: 85vh;
     border-radius: 14px 14px 0 0;
-  }
-
-  .profileHero,
-  .profileGrid,
-  .profileQrBlock,
-  .profileActions,
-  .paymentModalHeader,
-  .paymentModalFooter {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .paymentModalSearch {
-    width: auto;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .viewAllPaymentsModal .modalTable,
-  .viewAllMembersModal .modalTable,
-  .receiptModal .modalTable {
-    margin-left: 16px;
-    margin-right: 16px;
-  }
-
-  .receiptMemberCard {
-    margin-left: 16px;
-    margin-right: 16px;
-  }
-
-  .receiptMemberInfo {
-    grid-template-columns: 1fr 1fr;
   }
 
   .profileGrid,
@@ -2742,29 +2615,6 @@
   .modalFooter .submitBtn,
   .modalFooter .profileDeleteBtn,
   .modalFooter .closeBtn { width: 100%; flex: none; }
-
-  .profileHero {
-    align-items: flex-start;
-  }
-
-  .profileActions {
-    grid-template-columns: 1fr;
-  }
-
-  .profileEmailBtn,
-  .profileCloseBtn,
-  .profileDeleteBtn {
-    width: 100%;
-  }
-
-  .receiptMemberCard {
-    flex-direction: column;
-  }
-
-  .receiptMemberInfo {
-    grid-template-columns: 1fr;
-    width: 100%;
-  }
 
   .addMemberBtns { flex-direction: column; }
   .paymentModalFooter { flex-direction: column; }

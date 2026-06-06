@@ -42,6 +42,19 @@ const normalizePathname = (pathname = "/") => {
   return trimmed || "/";
 };
 
+const parseStoredUser = () => {
+  const raw = sessionStorage.getItem("currentUser");
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error("Invalid currentUser payload in sessionStorage.", error);
+    sessionStorage.removeItem("currentUser");
+    return null;
+  }
+};
+
 export default function DashboardShell({ initialRoute = "login", syncPathToRoot = true } = {}) {
   const [route, setRoute] = useState(initialRoute);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,10 +68,9 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
   const allowedRoutes = isAdmin ? NON_SCANNER_ROUTES : STAFF_ALLOWED_ROUTES;
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("currentUser");
+    const user = parseStoredUser();
 
-    if (stored) {
-      const user = JSON.parse(stored);
+    if (user) {
       setCurrentUser(user);
       const lastRoute = localStorage.getItem("lastRoute");
       const fallbackRoute = allowedRoutes.has(lastRoute)
@@ -199,7 +211,7 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
           daysLeft={forcePassData.daysLeft}
           onSuccess={() => {
             setForcePassData(null);
-            const updated = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+            const updated = parseStoredUser() || {};
             if (updated.password_change_required === false) {
               setForcePassData(null);
             }

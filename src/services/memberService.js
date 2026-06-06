@@ -2,6 +2,7 @@ import { supabase } from "../lib/supabaseClient";
 import { getAuditActorRole } from "./auditService";
 import { requireAdminRole } from "../utils/permissions";
 import { compressImageFile } from "../utils/imageCompression";
+import { computeMembershipExpiryDate } from "../utils/membershipUtils";
 
 const MEMBER_PHOTO_BUCKET = "member_photo";
 const MEMBER_PHOTO_PREFIX = "member_photos";
@@ -48,34 +49,9 @@ const logAuditTrail = async (action, memberId, memberName, changes = {}) => {
 
 const sanitizeFileName = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-const parseValidityAmount = (value) => {
-  const raw = String(value || "").trim();
-  if (!raw) return null;
-  const match = raw.match(/(\d+)/);
-  if (!match) return null;
-  const amount = Number.parseInt(match[1], 10);
-  return Number.isInteger(amount) && amount > 0 ? amount : null;
-};
-
 const computeExpirationDate = (joinDate, membershipValidity, monthlyValidity) => {
-  const baseDate = new Date(joinDate);
-  if (Number.isNaN(baseDate.getTime())) return null;
-
-  const years = parseValidityAmount(membershipValidity);
-  if (years) {
-    const expiryDate = new Date(baseDate);
-    expiryDate.setFullYear(expiryDate.getFullYear() + years);
-    return expiryDate.toISOString().split("T")[0];
-  }
-
-  const months = parseValidityAmount(monthlyValidity);
-  if (months) {
-    const expiryDate = new Date(baseDate);
-    expiryDate.setMonth(expiryDate.getMonth() + months);
-    return expiryDate.toISOString().split("T")[0];
-  }
-
-  return null;
+  const expiryDate = computeMembershipExpiryDate(joinDate, membershipValidity, monthlyValidity);
+  return expiryDate ? expiryDate.toISOString().split("T")[0] : null;
 };
 
 const getStoragePathFromUrl = (value) => {

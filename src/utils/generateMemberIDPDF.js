@@ -7,79 +7,48 @@ async function buildMemberIDPDF(member) {
   }
 
   const pdf = new jsPDF({
-    orientation: "landscape",
+    orientation: "portrait",
     unit: "mm",
-    format: [210, 100],
+    format: "a4",
   });
 
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const padding = 8;
 
-  // =====================
-  // FRONT PAGE - Logo Only
-  // =====================
-  pdf.setFillColor(126, 186, 86);
-  pdf.rect(0, 0, pageWidth, pageHeight, "F");
-
-  pdf.setFillColor(255, 255, 255);
-  pdf.rect(padding, padding, pageWidth - 2 * padding, pageHeight - 2 * padding, "F");
-
-  pdf.setDrawColor(126, 186, 86);
-  pdf.setLineWidth(1);
-  pdf.rect(padding, padding, pageWidth - 2 * padding, pageHeight - 2 * padding);
-
-  const logoSize = 50;
-  const logoX = (pageWidth - logoSize) / 2;
-  const logoY = (pageHeight - logoSize) / 2;
-  const logoImage = await loadImageAsDataURL(logoUrl);
-  if (logoImage) {
-    pdf.addImage(logoImage, "PNG", logoX, logoY, logoSize, logoSize);
+  // Generate the branded QR card as the main page
+  try {
+    const brandedCardImage = await generateMemberQRCardDataUrl(member);
+    
+    // Add branded card page (portrait A4 for the card image)
+    const imgWidth = pageWidth;
+    const imgHeight = (imgWidth * 3) / 2; // 2:3 aspect ratio from 1024x1536
+    pdf.addImage(brandedCardImage, "PNG", 0, 0, imgWidth, imgHeight);
+  } catch (err) {
+    console.warn("Branded card generation failed, using fallback design:", err);
+    // Fallback to simple design if branded card fails
+    pdf.setFillColor(126, 186, 86);
+    pdf.rect(0, 0, pageWidth, pageHeight, "F");
+    
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(5, 5, pageWidth - 10, pageHeight - 10, "F");
+    
+    pdf.setFontSize(20);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont(undefined, "bold");
+    pdf.text(`${member.fullName}`, pageWidth / 2, 30, { align: "center" });
+    
+    pdf.setFontSize(14);
+    pdf.setFont(undefined, "normal");
+    pdf.text(`Member ID: ${member.memberId}`, pageWidth / 2, 50, { align: "center" });
+    
+    const qrCanvas = await generateQRCodeCanvas(member.memberId, 400);
+    if (qrCanvas) {
+      const qrImage = qrCanvas.toDataURL("image/png");
+      const qrSize = 60;
+      const qrX = (pageWidth - qrSize) / 2;
+      pdf.addImage(qrImage, "PNG", qrX, 70, qrSize, qrSize);
+    }
   }
-
-  // =====================
-  // BACK PAGE - QR Code on Left, Name/ID on Right
-  // =====================
-  pdf.addPage([210, 100], "landscape");
-
-  pdf.setFillColor(126, 186, 86);
-  pdf.rect(0, 0, pageWidth, pageHeight, "F");
-
-  pdf.setFillColor(255, 255, 255);
-  pdf.rect(padding, padding, pageWidth - 2 * padding, pageHeight - 2 * padding, "F");
-
-  const qrSize = 70;
-  const qrX = padding + 16;
-  const qrY = (pageHeight - qrSize) / 2;
-
-  const qrCanvas = await generateQRCodeCanvas(member.memberId, qrSize * 3.78);
-  if (qrCanvas) {
-    const qrImage = qrCanvas.toDataURL("image/png");
-    pdf.addImage(qrImage, "PNG", qrX, qrY, qrSize, qrSize);
-  }
-
-  const qrTextY = qrY + qrSize + 3;
-  pdf.setFontSize(9);
-  pdf.setTextColor(100, 100, 100);
-  pdf.setFont(undefined, "normal");
-  pdf.text("Scan to Verify", qrX + qrSize / 2, qrTextY, { align: "center" });
-
-  const detailsX = qrX + qrSize + 18;
-  const detailsWidth = pageWidth - detailsX - padding - 8;
-
-  pdf.setFillColor(126, 186, 86);
-  pdf.rect(detailsX - 3, padding, detailsWidth + 6, pageHeight - 2 * padding, "F");
-
-  const backNameY = padding + 18;
-  pdf.setFontSize(28);
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFont(undefined, "bold");
-  pdf.text(`${member.fullName}`, detailsX + 4, backNameY, { maxWidth: detailsWidth - 8 });
-
-  const backIdY = backNameY + 18;
-  pdf.setFontSize(20);
-  pdf.setFont(undefined, "normal");
-  pdf.text(`ID: ${member.memberId}`, detailsX + 4, backIdY, { maxWidth: detailsWidth - 8 });
 
   return pdf;
 }

@@ -233,21 +233,21 @@ export default function EditMemberModal({ member, onClose, onSave }) {
   return (
     <>
       <div className={styles.overlay} onClick={handleModalClose}>
-        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-          <h2 className={styles.modalTitle}>Edit Member</h2>
+        <div className={styles.profileModal} onClick={(e) => e.stopPropagation()}>
+          <h2 className={styles.modalTitle} style={{ padding: "20px 28px 0", marginBottom: "16px" }}>Edit Member</h2>
 
           {error && (
-            <div style={{ color:"#d32f2f", backgroundColor:"#ffebee", padding:"12px", borderRadius:"4px", marginBottom:"16px", fontSize:"14px" }}>
+            <div style={{ color:"#d32f2f", backgroundColor:"#ffebee", padding:"12px", borderRadius:"4px", marginBottom:"16px", fontSize:"14px", margin: "0 28px 16px" }}>
               {error}
             </div>
           )}
 
-          <div className={styles.formGrid}>
+          <div style={{ padding: "0 28px", display: "flex", flexDirection: "column", gap: "16px" }}>
             {/* Photo Upload - Full Width */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label className={styles.modernLabel}>Photo</label>
+            <div className={styles.formGroupFull}>
+              <label className={styles.formLabel}>Photo</label>
               <div style={{
-                width: '100%',
+                width: '140px',
                 height: '140px',
                 borderRadius: '50%',
                 backgroundColor: '#f0f0f0',
@@ -256,10 +256,8 @@ export default function EditMemberModal({ member, onClose, onSave }) {
                 justifyContent: 'center',
                 overflow: 'hidden',
                 border: '2px solid #ddd',
-                marginTop: '8px',
                 cursor: 'pointer',
-                margin: '8px auto',
-                maxWidth: '140px'
+                margin: '0 auto'
               }} onClick={() => photoInputRef.current?.click()}>
                 {photoPreview ? (
                   <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -267,30 +265,30 @@ export default function EditMemberModal({ member, onClose, onSave }) {
                   <span style={{ fontSize: '48px' }}>📷</span>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
                 <button
                   className={styles.formInput}
                   onClick={openCamera}
                   type="button"
-                  style={{ marginTop: '8px', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
+                  style={{ padding: '8px 12px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd', flex: "0 1 auto", minWidth: "90px", margin: 0 }}
                   disabled={cameraLoading}
                 >
-                  {cameraLoading ? 'Opening Camera...' : 'Use Camera'}
+                  {cameraLoading ? 'Opening...' : 'Camera'}
                 </button>
                 <button
                   className={styles.formInput}
                   onClick={() => photoInputRef.current?.click()}
                   type="button"
-                  style={{ marginTop: '8px', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
+                  style={{ padding: '8px 12px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd', flex: "0 1 auto", minWidth: "90px", margin: 0 }}
                 >
-                  Choose Photo
+                  Choose
                 </button>
               </div>
               <button
                 className={styles.formInput}
                 onClick={handleRemovePhoto}
                 type="button"
-                style={{ marginTop: '8px', padding: '8px', cursor: 'pointer', backgroundColor: '#ffebee', border: '1px solid #ffcdd2', color: '#d32f2f' }}
+                style={{ padding: '8px 12px', cursor: 'pointer', backgroundColor: '#ffebee', border: '1px solid #ffcdd2', color: '#d32f2f', width: "100%", margin: 0 }}
               >
                 Remove Photo
               </button>
@@ -311,11 +309,13 @@ export default function EditMemberModal({ member, onClose, onSave }) {
 
               {cameraOpen && (
                 <div style={{
-                  marginTop: '12px',
+                  marginTop: '0px',
                   padding: '12px',
                   borderRadius: '16px',
                   border: '1px solid #ddd',
                   backgroundColor: '#fafafa',
+                  width: "100%",
+                  boxSizing: 'border-box'
                 }}>
                   <video
                     ref={cameraVideoRef}
@@ -330,7 +330,7 @@ export default function EditMemberModal({ member, onClose, onSave }) {
                       className={styles.formInput}
                       onClick={captureCameraPhoto}
                       type="button"
-                      style={{ marginTop: '0', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
+                      style={{ padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd', flex: 1, margin: 0 }}
                     >
                       Capture
                     </button>
@@ -338,9 +338,9 @@ export default function EditMemberModal({ member, onClose, onSave }) {
                       className={styles.formInput}
                       onClick={closeCamera}
                       type="button"
-                      style={{ marginTop: '0', padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}
+                      style={{ padding: '8px', cursor: 'pointer', backgroundColor: '#f5f5f5', border: '1px solid #ddd', flex: 1, margin: 0 }}
                     >
-                      Close Camera
+                      Close
                     </button>
                   </div>
                 </div>
@@ -348,20 +348,20 @@ export default function EditMemberModal({ member, onClose, onSave }) {
             </div>
 
             {/* Form Fields */}
-            <div>
-              <label className={styles.modernLabel}>First Name</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>First Name</label>
               <input className={styles.formInput} placeholder="First Name" value={form.firstName} onChange={set("firstName")} />
             </div>
-            <div>
-              <label className={styles.modernLabel}>Last Name</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Last Name</label>
               <input className={styles.formInput} placeholder="Last Name" value={form.lastName} onChange={set("lastName")} />
             </div>
-            <div>
-              <label className={styles.modernLabel}>Member ID</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Member ID</label>
               <input className={styles.formInput} value={form.member_id} disabled />
             </div>
-            <div>
-              <label className={styles.modernLabel}>Membership Type</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Membership Type</label>
               <select className={styles.formInput} value={form.membership_type} onChange={set("membership_type")}>
                 <option value="">Select Type</option>
                 {["Student","Regular","Senior","PWD"].map((t) => (
@@ -369,38 +369,42 @@ export default function EditMemberModal({ member, onClose, onSave }) {
                 ))}
               </select>
             </div>
-            <div>
-              <label className={styles.modernLabel}>Birthday</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Birthday</label>
               <input className={styles.formInput} type="date" value={form.birthday} onChange={set("birthday")} />
             </div>
-            <div>
-              <label className={styles.modernLabel}>Phone Number</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Phone Number</label>
               <input className={styles.formInput} placeholder="09XXXXXXXXX" value={form.phone} onChange={set("phone")} />
             </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label className={styles.modernLabel}>Address</label>
+            <div className={styles.formGroupFull}>
+              <label className={styles.formLabel}>Address</label>
               <input className={styles.formInput} placeholder="Address" value={form.address} onChange={set("address")} />
             </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label className={styles.modernLabel}>Email</label>
+            <div className={styles.formGroupFull}>
+              <label className={styles.formLabel}>Email</label>
               <input className={styles.formInput} placeholder="email@example.com" type="email" value={form.email} onChange={set("email")} />
             </div>
-            <div>
-              <label className={styles.modernLabel}>Emergency Contact Name</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Emergency Contact Name</label>
               <input className={styles.formInput} placeholder="Contact person name"
                 value={form.emergencyContactName} onChange={set("emergencyContactName")} />
             </div>
-            <div>
-              <label className={styles.modernLabel}>Emergency Contact Number</label>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Emergency Contact Number</label>
               <input className={styles.formInput} placeholder="09XXXXXXXXX"
                 value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} />
             </div>
           </div>
 
-          <button className={styles.submitBtn} onClick={handleSaveClick} disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
-          </button>
-          <button className={styles.closeBtn} onClick={handleModalClose} disabled={loading}>Cancel</button>
+          <div style={{ display: "flex", gap: "8px", padding: "16px 28px", flexWrap: "wrap" }}>
+            <button className={styles.submitBtn} onClick={handleSaveClick} disabled={loading} style={{ flex: 1, minWidth: "140px", margin: 0 }}>
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+            <button className={styles.closeBtn} onClick={handleModalClose} disabled={loading} style={{ flex: 1, minWidth: "140px", margin: 0 }}>
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
 

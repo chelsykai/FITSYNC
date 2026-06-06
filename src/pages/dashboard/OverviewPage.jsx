@@ -5,6 +5,7 @@ import ViewAllModal from "../../components/modals/overview/ViewAllModal";
 import ExportModal from "../../components/modals/overview/ExportModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
+  import { fetchTodayWalkInCount } from "../../services/walkInService";
 import {
   fetchTodayAttendanceByTimeBins,
   fetchTodayAttendanceCount,
@@ -14,8 +15,7 @@ import {
 } from "../../services/attendanceService";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { formatMMDDYYYY } from "../../utils/dateFormat";
-
-const stats = { walkIns: 13 };
+  import { formatValidityLabel, getMembershipExpiryDate, isMembershipActive } from "../../utils/membershipUtils";
 
 const EMPTY_DAILY_ACTIVITY = Array(12).fill(0);
 const CHECKIN_SLOT_LABELS = ["12A", "2A", "4A", "6A", "8A", "10A", "12P", "2P", "4P", "6P", "8P", "10P"];
@@ -28,62 +28,19 @@ const membershipTypeColors = {
   "Senior": "#c8c8c8",
 };
 
-const formatValidity = (value, unit) => {
-  const raw = String(value || "").trim();
-  if (!raw) return "N/A";
-  if (/[a-z]/i.test(raw)) return raw;
-  return `${raw} ${unit}${raw === "1" ? "" : "s"}`;
-};
-
 const getMembershipPlanParts = (membershipValidity, monthlyValidity) => {
   const yearlyRaw = String(membershipValidity || "").trim();
   const monthlyRaw = String(monthlyValidity || "").trim();
 
   if (yearlyRaw) {
-    return { term: formatValidity(yearlyRaw, "Year"), frequency: "" };
+    return { term: formatValidityLabel(yearlyRaw, "Year"), frequency: "" };
   }
 
   if (monthlyRaw) {
-    return { term: formatValidity(monthlyRaw, "Month"), frequency: "Monthly Pay" };
+    return { term: formatValidityLabel(monthlyRaw, "Month"), frequency: "Monthly Pay" };
   }
 
   return { term: "N/A", frequency: "" };
-};
-
-const getMembershipExpiryDate = (member) => {
-  if (member?.expiration_date) {
-    const storedExpiry = new Date(member.expiration_date);
-    if (!Number.isNaN(storedExpiry.getTime())) return storedExpiry;
-  }
-
-  if (!member?.join_date) return null;
-
-  const joinDate = new Date(member.join_date);
-  if (Number.isNaN(joinDate.getTime())) return null;
-
-  const yearlyRaw = String(member.membership_validity || "").trim();
-  if (yearlyRaw) {
-    const yearlyMatch = yearlyRaw.match(/(\d+)/);
-    if (!yearlyMatch) return null;
-    const years = Number.parseInt(yearlyMatch[1], 10);
-    if (!Number.isInteger(years) || years <= 0) return null;
-    const expiryDate = new Date(joinDate);
-    expiryDate.setFullYear(expiryDate.getFullYear() + years);
-    return expiryDate;
-  }
-
-  const monthlyRaw = String(member.monthly_validity || "").trim();
-  if (monthlyRaw) {
-    const monthlyMatch = monthlyRaw.match(/(\d+)/);
-    if (!monthlyMatch) return null;
-    const months = Number.parseInt(monthlyMatch[1], 10);
-    if (!Number.isInteger(months) || months <= 0) return null;
-    const expiryDate = new Date(joinDate);
-    expiryDate.setMonth(expiryDate.getMonth() + months);
-    return expiryDate;
-  }
-
-  return null;
 };
 
 // Function to calculate population distribution from members
@@ -106,7 +63,7 @@ function calculatePopulation(members) {
 
   members.forEach((m) => {
     const type = m.membership_type || "Regular";
-    if (typeCounts.hasOwnProperty(type)) {
+    if (Object.prototype.hasOwnProperty.call(typeCounts, type)) {
       typeCounts[type]++;
     }
   });
@@ -240,6 +197,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview", isAd
   const [error, setError] = useState(null);
   const [populationData, setPopulationData] = useState([]);
   const [todayCheckIns, setTodayCheckIns] = useState(0);
+  const [todayWalkIns, setTodayWalkIns] = useState(0);
   const [todayAttendanceRecords, setTodayAttendanceRecords] = useState([]);
   const [gymActivity, setGymActivity] = useState(EMPTY_DAILY_ACTIVITY);
   const [activityRange, setActivityRange] = useState("today");
@@ -272,8 +230,15 @@ export default function OverviewPage({ onNavigate, activePage = "overview", isAd
         setTodayAttendanceRecords([]);
       }
 
+      try {
+        setTodayWalkIns(await fetchTodayWalkInCount());
+      } catch (err) {
+        console.error("Error fetching walk-in count:", err);
+        setTodayWalkIns(0);
+      }
+
       // Clear error if both succeeded
-      if (memberData.length > 0 && typeof walkInCount === 'number' && !error) {
+      if (memberData.length > 0 && typeof walkInCount === 'number') {
         setError(null);
       }
     } finally {
@@ -356,7 +321,7 @@ export default function OverviewPage({ onNavigate, activePage = "overview", isAd
   const expiringSoonMembers = members
     .filter((member) => {
       const expiryDate = getMembershipExpiryDate(member);
-      if (!expiryDate) return false;
+      if (!expiryDate || !isMembershipActive(member)) return false;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const fourteenDaysAhead = new Date(today);
@@ -389,14 +354,14 @@ export default function OverviewPage({ onNavigate, activePage = "overview", isAd
               <span className={styles.statIcon}>👥</span>
               <div>
                 <p className={styles.statLabel}>Active Membership</p>
-                <p className={styles.statValue}>{loading ? "..." : members.length}</p>
+                <p className={styles.statValue}>{loading ? "..." : members.filter((member) => isMembershipActive(member)).length}</p>
               </div>
             </div>
             <div className={styles.statCard}>
               <span className={styles.statIcon}>🚶</span>
               <div>
                 <p className={styles.statLabel}>Today's Walk-in</p>
-                <p className={styles.statValue}>{stats.walkIns}</p>
+                <p className={styles.statValue}>{loading ? "..." : todayWalkIns}</p>
               </div>
             </div>
             {isAdmin && (
