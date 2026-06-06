@@ -244,8 +244,8 @@ export default function EditMemberModal({ member, onClose, onSave }) {
 
           <div className={styles.formGrid}>
             {/* Photo Upload - Full Width */}
-            <div className={styles.formGroupFull}>
-              <label className={styles.formLabel}>Photo</label>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label className={styles.modernLabel}>Photo</label>
               <div style={{
                 width: '100%',
                 height: '140px',
@@ -348,20 +348,20 @@ export default function EditMemberModal({ member, onClose, onSave }) {
             </div>
 
             {/* Form Fields */}
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>First Name</label>
+            <div>
+              <label className={styles.modernLabel}>First Name</label>
               <input className={styles.formInput} placeholder="First Name" value={form.firstName} onChange={set("firstName")} />
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Last Name</label>
+            <div>
+              <label className={styles.modernLabel}>Last Name</label>
               <input className={styles.formInput} placeholder="Last Name" value={form.lastName} onChange={set("lastName")} />
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Member ID</label>
+            <div>
+              <label className={styles.modernLabel}>Member ID</label>
               <input className={styles.formInput} value={form.member_id} disabled />
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Membership Type</label>
+            <div>
+              <label className={styles.modernLabel}>Membership Type</label>
               <select className={styles.formInput} value={form.membership_type} onChange={set("membership_type")}>
                 <option value="">Select Type</option>
                 {["Student","Regular","Senior","PWD"].map((t) => (
@@ -369,29 +369,29 @@ export default function EditMemberModal({ member, onClose, onSave }) {
                 ))}
               </select>
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Birthday</label>
+            <div>
+              <label className={styles.modernLabel}>Birthday</label>
               <input className={styles.formInput} type="date" value={form.birthday} onChange={set("birthday")} />
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Phone Number</label>
+            <div>
+              <label className={styles.modernLabel}>Phone Number</label>
               <input className={styles.formInput} placeholder="09XXXXXXXXX" value={form.phone} onChange={set("phone")} />
             </div>
-            <div className={styles.formGroupFull}>
-              <label className={styles.formLabel}>Address</label>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label className={styles.modernLabel}>Address</label>
               <input className={styles.formInput} placeholder="Address" value={form.address} onChange={set("address")} />
             </div>
-            <div className={styles.formGroupFull}>
-              <label className={styles.formLabel}>Email</label>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label className={styles.modernLabel}>Email</label>
               <input className={styles.formInput} placeholder="email@example.com" type="email" value={form.email} onChange={set("email")} />
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Emergency Contact Name</label>
+            <div>
+              <label className={styles.modernLabel}>Emergency Contact Name</label>
               <input className={styles.formInput} placeholder="Contact person name"
                 value={form.emergencyContactName} onChange={set("emergencyContactName")} />
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Emergency Contact Number</label>
+            <div>
+              <label className={styles.modernLabel}>Emergency Contact Number</label>
               <input className={styles.formInput} placeholder="09XXXXXXXXX"
                 value={form.emergencyContactNumber} onChange={set("emergencyContactNumber")} />
             </div>
