@@ -4,7 +4,6 @@ import Sidebar from "../../components/sidebar/sidebar";
 import { supabase } from "../../lib/supabaseClient";
 import { getAuditActorRole } from "../../services/auditService";
 import { updateMemberMembership } from "../../services/memberService";
-import { addWalkInRecord, fetchWalkIns } from "../../services/walkInService";
 
 const getTodayDateString = () => new Date().toISOString().split("T")[0];
 
@@ -38,15 +37,6 @@ const defaultExistingForm = {
 const defaultRenewalForm = {
   months: "",
   years: "",
-};
-
-const defaultWalkInForm = {
-  name: "",
-  planType: "Daily",
-  modeOfPayment: "Cash",
-  referenceNumber: "",
-  date: getTodayDateString(),
-  total: "",
 };
 
 const fetchMembers = async () => {
@@ -112,36 +102,23 @@ const add_record = async (formData) => {
   }
 };
 
-const TABS = [
-  { id: "existing", label: "1. Existing Member Payment", icon: "ti-user-check" },
-  { id: "walkin", label: "2. Walk-in Payment", icon: "ti-walk" },
-];
+
 
 export default function RecordPaymentPage({ onNavigate, activePage = "payments" }) {
-  const [activeTab, setActiveTab] = useState("existing");
   const [form, setForm] = useState(defaultExistingForm);
   const [renewalForm, setRenewalForm] = useState(defaultRenewalForm);
-  const [walkInForm, setWalkInForm] = useState(defaultWalkInForm);
   const [members, setMembers] = useState([]);
-  const [walkIns, setWalkIns] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [selectedWalkIn, setSelectedWalkIn] = useState(null);
   const [error, setError] = useState("");
-  const [walkInError, setWalkInError] = useState("");
   const [renewalError, setRenewalError] = useState("");
   const [loading, setLoading] = useState(false);
   const [renewalLoading, setRenewalLoading] = useState(false);
-  const [walkInLoading, setWalkInLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [renewalSuccess, setRenewalSuccess] = useState("");
-  const [walkInSuccess, setWalkInSuccess] = useState("");
   const [membersLoading, setMembersLoading] = useState(true);
-  const [walkInsLoading, setWalkInsLoading] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showWalkInDropdown, setShowWalkInDropdown] = useState(false);
   const [showRenewal, setShowRenewal] = useState(false);
   const dropdownRef = useRef(null);
-  const walkInDropdownRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -149,27 +126,12 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
       setMembers(await fetchMembers());
       setMembersLoading(false);
     })();
-
-    (async () => {
-      try {
-        setWalkInsLoading(true);
-        setWalkIns(await fetchWalkIns());
-      } catch (err) {
-        console.error("Error fetching walk-ins:", err);
-        setWalkIns([]);
-      } finally {
-        setWalkInsLoading(false);
-      }
-    })();
   }, []);
 
   useEffect(() => {
     const handler = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
-      }
-      if (walkInDropdownRef.current && !walkInDropdownRef.current.contains(event.target)) {
-        setShowWalkInDropdown(false);
       }
     };
 
@@ -200,27 +162,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
     setRenewalSuccess("");
   };
 
-  const handleWalkInInputChange = (event) => {
-    const value = event.target.value;
-    setWalkInForm((prev) => ({ ...prev, name: value }));
-    setSelectedWalkIn(null);
-    setShowWalkInDropdown(true);
-  };
-
-  const handleSelectWalkIn = (walkIn) => {
-    setSelectedWalkIn(walkIn);
-    setWalkInForm((prev) => ({
-      ...prev,
-      name: walkIn.name,
-      planType: walkIn.planType || "Daily",
-      date: walkIn.paymentDate || getTodayDateString(),
-      total: String(walkIn.total || ""),
-    }));
-    setShowWalkInDropdown(false);
-    setWalkInError("");
-    setWalkInSuccess("");
-  };
-
   const set = (field) => (event) => {
     const value = event.target.value;
     if (field === "modeOfPayment") {
@@ -235,34 +176,12 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
     setForm({ ...form, [field]: value });
   };
 
-  const setWI = (field) => (event) => {
-    const value = event.target.value;
-    if (field === "modeOfPayment") {
-      const requiresRef = ["GCash", "Bank Transfer", "Credit Card"].includes(value);
-      setWalkInForm({
-        ...walkInForm,
-        modeOfPayment: value,
-        referenceNumber: requiresRef ? walkInForm.referenceNumber : "",
-      });
-      return;
-    }
-    setWalkInForm({ ...walkInForm, [field]: value });
-  };
-
   const filteredMembers = form.memberName
     ? members.filter((member) =>
         member.full_name.toLowerCase().includes(form.memberName.toLowerCase()) ||
         String(member.member_id).includes(form.memberName)
       )
     : members;
-
-  const filteredWalkIns = walkInForm.name
-    ? walkIns.filter((record) =>
-        record.name.toLowerCase().includes(walkInForm.name.toLowerCase()) ||
-        String(record.paymentDate).includes(walkInForm.name) ||
-        String(record.planType).toLowerCase().includes(walkInForm.name.toLowerCase())
-      )
-    : walkIns;
 
   const handleSubmit = async () => {
     setError("");
@@ -344,41 +263,6 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
     }
   };
 
-  const handleWalkInSubmit = async () => {
-    setWalkInError("");
-    setWalkInSuccess("");
-
-    if (!selectedWalkIn?.name && !walkInForm.name.trim()) {
-      setWalkInError("Please search and select a recorded walk-in first.");
-      return;
-    }
-    if (!walkInForm.total) {
-      setWalkInError("Total is required");
-      return;
-    }
-
-    setWalkInLoading(true);
-    try {
-      await addWalkInRecord({
-        name: selectedWalkIn?.name || walkInForm.name,
-        paymentDate: walkInForm.date || getTodayDateString(),
-        planType: walkInForm.planType || selectedWalkIn?.planType || "Daily",
-        total: walkInForm.total,
-      });
-
-      const refreshed = await fetchWalkIns();
-      setWalkIns(refreshed);
-      setWalkInSuccess("Walk-in payment recorded successfully!");
-      setWalkInForm(defaultWalkInForm);
-      setSelectedWalkIn(null);
-      setShowWalkInDropdown(false);
-    } catch (error) {
-      setWalkInError(error.message || "Walk-in payment failed. Please try again.");
-    } finally {
-      setWalkInLoading(false);
-    }
-  };
-
   const expiryDays = daysUntilExpiry(selectedMember?.expiration_date);
   const isExpired = expiryDays !== null && expiryDays < 0;
   const isExpiringSoon = expiryDays !== null && expiryDays >= 0 && expiryDays <= 7;
@@ -395,305 +279,192 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
 
         <div className={styles.mainLayout}>
           <div className={styles.leftPanel}>
-            <div className={styles.tabBar}>
-              {TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  className={`${styles.tabBtn} ${activeTab === tab.id ? styles.tabBtnActive : ""}`}
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  <span className={`ti ${tab.icon}`} aria-hidden="true" />
-                  {tab.label}
-                </button>
-              ))}
+            <div className={styles.formCard}>
+              {error && <div className={styles.alertError}>{error}</div>}
+              {successMsg && <div className={styles.alertSuccess}>{successMsg}</div>}
+              {membersLoading && <div className={styles.alertInfo}>Loading members…</div>}
+
+              <div className={styles.formGroup} ref={dropdownRef}>
+              <label className={styles.formLabel}>Search Member</label>
+              <div className={styles.searchWrap}>
+                <span className="ti ti-search" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 15 }} aria-hidden="true" />
+                <input
+                  className={styles.searchInput}
+                  placeholder="Search member name or ID"
+                  value={form.memberName}
+                  onChange={handleMemberInputChange}
+                  onFocus={() => setShowDropdown(true)}
+                  disabled={membersLoading}
+                  autoComplete="off"
+                />
+              </div>
+              {showDropdown && !membersLoading && (
+                <div className={styles.dropdown}>
+                  {filteredMembers.length > 0 ? filteredMembers.map((member) => (
+                    <div key={member.member_id} className={styles.dropdownItem} onClick={() => handleSelectMember(member)}>
+                      <span className={styles.dropdownName}>{member.full_name}</span>
+                      <span className={styles.dropdownId}>ID: {member.member_id}</span>
+                    </div>
+                  )) : (
+                    <div className={styles.dropdownEmpty}>
+                      {form.memberName ? `No members found matching "${form.memberName}"` : "Start typing to see members"}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {activeTab === "existing" && (
-              <div className={styles.formCard}>
-                {error && <div className={styles.alertError}>{error}</div>}
-                {successMsg && <div className={styles.alertSuccess}>{successMsg}</div>}
-                {membersLoading && <div className={styles.alertInfo}>Loading members…</div>}
+            <div className={styles.memberDetails}>
+              <p className={styles.memberDetailsTitle}>Member Details</p>
+              <p className={styles.memberDetailsRow}>
+                <span className={styles.memberDetailsKey}>Name:</span>
+                <span>{selectedMember?.full_name || "[Auto-populated]"}</span>
+              </p>
+              <p className={styles.memberDetailsRow}>
+                <span className={styles.memberDetailsKey}>Current Plan:</span>
+                <span>{selectedMember?.membership_type || "[Auto-populated]"}</span>
+              </p>
+              <p className={styles.memberDetailsRow}>
+                <span className={styles.memberDetailsKey}>Expiration:</span>
+                <span className={isExpired ? styles.expiryExpired : isExpiringSoon ? styles.expiryWarn : undefined}>
+                  {selectedMember ? formatExpiry(selectedMember.expiration_date) : "[Auto-populated]"}
+                  {isExpired && " (Expired)"}
+                  {isExpiringSoon && ` (${expiryDays === 0 ? "Today" : `${expiryDays}d left`})`}
+                </span>
+              </p>
+            </div>
 
-                <div className={styles.formGroup} ref={dropdownRef}>
-                  <label className={styles.formLabel}>Search Member</label>
-                  <div className={styles.searchWrap}>
-                    <span className="ti ti-search" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 15 }} aria-hidden="true" />
-                    <input
-                      className={styles.searchInput}
-                      placeholder="Search member name or ID"
-                      value={form.memberName}
-                      onChange={handleMemberInputChange}
-                      onFocus={() => setShowDropdown(true)}
-                      disabled={membersLoading}
-                      autoComplete="off"
-                    />
-                  </div>
-                  {showDropdown && !membersLoading && (
-                    <div className={styles.dropdown}>
-                      {filteredMembers.length > 0 ? filteredMembers.map((member) => (
-                        <div key={member.member_id} className={styles.dropdownItem} onClick={() => handleSelectMember(member)}>
-                          <span className={styles.dropdownName}>{member.full_name}</span>
-                          <span className={styles.dropdownId}>ID: {member.member_id}</span>
-                        </div>
-                      )) : (
-                        <div className={styles.dropdownEmpty}>
-                          {form.memberName ? `No members found matching "${form.memberName}"` : "Start typing to see members"}
-                        </div>
-                      )}
+            {selectedMember && (
+              <button
+                type="button"
+                className={`${styles.renewalToggleBtn} ${showRenewal ? styles.renewalToggleBtnActive : ""}`}
+                onClick={() => { setShowRenewal((value) => !value); setRenewalError(""); setRenewalSuccess(""); }}
+              >
+                <span className="ti ti-refresh" aria-hidden="true" />
+                {showRenewal ? "▲ Hide Renewal" : (isExpired || isExpiringSoon) ? " Renew Membership ⚠️" : " Renew Membership"}
+              </button>
+            )}
+
+            {showRenewal && selectedMember && (
+              <div className={styles.renewalPanel}>
+                <p className={styles.renewalPanelTitle}>
+                  <span className="ti ti-refresh" aria-hidden="true" />
+                  Renewal — extends expiry from today
+                </p>
+                {renewalError && <p className={styles.renewalError}>{renewalError}</p>}
+                {renewalSuccess && <p className={styles.renewalSuccess}>{renewalSuccess}</p>}
+
+                <div className={styles.renewalInputRow}>
+                  <div className={styles.renewalInputGroup}>
+                    <label className={styles.renewalInputLabel}>Months</label>
+                    <div className={styles.renewalInputWrap}>
+                      <input
+                        className={styles.renewalInput}
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="0"
+                        value={renewalForm.months}
+                        onChange={(event) => setRenewalForm((prev) => ({ ...prev, months: event.target.value.replace(/[^\d]/g, "") }))}
+                      />
+                      <span className={styles.renewalUnit}>mo</span>
                     </div>
-                  )}
-                </div>
-
-                <div className={styles.memberDetails}>
-                  <p className={styles.memberDetailsTitle}>Member Details</p>
-                  <p className={styles.memberDetailsRow}>
-                    <span className={styles.memberDetailsKey}>Name:</span>
-                    <span>{selectedMember?.full_name || "[Auto-populated]"}</span>
-                  </p>
-                  <p className={styles.memberDetailsRow}>
-                    <span className={styles.memberDetailsKey}>Current Plan:</span>
-                    <span>{selectedMember?.membership_type || "[Auto-populated]"}</span>
-                  </p>
-                  <p className={styles.memberDetailsRow}>
-                    <span className={styles.memberDetailsKey}>Expiration:</span>
-                    <span className={isExpired ? styles.expiryExpired : isExpiringSoon ? styles.expiryWarn : undefined}>
-                      {selectedMember ? formatExpiry(selectedMember.expiration_date) : "[Auto-populated]"}
-                      {isExpired && " (Expired)"}
-                      {isExpiringSoon && ` (${expiryDays === 0 ? "Today" : `${expiryDays}d left`})`}
-                    </span>
-                  </p>
-                </div>
-
-                {selectedMember && (
+                  </div>
+                  <div className={styles.renewalInputGroup}>
+                    <label className={styles.renewalInputLabel}>Years</label>
+                    <div className={styles.renewalInputWrap}>
+                      <input
+                        className={styles.renewalInput}
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="0"
+                        value={renewalForm.years}
+                        onChange={(event) => setRenewalForm((prev) => ({ ...prev, years: event.target.value.replace(/[^\d]/g, "") }))}
+                      />
+                      <span className={styles.renewalUnit}>yr</span>
+                    </div>
+                  </div>
                   <button
                     type="button"
-                    className={`${styles.renewalToggleBtn} ${showRenewal ? styles.renewalToggleBtnActive : ""}`}
-                    onClick={() => { setShowRenewal((value) => !value); setRenewalError(""); setRenewalSuccess(""); }}
+                    className={styles.renewalSubmitBtn}
+                    onClick={handleRenewalSubmit}
+                    disabled={renewalLoading || (!renewalForm.months && !renewalForm.years)}
                   >
-                    <span className="ti ti-refresh" aria-hidden="true" />
-                    {showRenewal ? "▲ Hide Renewal" : (isExpired || isExpiringSoon) ? " Renew Membership ⚠️" : " Renew Membership"}
+                    {renewalLoading ? "Renewing…" : "Confirm"}
                   </button>
-                )}
-
-                {showRenewal && selectedMember && (
-                  <div className={styles.renewalPanel}>
-                    <p className={styles.renewalPanelTitle}>
-                      <span className="ti ti-refresh" aria-hidden="true" />
-                      Renewal — extends expiry from today
-                    </p>
-                    {renewalError && <p className={styles.renewalError}>{renewalError}</p>}
-                    {renewalSuccess && <p className={styles.renewalSuccess}>{renewalSuccess}</p>}
-
-                    <div className={styles.renewalInputRow}>
-                      <div className={styles.renewalInputGroup}>
-                        <label className={styles.renewalInputLabel}>Months</label>
-                        <div className={styles.renewalInputWrap}>
-                          <input
-                            className={styles.renewalInput}
-                            type="number"
-                            min="1"
-                            step="1"
-                            placeholder="0"
-                            value={renewalForm.months}
-                            onChange={(event) => setRenewalForm((prev) => ({ ...prev, months: event.target.value.replace(/[^\d]/g, "") }))}
-                          />
-                          <span className={styles.renewalUnit}>mo</span>
-                        </div>
-                      </div>
-                      <div className={styles.renewalInputGroup}>
-                        <label className={styles.renewalInputLabel}>Years</label>
-                        <div className={styles.renewalInputWrap}>
-                          <input
-                            className={styles.renewalInput}
-                            type="number"
-                            min="1"
-                            step="1"
-                            placeholder="0"
-                            value={renewalForm.years}
-                            onChange={(event) => setRenewalForm((prev) => ({ ...prev, years: event.target.value.replace(/[^\d]/g, "") }))}
-                          />
-                          <span className={styles.renewalUnit}>yr</span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        className={styles.renewalSubmitBtn}
-                        onClick={handleRenewalSubmit}
-                        disabled={renewalLoading || (!renewalForm.months && !renewalForm.years)}
-                      >
-                        {renewalLoading ? "Renewing…" : "Confirm"}
-                      </button>
-                    </div>
-
-                    <p className={styles.renewalHint}>
-                      This updates the member&apos;s expiration date in the database.
-                    </p>
-                  </div>
-                )}
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Date</label>
-                    <input className={styles.formInput} type="date" value={form.date} disabled />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Payment Details</label>
-                    <input className={styles.formInput} placeholder="e.g. Monthly Renewal" value={form.description} onChange={set("description")} />
-                  </div>
                 </div>
 
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Mode Of Payment</label>
-                    <select className={styles.formInput} value={form.modeOfPayment} onChange={set("modeOfPayment")}>
-                      {["Cash", "GCash", "Bank Transfer", "Credit Card"].map((mode) => (
-                        <option key={mode} value={mode}>{mode}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment) && (
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Reference Number</label>
-                      <input className={styles.formInput} placeholder="Enter Reference Number" value={form.referenceNumber} onChange={set("referenceNumber")} />
-                    </div>
-                  )}
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Total</label>
-                  <input className={styles.formInput} type="number" placeholder="Enter Total Amount" value={form.total} onChange={set("total")} />
-                </div>
-
-                <div className={styles.formRowStatus}>
-                  <div className={styles.statusGroup}>
-                    <label className={styles.formLabel}>Status</label>
-                    <div className={styles.radioRow}>
-                      {["Paid", "Unpaid"].map((status) => (
-                        <label key={status} className={styles.radioOption}>
-                          <input type="radio" name="status" value={status} checked={form.status === status} onChange={set("status")} style={{ accentColor: "#7eba56" }} />
-                          {status}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={styles.actionBtns}>
-                    <button className={styles.addRecordBtn} onClick={handleSubmit} disabled={loading}>
-                      {loading ? "Adding…" : "Add Record"}
-                    </button>
-                    <button
-                      className={styles.cancelBtn}
-                      onClick={() => {
-                        setForm({ ...defaultExistingForm, date: getTodayDateString() });
-                        setSelectedMember(null);
-                        setShowRenewal(false);
-                        setError("");
-                      }}
-                      disabled={loading}
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
+                <p className={styles.renewalHint}>
+                  This updates the member&apos;s expiration date in the database.
+                </p>
               </div>
             )}
 
-            {activeTab === "walkin" && (
-              <div className={styles.formCard}>
-                {walkInError && <div className={styles.alertError}>{walkInError}</div>}
-                {walkInSuccess && <div className={styles.alertSuccess}>{walkInSuccess}</div>}
-                {walkInsLoading && <div className={styles.alertInfo}>Loading walk-in records…</div>}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Date</label>
+                <input className={styles.formInput} type="date" value={form.date} disabled />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Payment Details</label>
+                <input className={styles.formInput} placeholder="e.g. Monthly Renewal" value={form.description} onChange={set("description")} />
+              </div>
+            </div>
 
-                <div className={styles.formGroup} ref={walkInDropdownRef}>
-                  <label className={styles.formLabel}>Search Walk-in</label>
-                  <div className={styles.searchWrap}>
-                    <span className="ti ti-search" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 15 }} aria-hidden="true" />
-                    <input
-                      className={styles.searchInput}
-                      placeholder="Search recorded walk-in name"
-                      value={walkInForm.name}
-                      onChange={handleWalkInInputChange}
-                      onFocus={() => setShowWalkInDropdown(true)}
-                      disabled={walkInsLoading}
-                      autoComplete="off"
-                    />
-                  </div>
-                  {showWalkInDropdown && !walkInsLoading && (
-                    <div className={styles.dropdown}>
-                      {filteredWalkIns.length > 0 ? filteredWalkIns.map((record) => (
-                        <div key={`${record.id}-${record.name}`} className={styles.dropdownItem} onClick={() => handleSelectWalkIn(record)}>
-                          <span className={styles.dropdownName}>{record.name}</span>
-                          <span className={styles.dropdownId}>{record.planType} · {record.paymentDate}</span>
-                        </div>
-                      )) : (
-                        <div className={styles.dropdownEmpty}>
-                          {walkInForm.name ? `No walk-in records found matching "${walkInForm.name}"` : "Start typing to see recorded walk-ins"}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Plan Type</label>
-                    <select className={styles.formInput} value={walkInForm.planType} onChange={setWI("planType")}>
-                      {["Daily", "Monthly"].map((plan) => (
-                        <option key={plan} value={plan}>{plan}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Mode Of Payment</label>
-                    <select className={styles.formInput} value={walkInForm.modeOfPayment} onChange={setWI("modeOfPayment")}>
-                      {["Cash", "GCash", "Bank Transfer", "Credit Card"].map((mode) => (
-                        <option key={mode} value={mode}>{mode}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {["GCash", "Bank Transfer", "Credit Card"].includes(walkInForm.modeOfPayment) && (
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Reference Number</label>
-                      <input className={styles.formInput} placeholder="Enter Reference Number" value={walkInForm.referenceNumber} onChange={setWI("referenceNumber")} />
-                    </div>
-                  )}
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Date</label>
-                    <input className={styles.formInput} type="date" value={walkInForm.date} onChange={setWI("date")} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Selected Walk-in</label>
-                    <input className={styles.formInput} value={selectedWalkIn?.name || walkInForm.name || "None selected"} readOnly />
-                  </div>
-                </div>
-
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Mode Of Payment</label>
+                <select className={styles.formInput} value={form.modeOfPayment} onChange={set("modeOfPayment")}>
+                  {["Cash", "GCash", "Bank Transfer", "Credit Card"].map((mode) => (
+                    <option key={mode} value={mode}>{mode}</option>
+                  ))}
+                </select>
+              </div>
+              {["GCash", "Bank Transfer", "Credit Card"].includes(form.modeOfPayment) && (
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Total</label>
-                  <input className={styles.formInput} type="number" placeholder="Enter Total Amount" value={walkInForm.total} onChange={setWI("total")} />
+                  <label className={styles.formLabel}>Reference Number</label>
+                  <input className={styles.formInput} placeholder="Enter Reference Number" value={form.referenceNumber} onChange={set("referenceNumber")} />
                 </div>
+              )}
+            </div>
 
-                <div className={styles.actionBtns}>
-                  <button className={styles.addRecordBtn} onClick={handleWalkInSubmit} disabled={walkInLoading}>
-                    {walkInLoading ? "Adding…" : "Add Record"}
-                  </button>
-                    <button
-                      className={styles.cancelBtn}
-                      onClick={() => {
-                        setWalkInForm(defaultWalkInForm);
-                        setSelectedWalkIn(null);
-                        setShowWalkInDropdown(false);
-                        setWalkInError("");
-                        setWalkInSuccess("");
-                      }}
-                      disabled={walkInLoading}
-                    >
-                      Clear
-                    </button>
-                  </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Total</label>
+              <input className={styles.formInput} type="number" placeholder="Enter Total Amount" value={form.total} onChange={set("total")} />
+            </div>
+
+            <div className={styles.formRowStatus}>
+              <div className={styles.statusGroup}>
+                <label className={styles.formLabel}>Status</label>
+                <div className={styles.radioRow}>
+                  {["Paid", "Unpaid"].map((status) => (
+                    <label key={status} className={styles.radioOption}>
+                      <input type="radio" name="status" value={status} checked={form.status === status} onChange={set("status")} style={{ accentColor: "#7eba56" }} />
+                      {status}
+                    </label>
+                  ))}
                 </div>
-            )}
+              </div>
+              <div className={styles.actionBtns}>
+                <button className={styles.addRecordBtn} onClick={handleSubmit} disabled={loading}>
+                  {loading ? "Adding…" : "Add Record"}
+                </button>
+                <button
+                  className={styles.cancelBtn}
+                  onClick={() => {
+                    setForm({ ...defaultExistingForm, date: getTodayDateString() });
+                    setSelectedMember(null);
+                    setShowRenewal(false);
+                    setError("");
+                  }}
+                  disabled={loading}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            </div>
 
             <div className={styles.closeRow}>
               <button className={styles.closePageBtn} onClick={() => onNavigate("payments")}>Close</button>
