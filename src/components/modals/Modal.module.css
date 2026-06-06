@@ -2201,9 +2201,11 @@
 .receiptModal {
   background: #fff;
   border-radius: 14px;
-  width: min(480px, calc(100vw - 32px));
-  max-height: 90vh;
-  overflow-y: auto;
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(88vh, 720px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
   font-family: "Montserrat", sans-serif;
 }
@@ -2212,6 +2214,7 @@
   padding: 20px 24px 16px;
   border-bottom: 1px solid #eee;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .receiptBody {
@@ -2219,6 +2222,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .receiptRow {
@@ -2248,15 +2253,17 @@
   background: #f5f9f2;
   border: 1px solid #d4e8c0;
   border-radius: 10px;
-  padding: 14px 16px;
+  margin: 16px 24px 12px;
+  padding: 16px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 14px;
 }
 
+.receiptAvatar,
 .receiptMemberAvatar {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   background: #d0e8c0;
@@ -2265,6 +2272,34 @@
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
+}
+
+.receiptMemberInfo {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 18px;
+}
+
+.receiptInfoCol {
+  min-width: 0;
+}
+
+.receiptInfoLabel {
+  color: #4f6047;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 2px;
+}
+
+.receiptInfoValue {
+  color: #222;
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
 }
 
 .receiptMemberName {
@@ -2280,6 +2315,56 @@
   margin: 0;
 }
 
+.receiptModal .modalTable {
+  display: block;
+  width: auto;
+  min-height: 0;
+  margin: 0 24px 14px;
+  overflow: auto;
+  font-size: 12px;
+  border: 1px solid #edf0ea;
+  border-radius: 10px;
+}
+
+.receiptModal .modalTable thead,
+.receiptModal .modalTable tbody,
+.receiptModal .modalTable tr {
+  display: table;
+  width: 100%;
+  min-width: 690px;
+  table-layout: fixed;
+}
+
+.receiptModal .modalTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.receiptModal .modalTable th {
+  color: #3d7221;
+  font-size: 11px;
+  text-transform: none;
+}
+
+.receiptModal .modalTable th,
+.receiptModal .modalTable td {
+  padding: 10px 9px;
+}
+
+.receiptModal .modalTable th:nth-child(1),
+.receiptModal .modalTable td:nth-child(1) { width: 86px; }
+
+.receiptModal .modalTable th:nth-child(2),
+.receiptModal .modalTable td:nth-child(2) { width: 110px; }
+
+.receiptModal .modalTable th:nth-child(5),
+.receiptModal .modalTable td:nth-child(5) { width: 84px; text-align: right; }
+
+.receiptModal .paymentModalFooter {
+  margin-top: auto;
+}
+
 /* Receipt action links */
 .receiptActions {
   display: flex;
@@ -2288,6 +2373,7 @@
   border-top: 1px solid #eee;
   justify-content: flex-end;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .receiptActionBtn {
@@ -2586,7 +2672,8 @@
   .overlay { align-items: flex-end; }
 
   .attendanceModal,
-  .viewAllModal {
+  .viewAllModal,
+  .receiptModal {
     width: 100%;
     max-height: 85vh;
     border-radius: 14px 14px 0 0;
@@ -2608,6 +2695,20 @@
   }
 
   .modalFooter .closeBtn { width: 100%; }
+
+  .receiptMemberCard {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .receiptMemberInfo {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .receiptModal .modalTable {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -2620,4 +2721,13 @@
   .paymentModalFooter { flex-direction: column; }
   .receiptActions { flex-direction: column; }
   .attendanceTopBar { flex-direction: column; align-items: flex-start; }
+
+  .receiptMemberCard {
+    flex-direction: column;
+  }
+
+  .receiptMemberInfo {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
 }
