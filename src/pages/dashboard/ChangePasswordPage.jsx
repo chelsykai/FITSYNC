@@ -17,36 +17,45 @@ function validate(current, next, confirm) {
   return null;
 }
 
-// ── Placeholder API call — backend dev: replace this function ─────────────────
-async function changePasswordApi(userId, currentPassword, newPassword) {
-  // TODO: replace with real endpoint, e.g.:
-  // const res = await fetch("/api/users/change-password", {
-  //   method: "PUT",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify({ userId, currentPassword, newPassword }),
-  // });
-  // if (!res.ok) throw new Error((await res.json()).message || "Failed.");
+// ── Password change via custom auth ───────────────────────────────────────
+async function changePasswordApi(currentPassword, newPassword, userId) {
+  try {
+    if (!userId) {
+      throw new Error("Could not verify current user. Missing user ID.");
+    }
 
-  // ── Supabase placeholder ──────────────────────────────────────────────────
-  const { data, error: fetchError } = await supabase
-    .from("system_user")
-    .select("password")
-    .eq("user_id", userId)
-    .single();
+    // Verify current password against system_user table
+    const { data: userData, error: fetchError } = await supabase
+      .from("system_user")
+      .select("password")
+      .eq("user_id", userId)
+      .single();
+      
+    if (fetchError || !userData) {
+      throw new Error("Failed to verify current user.");
+    }
 
-  if (fetchError || !data) throw new Error("Could not verify current password.");
-  if (data.password !== currentPassword) throw new Error("Current password is incorrect.");
+    if (userData.password !== currentPassword) {
+      throw new Error("Current password is incorrect.");
+    }
 
-  const { error: updateError } = await supabase
-    .from("system_user")
-    .update({
-      password: newPassword,
-      password_change_required: false,
-      password_change_deadline: null,
-    })
-    .eq("user_id", userId);
+    // Update password in system_user table
+    const { error: updateError } = await supabase
+      .from("system_user")
+      .update({
+        password: newPassword,
+      })
+      .eq("user_id", userId);
+      
+    if (updateError) {
+      console.warn("Failed to sync password to system_user table:", updateError);
+      throw new Error(updateError.message || "Failed to update password. Please try again.");
+    }
 
-  if (updateError) throw new Error("Failed to update password. Please try again.");
+    return { success: true };
+  } catch (err) {
+    throw new Error(err.message || "Password change failed.");
+  }
 }
 
 // ── Eye icon SVG ──────────────────────────────────────────────────────────────
@@ -137,10 +146,12 @@ export default function ChangePasswordPage({ onNavigate, userRole = "staff", isA
     setLoading(true);
     setModalError("");
     try {
-      await changePasswordApi(currentUser.user_id, current, next);
+      const userId = currentUser?.user_id || currentUser?.id;
+      
+      await changePasswordApi(current, next, userId);
 
-      // Update session so password_change_required is cleared
-      const updated = { ...currentUser, password: next, password_change_required: false, password_change_deadline: null };
+      // Update session with new password
+      const updated = { ...currentUser, password: next };
       sessionStorage.setItem("currentUser", JSON.stringify(updated));
 
       setShowConfirmModal(false);

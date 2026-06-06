@@ -25,17 +25,36 @@ function assertEmailConfig() {
  * Requires a public bucket named "member-qr-codes" in your Supabase project.
  */
 export async function uploadQRAndGetUrl(memberId, qrDataUrl) {
-  const blob = await (await fetch(qrDataUrl)).blob();
-  const path = `${memberId}.png`;
+  try {
+    const blob = await (await fetch(qrDataUrl)).blob();
+    const path = `${memberId}.png`;
 
-  const { error } = await supabase.storage
-    .from("member-qr-codes")
-    .upload(path, blob, { contentType: "image/png", upsert: true });
+    const { error } = await supabase.storage
+      .from("member-qr-codes")
+      .upload(path, blob, { contentType: "image/png", upsert: true });
 
-  if (error) throw new Error(`QR upload failed: ${error.message}`);
+    if (error) {
+      // Provide helpful error messages for common RLS issues
+      if (error.message.includes("row-level security")) {
+        throw new Error(
+          "QR upload failed: Missing or incorrect RLS policies on member-qr-codes bucket. " +
+          "See SUPABASE_RLS_SETUP.md for configuration."
+        );
+      }
+      if (error.message.includes("not found")) {
+        throw new Error(
+          "QR upload failed: member-qr-codes bucket does not exist. " +
+          "Create it in Supabase Storage and configure RLS policies."
+        );
+      }
+      throw new Error(`QR upload failed: ${error.message}`);
+    }
 
-  const { data } = supabase.storage.from("member-qr-codes").getPublicUrl(path);
-  return data.publicUrl;
+    const { data } = supabase.storage.from("member-qr-codes").getPublicUrl(path);
+    return data.publicUrl;
+  } catch (err) {
+    throw new Error(err.message || "Failed to upload QR code");
+  }
 }
 
 export async function sendMemberWelcomeEmail(member, qrPublicUrl) {

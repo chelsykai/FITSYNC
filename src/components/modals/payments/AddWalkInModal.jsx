@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "../Modal.module.css";
-import { supabase } from "../../../lib/supabaseClient";
+import { addWalkInRecord } from "../../../services/walkInService";
 import { toISODateString } from "../../../utils/dateFormat";
 
 export default function AddWalkInModal({ onClose, onSaved }) {
@@ -28,22 +28,32 @@ export default function AddWalkInModal({ onClose, onSaved }) {
     try {
       setSaving(true);
       setError("");
+      console.log("[AddWalkInModal] Adding walk-in record with data:", { name: name.trim() || "Guest", paymentDate: date, planType, total });
 
-      const { error: insertError } = await supabase.from("walk_in").insert([{
+      const result = await addWalkInRecord({
         name: name.trim() || "Guest",
-        payment_date: date,
-        plan_type: planType,
+        paymentDate: date,
+        planType,
         total,
-        status: "Paid",
-      }]);
+      });
+      console.log("[AddWalkInModal] Walk-in record added successfully:", result);
 
-      if (insertError) throw insertError;
-
-      await onSaved?.();
+      console.log("[AddWalkInModal] Calling onSaved callback...");
+      if (onSaved) {
+        await onSaved();
+      }
+      console.log("[AddWalkInModal] onSaved callback completed, closing modal");
+      
+      // Clear form before closing
+      setName("");
+      setAmount("");
+      setPlanType("Daily");
+      setDate(toISODateString());
+      
       onClose();
     } catch (err) {
-      console.error("Error adding walk-in record:", err);
-      setError("Unable to save walk-in record right now. Please try again.");
+      console.error("[AddWalkInModal] Error adding walk-in record:", err);
+      setError(err.message || "Unable to save walk-in record right now. Please try again.");
     } finally {
       setSaving(false);
     }
