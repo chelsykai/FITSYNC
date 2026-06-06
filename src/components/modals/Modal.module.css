@@ -1030,7 +1030,13 @@
 }
 .cameraBtnRow {
   display: flex;
+  flex-direction: column;
   gap: 6px;
+  width: 100%;
+}
+
+.cameraBtnRow .photoActionBtn {
+  width: 100%;
 }
 
 .addMemberModal {
