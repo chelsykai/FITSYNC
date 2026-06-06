@@ -1,44 +1,45 @@
-=======
-FITSYNC: QR-Based Membership Tracking (Capstone)
+# FITSYNC: QR-Based Membership Tracking (Capstone)
 
-A modern fitness gym management system with QR-based attendance tracking, membership management, and payment tracking.
+A modern fitness gym management system with QR-based attendance tracking, membership management, payment tracking, and admin/staff dashboards.
 
 ## Tech Stack
 
 ### Frontend
 
-- **React** (v19.2.0) - UI library
-- **Vite** (v7.2.4) - Build tool and dev server
-- **React DOM** (v19.2.0) - React rendering for web
+- React v19.2.0
+- React DOM v19.2.0
+- React Router DOM v7.15.1
+- Vite v7.2.4
 
 ### Backend & Database
 
-- **Supabase** (v2.101.1) - Backend-as-a-Service (PostgreSQL, Auth, Real-time)
+- Supabase v2.101.1
 
 ### Libraries & Tools
 
-- **html5-qrcode** (v2.3.8) - QR code scanning
-- **jsPDF** (v4.2.1) - PDF generation (Member ID cards)
-- **ExcelJS** (v4.4.0) - Excel file export
-- **Recharts** (v3.8.1) - Data visualization/charting
-- **EmailJS** (v4.4.1) - Email notifications
+- html5-qrcode v2.3.8
+- jsPDF v4.2.1
+- ExcelJS v3.4.0
+- Recharts v3.8.1
+- EmailJS v4.4.1
+- Tabler Icons v3.44.0
 
 ### Development Tools
 
-- **ESLint** (v9.39.1) - Code linting
-- **Vite React SWC Plugin** (v4.2.2) - Fast React compilation
-- **TypeScript Support** - Type definitions for React and React DOM
+- ESLint v9.39.1
+- @vitejs/plugin-react-swc v4.2.2
+- TypeScript type packages for React and React DOM
 
 ## Features
 
--  QR-based member attendance tracking
--  Member management (create, edit, delete)
--  Payment recording and tracking
--  Dashboard with analytics
--  Data export (PDF, Excel)
--  Email notifications
--  Membership plans (monthly and yearly)
--  Member profiles and history
+- QR-based member attendance tracking
+- Member management (create, edit, delete)
+- Payment recording and tracking
+- Dashboard analytics and summaries
+- Data export (PDF, Excel)
+- Email notifications
+- Membership plans (monthly and yearly)
+- Member profiles and history
 
 ## Project Structure
 
@@ -55,14 +56,14 @@ src/
 ```
 
 ## Setup
-///
+
 1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Start development server:
+2. Start the development server:
 
 ```bash
 npm run dev
@@ -71,12 +72,11 @@ npm run dev
 3. Build for production:
 
 ```bash
-npm build
+npm run build
 ```
 
-4. Lint code:
+4. Lint the code:
 
 ```bash
 npm run lint
 ```
->>>>>>> 876fb500ba91de9b783324f5f0e174ae1be699ca

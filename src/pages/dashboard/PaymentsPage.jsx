@@ -1,11 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import styles from "./PaymentsPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
-import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
+import PaymentReceiptModal from "../../components/modals/payments/PaymentReceiptModal";
+import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
+import AddWalkInModal from "../../components/modals/payments/AddWalkInModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
+import { fetchWalkIns as fetchWalkInsService } from "../../services/walkInService";
 import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
+import WalkInTable from "./WalkInTable";
+import { isMembershipActive } from "../../utils/membershipUtils";
 
 /**
  * Fetch total count of members from the database
@@ -104,6 +109,24 @@ const fetchPayments = async () => {
   }
 };
 
+const fetchWalkIns = async () => {
+  try {
+    const data = await fetchWalkInsService();
+    console.log("Fetched walk-ins:", data);
+    return (data || []).map((record) => ({
+      id: record.id,
+      name: record.name,
+      date: formatMMDDYYYY(record.paymentDate),
+      rawDate: parseLocalISODate(record.paymentDate),
+      planType: record.planType,
+      total: record.total,
+    }));
+  } catch (err) {
+    console.error("Error in fetchWalkIns:", err);
+    return [];
+  }
+};
+
 /**
  * Calculate revenue stats
  */
@@ -148,22 +171,22 @@ const calculateStats = (payments, activeMemberships = 0) => {
 };
 
 export default function PaymentsPage({ onNavigate, activePage = "payments", isAdmin = false }) {
+  const [activeTab, setActiveTab] = useState("payments");
   const [payments, setPayments] = useState([]);
+  const [walkIns, setWalkIns] = useState([]);
   const [error, setError] = useState("");
   const [stats, setStats] = useState({
     totalTransactions: 0,
     activeMemberships: 0,
   });
-  const [revenue, setRevenue] = useState({
-    today: 0,
-    thisMonth: 0,
-    pending: 0,
-  });
   const [loadingPayments, setLoadingPayments] = useState(true);
+  const [loadingWalkIns, setLoadingWalkIns] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [search, setSearch] = useState("");
-  const [showExport, setShowExport] = useState(false);
   const [showViewAll, setShowViewAll] = useState(false);
+  const [showExport, setShowExport] = useState(false);
+  const [showAddWalkIn, setShowAddWalkIn] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [members, setMembers] = useState([]);
 
   const loadMembers = useCallback(async (showLoader = false) => {
@@ -196,30 +219,45 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
         totalTransactions: calculatedStats.totalTransactions,
         activeMemberships: calculatedStats.activeMemberships,
       });
-      setRevenue({
-        today: calculatedStats.today,
-        thisMonth: calculatedStats.thisMonth,
-        pending: calculatedStats.pending,
-      });
     } catch (err) {
       console.error("Error loading payments:", err);
       setError("Unable to load payment records right now. Please try again.");
       setPayments([]);
       setStats({ totalTransactions: 0, activeMemberships: 0 });
-      setRevenue({ today: 0, thisMonth: 0, pending: 0 });
     } finally {
       if (showLoader) setLoadingPayments(false);
+    }
+  }, []);
+
+  const loadWalkIns = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoadingWalkIns(true);
+      console.log("[loadWalkIns] Starting to fetch walk-in records...");
+      const walkInData = await fetchWalkIns();
+      console.log("[loadWalkIns] Fetched walk-in data:", walkInData);
+      console.log("[loadWalkIns] Total records:", walkInData.length);
+      console.log("[loadWalkIns] Setting walkIns state to:", walkInData);
+      setWalkIns(walkInData);
+    } catch (err) {
+      console.error("[loadWalkIns] Error loading walk-in records:", err);
+      setWalkIns([]);
+    } finally {
+      if (showLoader) setLoadingWalkIns(false);
     }
   }, []);
 
   useEffect(() => {
     loadMembers(true);
     loadPayments(true);
+    loadWalkIns(true);
 
     const paymentsChannel = supabase
       .channel("payments-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "record_payment" }, () => {
         loadPayments();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "walkin_records" }, () => {
+        loadWalkIns();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
         loadMembers();
@@ -230,13 +268,14 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
     return () => {
       supabase.removeChannel(paymentsChannel);
     };
-  }, [loadMembers, loadPayments]);
+  }, [loadMembers, loadPayments, loadWalkIns]);
 
   // Fallback auto-refresh when user returns to the page
   useEffect(() => {
     const handleFocus = () => {
       loadMembers();
       loadPayments();
+      loadWalkIns();
     };
 
     window.addEventListener("focus", handleFocus);
@@ -244,7 +283,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
     return () => {
       window.removeEventListener("focus", handleFocus);
     };
-  }, [loadMembers, loadPayments]);
+  }, [loadMembers, loadPayments, loadWalkIns]);
 
   const filtered = payments.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -287,25 +326,13 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
               <span className={styles.statIcon}>👥</span>
               <div>
                 <p className={styles.statLabel}>Active Memberships</p>
-                <p className={styles.statValue}>{loadingMembers ? "..." : members.length}</p>
+                <p className={styles.statValue}>{loadingMembers ? "..." : members.filter((member) => isMembershipActive(member)).length}</p>
               </div>
             </div>
-            {isAdmin && (
-              <div
-                className={`${styles.statCard} ${styles.exportCard}`}
-                onClick={() => setShowExport(true)}
-              >
-                <span className={styles.statIcon}>🖨️</span>
-                <div>
-                  <p className={styles.statLabel}>Export</p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Search */}
           <div className={styles.searchWrapper}>
-            <span className={styles.searchIcon}>🔍</span>
             <input
               type="text"
               placeholder="Search"
@@ -335,99 +362,152 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
 
           {/* Table Card */}
           <div className={styles.tableCard}>
-            <div className={styles.tableHeader}>
-              <h2 className={styles.tableTitle}>Payment Records Table</h2>
-              {isAdmin && (
-                <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
-                  Add / Record Payment
-                </button>
-              )}
-            </div>
-
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Member ID</th>
-                  <th>Name</th>
-                  <th>Payment Date</th>
-                  <th>Membership Type</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.length === 0 ? (
-                  <tr key="no-payments"><td colSpan={6} className={styles.noResults}>
-                    No payment records yet. Click "Add / Record Payment" to create one.
-                  </td></tr>
-                ) : filtered.length === 0 ? (
-                  <tr key="no-match"><td colSpan={6} className={styles.noResults}>
-                    No records match your search.
-                  </td></tr>
-                ) : (
-                  filtered.map((p, index) => (
-                    <tr key={`${p.memberId}-${p.date}-${index}`}>
-                      <td>{p.memberId}</td>
-                      <td>{p.name}</td>
-                      <td>{p.date}</td>
-                      <td>{p.type}</td>
-                      <td>{p.total.toLocaleString()}</td>
-                      <td>
-                        <span className={`${styles.badge} ${p.status === "Paid" ? styles.paid : styles.pending}`}>
-                          {p.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-
-            <div className={styles.viewAllWrapper}>
-              <button className={styles.viewAllBtn} onClick={() => setShowViewAll(true)}>
-                View All
+            <div className={styles.tabSwitcher} role="tablist" aria-label="Payment record type">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "payments"}
+                className={`${styles.tabButton} ${activeTab === "payments" ? styles.tabButtonActive : ""}`}
+                onClick={() => setActiveTab("payments")}
+              >
+                Payment Records
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "walkIns"}
+                className={`${styles.tabButton} ${activeTab === "walkIns" ? styles.tabButtonActive : ""}`}
+                onClick={() => setActiveTab("walkIns")}
+              >
+                Walk-in Records
               </button>
             </div>
+
+            <div className={styles.tableHeader}>
+              <h2 className={styles.tableTitle}>
+                {activeTab === "payments" ? "Payment Records Table" : "Walk-in Records Table"}
+              </h2>
+              <div className={styles.tableActions}>
+                {activeTab === "payments" && isAdmin && (
+                  <button className={styles.exportBtn} onClick={() => setShowExport(true)}>
+                    Export
+                  </button>
+                )}
+                {activeTab === "payments" ? (
+                  <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
+                    Add / Record Payment
+                  </button>
+                ) : (
+                  <button className={styles.addBtn} onClick={() => setShowAddWalkIn(true)}>
+                    Add Walk-in
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {activeTab === "payments" ? (
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Member ID</th>
+                      <th>Name</th>
+                      <th>Payment Date</th>
+                      <th>Membership Type</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.length === 0 ? (
+                      <tr key="no-payments"><td colSpan={6} className={styles.noResults}>
+                        No payment records yet. Click "Add / Record Payment" to create one.
+                      </td></tr>
+                    ) : filtered.length === 0 ? (
+                      <tr key="no-match"><td colSpan={6} className={styles.noResults}>
+                        No records match your search.
+                      </td></tr>
+                    ) : (
+                      filtered.map((p, index) => (
+                        <tr
+                          key={`${p.id || p.memberId}-${p.date}-${index}`}
+                          className={styles.clickableRow}
+                          onClick={() => setSelectedPayment(p)}
+                        >
+                          <td>{p.memberId}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className={styles.paymentNameBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPayment(p);
+                              }}
+                            >
+                              {p.name}
+                            </button>
+                          </td>
+                          <td>{p.date}</td>
+                          <td>{p.type}</td>
+                          <td>{p.total.toLocaleString()}</td>
+                          <td>
+                            <span className={`${styles.badge} ${p.status === "Paid" ? styles.paid : styles.pending}`}>
+                              {p.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <WalkInTable walkIns={walkIns} search={search} loading={loadingWalkIns} />
+            )}
+
+            {activeTab === "payments" && (
+              <div className={styles.viewAllWrapper}>
+                <button className={styles.viewAllBtn} onClick={() => setShowViewAll(true)}>
+                  View All
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Revenue Cards */}
-          <div className={styles.revenueRow}>
-            <div className={styles.revenueCard}>
-              <span className={styles.revenueIcon}>💰</span>
-              <div>
-                <p className={styles.revenueLabel}>Today's Revenue</p>
-                <p className={styles.revenueValue}>₱ {revenue.today.toLocaleString()}</p>
-              </div>
-            </div>
-            <div className={styles.revenueCard}>
-              <span className={styles.revenueIcon}>📊</span>
-              <div>
-                <p className={styles.revenueLabel}>This month's Revenue</p>
-                <p className={styles.revenueValue}>₱ {revenue.thisMonth.toLocaleString()}</p>
-              </div>
-            </div>
-            <div className={`${styles.revenueCard} ${styles.pendingCard}`}>
-              <span className={styles.revenueIcon}>🕐</span>
-              <div>
-                <p className={styles.revenueLabel}>Pending Payments</p>
-                <p className={`${styles.revenueValue} ${styles.pendingValue}`}>
-                  ₱ {revenue.pending.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
 
       {/* Modals */}
-      {showExport && isAdmin && (
-        <PaymentsExportModal payments={payments} members={members} onClose={() => setShowExport(false)} isAdmin={isAdmin} />
-      )}
       {showViewAll && (
         <ViewAllPaymentsModal
           payments={payments}
           onClose={() => setShowViewAll(false)}
           onAddPayment={() => { setShowViewAll(false); onNavigate("recordPayment"); }}
+        />
+      )}
+      {selectedPayment && (
+        <PaymentReceiptModal
+          payment={selectedPayment}
+          onClose={() => setSelectedPayment(null)}
+          onAddPayment={() => {
+            setSelectedPayment(null);
+            onNavigate("recordPayment");
+          }}
+        />
+      )}
+      {showExport && isAdmin && (
+        <PaymentsExportModal
+          payments={payments}
+          members={members}
+          onClose={() => setShowExport(false)}
+          isAdmin={isAdmin}
+        />
+      )}
+      {showAddWalkIn && (
+        <AddWalkInModal
+          onClose={() => setShowAddWalkIn(false)}
+          onSaved={() => loadWalkIns()}
         />
       )}
     </>

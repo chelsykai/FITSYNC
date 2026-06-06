@@ -2,17 +2,19 @@ import { useState, useEffect } from "react";
 import LogInPage from "../pages/auth/LogInPage";
 import OverviewPage from "../pages/dashboard/OverviewPage";
 import StaffDashboardPage from "../pages/dashboard/StaffDashboardPage";
+import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
 import MembersPage from "../pages/dashboard/MembersPage";
 import PaymentsPage from "../pages/dashboard/PaymentsPage";
 import NotificationsPage from "../pages/dashboard/NotificationsPage";
 import AccountsPage from "../pages/dashboard/AccountsPage";
 import RecordPaymentPage from "../pages/dashboard/RecordPaymentPage";
-import ChangePasswordPage from "../pages/dashboard/ChangePasswordPage";
 import ForcePasswordChangeModal from "../components/modals/accounts/ForcePasswordChangeModal";
 import { getWorkingDaysLeft } from "../utils/dateUtils";
+import ChangePasswordPage from "../pages/dashboard/ChangePasswordPage";
 
 const AUTH_ROUTES = new Set(["login", "create", "forgot"]);
 const NON_SCANNER_ROUTES = new Set([
+  "adminDashboard",
   "overview",
   "members",
   "payments",
@@ -22,19 +24,35 @@ const NON_SCANNER_ROUTES = new Set([
   "changePassword",
 ]);
 
-const ADMIN_ONLY_ROUTES = new Set([
+const ADMIN_ONLY_ROUTES = new Set(["accounts"]);
+
+const STAFF_ALLOWED_ROUTES = new Set([
+  "staffDashboard",
+  "overview",
+  "members",
   "payments",
   "notifications",
-  "accounts",
   "recordPayment",
+  "changePassword",
 ]);
-
-const STAFF_ALLOWED_ROUTES = new Set(["staffDashboard", "overview", "members", "changePassword"]);
 
 const normalizePathname = (pathname = "/") => {
   if (!pathname) return "/";
   const trimmed = pathname.replace(/\/+$/, "");
   return trimmed || "/";
+};
+
+const parseStoredUser = () => {
+  const raw = sessionStorage.getItem("currentUser");
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error("Invalid currentUser payload in sessionStorage.", error);
+    sessionStorage.removeItem("currentUser");
+    return null;
+  }
 };
 
 export default function DashboardShell({ initialRoute = "login", syncPathToRoot = true } = {}) {
@@ -50,13 +68,16 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
   const allowedRoutes = isAdmin ? NON_SCANNER_ROUTES : STAFF_ALLOWED_ROUTES;
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("currentUser");
+    const user = parseStoredUser();
 
-    if (stored) {
-      const user = JSON.parse(stored);
+    if (user) {
       setCurrentUser(user);
       const lastRoute = localStorage.getItem("lastRoute");
-      const fallbackRoute = allowedRoutes.has(lastRoute) ? lastRoute : "overview";
+      const fallbackRoute = allowedRoutes.has(lastRoute)
+        ? lastRoute
+        : isAdmin
+          ? "adminDashboard"
+          : "staffDashboard";
 
       if (user.password_change_required === true) {
         const daysLeft = getWorkingDaysLeft(user.password_change_deadline);
@@ -120,6 +141,10 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
       return;
     }
 
+    if (meta?.user) {
+      setCurrentUser(meta.user);
+    }
+
     if (ADMIN_ONLY_ROUTES.has(to) && !isAdmin) {
       setRoute("overview");
       return;
@@ -137,6 +162,8 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
   };
 
   const renderPage = () => {
+    // All shared props — includes badge counts and isAdmin so every
+    // page (and the Sidebar inside it) gets the data it needs.
     const pageProps = {
       onNavigate: navigate,
       newMembersCount,
@@ -154,22 +181,21 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
         return <OverviewPage key="overview" activePage="overview" {...pageProps} />;
       case "staffDashboard":
         return <StaffDashboardPage key="staffDashboard" {...pageProps} />;
+      case "adminDashboard":
+        return <AdminDashboardPage key="adminDashboard" {...pageProps} />;
       case "members":
         return <MembersPage key="members" activePage="members" {...pageProps} />;
       case "payments":
-        if (!isAdmin) return <OverviewPage key="overview-staff" activePage="overview" {...pageProps} />;
         return <PaymentsPage key="payments" activePage="payments" {...pageProps} />;
       case "notifications":
-        if (!isAdmin) return <OverviewPage key="overview-staff-2" activePage="overview" {...pageProps} />;
         return <NotificationsPage key="notifications" activePage="notifications" {...pageProps} />;
       case "accounts":
         if (!isAdmin) return <OverviewPage key="overview-staff-3" activePage="overview" {...pageProps} />;
         return <AccountsPage key="accounts" activePage="accounts" {...pageProps} />;
       case "recordPayment":
-        if (!isAdmin) return <OverviewPage key="overview-staff-4" activePage="overview" {...pageProps} />;
         return <RecordPaymentPage key="recordPayment" activePage="payments" {...pageProps} />;
       case "changePassword":
-        return <ChangePasswordPage key="changePassword" activePage="accounts" {...pageProps} />;
+        return <ChangePasswordPage key="changePassword" activePage={isAdmin ? "accounts" : "overview"} {...pageProps} />;
       default:
         return <LogInPage key="login" {...pageProps} />;
     }
@@ -185,7 +211,7 @@ export default function DashboardShell({ initialRoute = "login", syncPathToRoot 
           daysLeft={forcePassData.daysLeft}
           onSuccess={() => {
             setForcePassData(null);
-            const updated = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+            const updated = parseStoredUser() || {};
             if (updated.password_change_required === false) {
               setForcePassData(null);
             }

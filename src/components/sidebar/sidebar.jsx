@@ -3,6 +3,7 @@ import styles from "./sidebar.module.css";
 import logo from "../../assets/logo_2.png";
 
 const ADMIN_NAV_ITEMS = [
+  { label: "DASHBOARD",     route: "adminDashboard", icon: "ti-home"             },
   { label: "OVERVIEW",      route: "overview",      icon: "ti-layout-dashboard" },
   { label: "MEMBERS",       route: "members",       icon: "ti-users"            },
   { label: "PAYMENTS",      route: "payments",      icon: "ti-credit-card"      },
@@ -11,8 +12,11 @@ const ADMIN_NAV_ITEMS = [
 ];
 
 const STAFF_NAV_ITEMS = [
-  { label: "OVERVIEW", route: "overview", icon: "ti-layout-dashboard" },
-  { label: "MEMBERS",  route: "members",  icon: "ti-users"            },
+  { label: "DASHBOARD", route: "staffDashboard", icon: "ti-home"        },
+  { label: "OVERVIEW",  route: "overview",       icon: "ti-layout-dashboard" },
+  { label: "MEMBERS",   route: "members",        icon: "ti-users"            },
+  { label: "PAYMENTS",  route: "payments",       icon: "ti-credit-card"      },
+  { label: "NOTIFICATIONS", route: "notifications", icon: "ti-bell"          },
 ];
 
 const getStoredRole = () => {

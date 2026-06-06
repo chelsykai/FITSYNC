@@ -53,7 +53,9 @@ export default function LogInPage({ onNavigate }) {
         return;
       }
 
-      onNavigate(String(user.role || "staff").toLowerCase() === "admin" ? "overview" : "staffDashboard");
+      onNavigate(String(user.role || "staff").toLowerCase() === "admin" ? "overview" : "staffDashboard", {
+        user,
+      });
     } catch (err) {
       setError("An error occurred. Please try again.");
       setLoading(false);

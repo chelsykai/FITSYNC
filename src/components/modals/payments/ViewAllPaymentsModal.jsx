@@ -121,9 +121,7 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
                 <th>Membership Type</th>
                 <th>Total</th>
                 <th>MOD</th>
-                <th>Promo Code</th>
                 <th>Status</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -139,21 +137,15 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
                   <td>{p.type}</td>
                   <td>{p.total.toLocaleString()}</td>
                   <td>{p.mod || "CASH"}</td>
-                  <td>{p.promoCode || "—"}</td>
                   <td>
                     <span className={`${styles.badge} ${p.status === "Paid" ? styles.badgePaid : styles.badgePending}`}>
                       {p.status}
                     </span>
                   </td>
-                  <td>
-                    <div className={styles.receiptActions}>
-                      <button className={styles.receiptLinkBtn} onClick={() => setReceipt(p)}>view</button>
-                    </div>
-                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={9} className={styles.noResults}>No records found.</td></tr>
+                <tr><td colSpan={7} className={styles.noResults}>No records found.</td></tr>
               )}
             </tbody>
           </table>

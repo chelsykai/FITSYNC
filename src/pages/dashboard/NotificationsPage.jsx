@@ -6,8 +6,10 @@ import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { sendMemberNotificationEmail } from "../../services/notificationEmailService";
 import { formatMMDDYYYY } from "../../utils/dateFormat";
+import { getMembershipDaysRemaining, getMembershipExpiryDate } from "../../utils/membershipUtils";
 
 const FILTER_STATUS = ["Pending", "Sent", "Failed"];
+const STATUS_STORAGE_KEY = "fitsync.notificationStatuses";
 
 const filterMap = {
   ALL:        () => true,
@@ -24,66 +26,18 @@ const dotColor = {
   red:    "#e05555",
 };
 
-function parseMembershipValidity(yearlyValidity, monthlyValidity) {
-  const yearly = String(yearlyValidity || "").trim();
-  const monthly = String(monthlyValidity || "").trim();
-
-  if (yearly) {
-    const yearlyMatch = yearly.match(/(\d+)/);
-    if (!yearlyMatch) return null;
-    return {
-      amount: Number(yearlyMatch[1]),
-      unit: "year",
-    };
-  }
-
-  if (!monthly) return null;
-  const validityMatch = monthly.match(/(\d+)\s*(month|day|week)?s?/i);
-  if (!validityMatch) return null;
-
-  return {
-    amount: Number(validityMatch[1]),
-    unit: (validityMatch[2] || "month").toLowerCase(),
-  };
-}
-
-function calculateExpiryDate(joinDate, yearlyValidity, monthlyValidity) {
-  if (yearlyValidity instanceof Date) return yearlyValidity;
-  const parsed = parseMembershipValidity(yearlyValidity, monthlyValidity);
-  if (!joinDate || !parsed) return null;
-
-  const expiryDate = new Date(joinDate);
-  if (Number.isNaN(expiryDate.getTime())) return null;
-
-  if (parsed.unit === "year") {
-    expiryDate.setFullYear(expiryDate.getFullYear() + parsed.amount);
-  } else if (parsed.unit === "month") {
-    expiryDate.setMonth(expiryDate.getMonth() + parsed.amount);
-  } else if (parsed.unit === "week") {
-    expiryDate.setDate(expiryDate.getDate() + parsed.amount * 7);
-  } else {
-    expiryDate.setDate(expiryDate.getDate() + parsed.amount);
-  }
-
-  return expiryDate;
-}
-
 function buildNotificationsFromMembers(members) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   return members
     .flatMap((member) => {
       const results = [];
-      const storedExpiry = member.expiration_date ? new Date(member.expiration_date) : null;
-      const expiryDate = storedExpiry && !Number.isNaN(storedExpiry.getTime())
-        ? storedExpiry
-        : calculateExpiryDate(member.join_date, member.membership_validity, member.monthly_validity);
+      const expiryDate = getMembershipExpiryDate(member);
 
       if (expiryDate) {
-        const oneDay = 1000 * 60 * 60 * 24;
-        const dayDiff = Math.ceil((expiryDate.getTime() - today.getTime()) / oneDay);
+        const dayDiff = getMembershipDaysRemaining(member);
         const expiryText = formatMMDDYYYY(expiryDate);
+        if (dayDiff === null) {
+          return results;
+        }
         if (dayDiff < 0) {
           results.push({
             key: `${member.member_id}-overdue`,
@@ -141,14 +95,35 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   const [filterStatus, setFilterStatus] = useState(null);
   const [viewLogTarget, setViewLogTarget] = useState(null);
   const [notifications, setNotifications] = useState([]);
-  const [statusMap, setStatusMap] = useState({});
+  const [statusMap, setStatusMap] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STATUS_STORAGE_KEY) || "{}");
+      return stored && typeof stored === "object" ? stored : {};
+    } catch {
+      return {};
+    }
+  });
   const [sendingMap, setSendingMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const filtersDDRef   = useRef();
 
-  const pendingCount = notifications.filter(
-  (n) => !statusMap[n.key] || statusMap[n.key] === "Pending").length;
+  useEffect(() => {
+    try {
+      localStorage.setItem(STATUS_STORAGE_KEY, JSON.stringify(statusMap));
+    } catch (err) {
+      console.error("Error saving notification statuses:", err);
+    }
+  }, [statusMap]);
+
+  const notificationsWithStatus = notifications.map((notification) => ({
+    ...notification,
+    status: statusMap[notification.key] || "Pending",
+  }));
+
+  const pendingCount = notificationsWithStatus.filter(
+    (notification) => notification.status === "Pending"
+  ).length;
 
    useEffect(() => { onNewNotif?.(pendingCount);}, [pendingCount]);
 
@@ -210,6 +185,10 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   }, []);
 
   const handleNotify = async (notification) => {
+    if (statusMap[notification.key] === "Sent") {
+      return;
+    }
+
     if (!notification?.member?.email) {
       setStatusMap((prev) => ({ ...prev, [notification.key]: "Failed" }));
       window.alert(`No email found for ${notification.name}.`);
@@ -230,12 +209,12 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   };
 
   const filtered = notifications.filter((n) => {
+    const computedStatus = statusMap[n.key] || "Pending";
     const matchSearch =
       n.type.toLowerCase().includes(search.toLowerCase()) ||
       n.id.toLowerCase().includes(search.toLowerCase()) ||
       n.name.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filterMap[activeFilter](n);
-    const computedStatus = statusMap[n.key] || "Pending";
     const matchStatus = !filterStatus || computedStatus === filterStatus;
     return matchSearch && matchFilter && matchStatus;
   });
@@ -255,12 +234,13 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
 
     for (const notification of targets) {
       // Keep sequence simple to avoid EmailJS rate limits.
-      // eslint-disable-next-line no-await-in-loop
       await handleNotify(notification);
     }
   };
 
-  const getActionClass = (action) => {
+  const getActionClass = (action, status) => {
+    if (status === "Sent") return styles.sentBtn;
+    if (status === "Failed") return styles.retryBtn;
     if (action === "VIEW LOG") return styles.viewLogBtn;
     if (action === "REMIND")   return styles.remindBtn;
     return styles.notifyBtn;
@@ -343,7 +323,13 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
 
           {/* Notification Grid */}
           <div className={styles.grid}>
-            {filtered.map((n) => (
+            {filtered.map((n) => {
+              const currentStatus = statusMap[n.key] || "Pending";
+              const isSent = currentStatus === "Sent";
+              const isFailed = currentStatus === "Failed";
+              const actionLabel = isSent ? "SENT" : isFailed ? "RETRY" : n.action;
+
+              return (
               <div
                 key={n.key}
                 className={`${styles.card} ${selectMode && selected.includes(n.key) ? styles.cardSelected : ""}`}
@@ -361,7 +347,7 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
                   <span className={styles.dot} style={{ backgroundColor: dotColor[n.color] }} />
                   <span className={styles.cardType}>{n.type}</span>
                   <button
-                    className={`${styles.actionBtn} ${getActionClass(n.action)}`}
+                    className={`${styles.actionBtn} ${getActionClass(n.action, currentStatus)}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (n.action === "VIEW LOG") {
@@ -370,9 +356,9 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
                       }
                       handleNotify(n);
                     }}
-                    disabled={Boolean(sendingMap[n.key])}
+                    disabled={Boolean(sendingMap[n.key]) || isSent}
                   >
-                    {sendingMap[n.key] ? "SENDING..." : n.action}
+                    {sendingMap[n.key] ? "SENDING..." : actionLabel}
                   </button>
                 </div>
                 <p className={styles.cardId}>{n.id}</p>
@@ -389,10 +375,11 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
                   </div>
                 </div>
                 <p className={styles.cardValue} style={{ marginTop: 10 }}>
-                  Status: {statusMap[n.key] || "Pending"}
+                  Status: {currentStatus}
                 </p>
               </div>
-            ))}
+              );
+            })}
 
             {!loading && filtered.length === 0 && (
               <div className={styles.card}>

@@ -1,4 +1,4 @@
-import styles from "./StaffDashboardPage.module.css";
+import styles from "./AdminDashboardPage.module.css";
 import Sidebar from "../../components/sidebar/sidebar";
 
 const quickActions = [
@@ -9,10 +9,34 @@ const quickActions = [
     icon: "ti-qr-code",
   },
   {
-    title: "View Members",
-    description: "Browse member records and basic membership details.",
+    title: "Overview",
+    description: "Review attendance, member activity, and gym performance at a glance.",
+    route: "overview",
+    icon: "ti-layout-dashboard",
+  },
+  {
+    title: "Members",
+    description: "Manage member records, registrations, and attendance workflows.",
     route: "members",
     icon: "ti-users",
+  },
+  {
+    title: "Payments",
+    description: "Record transactions, review payment history, and maintain audit trails.",
+    route: "payments",
+    icon: "ti-credit-card",
+  },
+  {
+    title: "Notifications",
+    description: "Send membership reminders and follow-up alerts to members.",
+    route: "notifications",
+    icon: "ti-bell",
+  },
+  {
+    title: "Accounts",
+    description: "Create, edit, and manage staff access and system users.",
+    route: "accounts",
+    icon: "ti-user-circle",
   },
   {
     title: "Change Password",
@@ -22,27 +46,27 @@ const quickActions = [
   },
 ];
 
-export default function StaffDashboardPage({ onNavigate, userRole = "staff" }) {
-  const currentRole = String(userRole || "staff").toLowerCase();
+export default function AdminDashboardPage({ onNavigate, userRole = "admin" }) {
+  const currentRole = String(userRole || "admin").toLowerCase();
 
   return (
     <div className={styles.layout}>
-      <Sidebar activePage="staffDashboard" onNavigate={onNavigate} isAdmin={false} />
+      <Sidebar activePage="adminDashboard" onNavigate={onNavigate} isAdmin={true} />
 
       <main className={styles.content}>
         <section className={styles.hero}>
           <div>
-            <p className={styles.eyebrow}>Staff dashboard</p>
+            <p className={styles.eyebrow}>Admin dashboard</p>
             <h1 className={styles.title}>Welcome to FitSync</h1>
             <p className={styles.subtitle}>
-              You are signed in as <strong>{currentRole}</strong>. Use the tools below to handle daily tasks.
+              You are signed in as <strong>{currentRole}</strong>. Use the tools below to manage the system.
             </p>
           </div>
 
           <div className={styles.statusCard}>
             <span className={styles.statusLabel}>Access level</span>
-            <strong className={styles.statusValue}>Staff</strong>
-            <p className={styles.statusNote}>Limited dashboard access for attendance and member support.</p>
+            <strong className={styles.statusValue}>Admin</strong>
+            <p className={styles.statusNote}>Full dashboard access for operations, users, and reporting.</p>
           </div>
         </section>
 
@@ -57,6 +81,7 @@ export default function StaffDashboardPage({ onNavigate, userRole = "staff" }) {
                   window.open(action.route, "_blank", "noopener,noreferrer");
                   return;
                 }
+
                 onNavigate(action.route);
               }}
             >
@@ -82,12 +107,13 @@ export default function StaffDashboardPage({ onNavigate, userRole = "staff" }) {
         </section>
 
         <section className={styles.noticePanel}>
-          <p className={styles.noticeTitle}>Staff accessibilities</p>
+          <p className={styles.noticeTitle}>Admin accessibilities</p>
           <ul className={styles.noticeList}>
-            <li>Open the scanner in a new tab and record attendance.</li>
-            <li>View and add member records, then open attendance tracking.</li>
-            <li>Access payment records and record transactions.</li>
-            <li>Send membership notifications and follow-up alerts.</li>
+            <li>Access the overview dashboard and monitor attendance trends.</li>
+            <li>Manage member records, attendance, and membership updates.</li>
+            <li>Record payments and maintain the transaction audit trail.</li>
+            <li>Send notifications for expirations, reminders, and follow-ups.</li>
+            <li>Create and manage staff accounts and related permissions.</li>
             <li>Update your own password.</li>
           </ul>
         </section>

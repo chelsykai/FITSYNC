@@ -222,10 +222,14 @@
 
 .notifyBtn   { background-color: #7eba56; }
 .notifyBtn:hover { background-color: #6aa947; }
+.sentBtn     { background-color: #4f7f2c; }
+.sentBtn:hover { background-color: #426c25; }
 .logBtn      { background-color: #4a90d9; }
 .logBtn:hover { background-color: #3a7cc0; }
 .remindBtn   { background-color: #f0a500; }
 .remindBtn:hover { background-color: #d99200; }
+.retryBtn    { background-color: #d97706; }
+.retryBtn:hover { background-color: #b86305; }
 
 /* BULK BAR */
 .bulkBar {

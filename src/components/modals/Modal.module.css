@@ -1,413 +1,580 @@
-/* ── Shared overlay ── */
+/* ============================================================
+   Modal.module.css  —  FitSync
+   Sections:
+   1.  Shared overlay & shell -22
+   2.  View-All table modal - 66
+   3.  Export modal - 161
+   4.  Members export / shared form - 220
+   5.  Date-range row - 242
+   6.  Shared form primitives (labels, inputs, buttons) - 276
+   7.  Profile modal - 383
+   8.  Delete confirmation modal - 523
+   9.  Add Member modal - 550
+   10. Attendance modal - 1007
+   11. Member Registered modal - 1379
+   12. Payments (View-All, Receipt) - 1413
+   13. View Log modal (notifications) - 1615
+   14. Create / Edit Account modal -1703
+   15. Responsive overrides -1750
+   ============================================================ */
+
+/* ============================================================
+   1. SHARED OVERLAY & SHELL
+   ============================================================ */
+
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
 }
 
-/* ── Modal shell (used by ViewAll, MembersExport, AddMember) ── */
+/* Base modal shell */
 .modal {
-  background: #ffffff;
-  border-radius: 16px;
+  background: #fff;
+  border-radius: 12px;
   padding: 28px 32px;
-  width: 420px;
-  max-height: 85vh;
+  width: 480px;
+  max-width: calc(100vw - 32px);
+  max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
 }
 
-/* Wide variant for ViewAllModal table */
+/* Wide shell — ViewAll, export tables */
+.modalWide {
+  width: 900px;
+  max-width: calc(100vw - 32px);
+  padding: 0;
+  overflow: hidden;
+}
+
 .wideModal {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 32px 40px;
-  width: 90vw;
-  max-width: 1100px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  background: #fff;
+  border-radius: 14px;
+  width: min(960px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: auto;
+  padding: 24px;
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
 }
 
 .modalTitle {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: #333;
-  margin: 0 0 20px 0;
-  text-align: center;
+  color: #222;
+  margin: 0 0 20px;
   font-family: "Montserrat", sans-serif;
 }
 
-/* ── View-All table ── */
+
+/* ============================================================
+   2. VIEW-ALL TABLE MODAL
+   ============================================================ */
+
+.viewAllModal {
+  background: #fff;
+  border-radius: 14px;
+  width: min(1200px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
+}
+
+.viewAllHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+
+.viewAllTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+}
+
+.viewAllBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 20px;
+}
+
+.viewAllTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 16px;
+}
+
+.viewAllTable th {
+  text-align: left;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  font-weight: 700;
+  color: #444;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.viewAllTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.viewAllTable tr:hover td {
+  background: #fafafa;
+}
+
+.viewAllFooter {
+  padding: 14px 24px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* Search bar inside view-all */
+.viewAllSearch {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 24px 0;
+}
+
+.viewAllSearchInput {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+
+.viewAllSearchInput:focus {
+  border-color: #7eba56;
+}
+
 .modalTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
-  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
 }
 
 .modalTable th {
   text-align: left;
-  color: #3d6b27;
+  padding: 10px 12px;
+  background: #f5f5f5;
   font-weight: 700;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 10px 10px;
-  border-bottom: 2px solid #d0e8c0;
-  background: #f5faf2;
+  color: #444;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
 }
 
 .modalTable td {
-  padding: 8px 10px;
-  color: #444;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  vertical-align: middle;
 }
 
-.membershipPlanCol {
-  text-align: left;
-}
-
-.membershipPlanTerm {
-  font-weight: 700;
-  color: #2f3d28;
-}
-
-.membershipPlanFrequency {
-  font-weight: 500;
-  color: #6b7564;
-}
-
-.modalTable tr:last-child td {
-  border-bottom: none;
+.modalTable tr:hover td {
+  background: #fafafa;
 }
 
 .viewAllWrapper {
   display: flex;
-  justify-content: center;
-  margin-top: 16px;
+  justify-content: flex-end;
+  margin-top: 18px;
 }
 
 .viewAllBtn {
-  background-color: #333;
-  color: #E5F0DE;
+  padding: 10px 22px;
+  background: #7eba56;
+  color: #fff;
   border: none;
-  border-radius: 20px;
-  padding: 8px 32px;
-  font-size: 12px;
+  border-radius: 8px;
   font-family: "Montserrat", sans-serif;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
 .viewAllBtn:hover {
-  background-color: #555;
+  background: #6aa947;
 }
 
-/* ── Export modal (OverviewPage) ── */
+.membershipPlanCol {
+  min-width: 150px;
+}
+
+.membershipPlanTerm {
+  font-weight: 600;
+}
+
+.membershipPlanFrequency {
+  color: #666;
+  font-size: 12px;
+}
+
+.actionBtns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+/* ============================================================
+   3. EXPORT MODAL
+   ============================================================ */
+
 .exportModal {
-  background: #ffffff;
-  border-radius: 16px;
+  background: #fff;
+  border-radius: 14px;
   padding: 28px 32px;
-  width: 420px;
-  max-height: 80vh;
+  width: min(560px, calc(100vw - 32px));
+  max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
 }
 
-.exportSectionLabel {
-  font-size: 13px;
+.exportTitle {
+  font-size: 17px;
   font-weight: 700;
+  color: #222;
+  margin: 0 0 6px;
+}
+
+.exportDesc {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 20px;
+}
+
+.exportOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.exportOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
   color: #333;
-  margin: 16px 0 8px 0;
-  font-family: "Montserrat", sans-serif;
+  transition: border-color 0.18s, background 0.18s;
 }
 
-.exportRadioRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
+.exportOption:hover {
+  border-color: #7eba56;
+  background: #f5fbee;
+}
+
+.exportOptionSelected {
+  border-color: #7eba56;
+  background: #f0f9e8;
+}
+
+.sectionLabel,
+.exportSectionLabel {
+  font-size: 12px;
+  font-weight: 700;
   color: #444;
-  margin-bottom: 8px;
-  cursor: pointer;
-  font-family: "Montserrat", sans-serif;
+  margin: 18px 0 10px;
 }
 
-.exportSearch {
-  display: flex;
-  align-items: center;
-  background: #ffffff;
-  border: 1.5px solid #d4e8c0;
-  border-radius: 12px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-  gap: 10px;
-  width: 354px;
-}
-
-.exportSearchInput {
-  border: none;
-  outline: none;
-  font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  flex: 1;
-  background: transparent;
-}
-
-.exportSearchClear {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #aaa;
-  font-size: 13px;
-  padding: 0;
-}
-
-.exportCheckList {
-  max-height: 160px;
-  overflow-y: auto;
-  margin-bottom: 16px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 8px 12px;
-  background-color: white;
-}
-
+.radioRow,
+.exportRadioRow,
+.checkRow,
 .exportCheckRow {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: #444;
-  margin-bottom: 8px;
-  cursor: pointer;
+  color: #333;
   font-family: "Montserrat", sans-serif;
+}
+
+.radioRow,
+.exportRadioRow {
+  margin-bottom: 8px;
+}
+
+.modalSearch,
+.exportSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+.modalSearchInput,
+.exportSearchInput {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+}
+
+.clearBtn,
+.exportSearchClear {
+  border: none;
+  background: transparent;
+  color: #777;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.clearBtn:disabled,
+.exportSearchClear:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.checkList,
+.exportCheckList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px 0 12px;
+}
+
+.checkRow,
+.exportCheckRow {
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.checkRow:hover,
+.exportCheckRow:hover {
+  border-color: #7eba56;
+  background: #f8fcf5;
+}
+
+.memberIcon {
+  color: #6aa947;
+  font-size: 13px;
+  line-height: 1;
 }
 
 .exportSubmitBtn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background: #7eba56;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 8px;
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
-  margin-bottom: 8px;
-  transition: background 0.2s;
+  margin: 8px 0 10px;
 }
 
 .exportSubmitBtn:hover {
   background: #6aa947;
 }
 
+.exportSubmitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .exportCloseBtn {
   width: 100%;
-  padding: 10px;
-  background: #333;
-  color: white;
-  border: none;
+  padding: 11px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
 .exportCloseBtn:hover {
-  background: #555;
+  background: #f5f5f5;
 }
 
-/* ── Members modals (export + add member) ── */
-.sectionLabel {
-  font-size: 13px;
-  font-weight: 700;
-  color: #333;
-  margin: 14px 0 8px 0;
-  font-family: "Montserrat", sans-serif;
-}
 
-.radioRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: #444;
-  margin-bottom: 6px;
-  cursor: pointer;
-  font-family: "Montserrat", sans-serif;
-}
+/* ============================================================
+   4. MEMBERS EXPORT / SHARED FORM
+   ============================================================ */
 
-.modalSearch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #ffffff;
-  border: 1.5px solid #d4e8c0;
-  border-radius: 12px;
-  padding: 10px 16px;
-  margin-bottom: 8px;
-}
-
-.modalSearchInput {
-  border: none;
-  outline: none;
-  font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  flex: 1;
-  background: transparent;
-}
-
-.clearBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #555;
-  font-size: 14px;
-  padding: 0;
-}
-
-.checkList {
-  max-height: 180px;
+.membersExportModal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 32px;
+  width: min(520px, calc(100vw - 32px));
+  max-height: 90vh;
   overflow-y: auto;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 16px;
-  background-color: white;
-}
-
-.checkRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #444;
-  margin-bottom: 8px;
-  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
   font-family: "Montserrat", sans-serif;
 }
 
-.memberIcon { font-size: 14px; }
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
 
-/* ── Date range row (Export modals) ── */
+
+/* ============================================================
+   5. DATE-RANGE ROW
+   ============================================================ */
+
 .dateRow {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 10px;
-  margin-bottom: 4px;
+  flex-wrap: wrap;
 }
 
 .dateGroup {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
   flex: 1;
+  min-width: 150px;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .dateLabel {
   font-size: 11px;
   font-weight: 700;
-  color: #555;
-  font-family: "Montserrat", sans-serif;
+  color: #666;
+}
+
+.dateSep {
+  font-size: 13px;
+  color: #888;
+  flex-shrink: 0;
 }
 
 .dateInput {
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 9px 12px;
   font-family: "Montserrat", sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   color: #333;
   outline: none;
-  background: white;
-  width: 100%;
-  box-sizing: border-box;
+  flex: 1;
+  min-width: 130px;
 }
 
-.dateInput:focus { border-color: #7eba56; }
-
-.dateSep {
-  font-size: 16px;
-  color: #888;
-  padding-bottom: 8px;
-  flex-shrink: 0;
+.dateInput:focus {
+  border-color: #7eba56;
 }
 
-.csvNote {
-  font-size: 11px;
-  color: #888;
-  font-family: "Montserrat", sans-serif;
-  text-align: center;
-  margin: 0 0 12px 0;
-}
 
-/* ── Add member form ── */
-.formGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.formGroup { display: flex; flex-direction: column; gap: 4px; }
-.formGroupFull { display: flex; flex-direction: column; gap: 4px; grid-column: 1 / -1; }
-
-.formLabel {
-  font-size: 11px;
-  font-weight: 700;
-  color: #555;
-  font-family: "Montserrat", sans-serif;
-}
+/* ============================================================
+   6. SHARED FORM PRIMITIVES
+   ============================================================ */
 
 .formInput {
+  width: 100%;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-family: "Montserrat", sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   color: #333;
+  background: #fff;
   outline: none;
-  background: white;
+  box-sizing: border-box;
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
 
-.formInput:focus { border-color: #7eba56; }
+.formInput:focus {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.12);
+}
+
+.formInput:disabled {
+  background: #f5f5f5;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.modernLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #5d6f53;
+  letter-spacing: 0.28px;
+  text-transform: uppercase;
+  font-family: "Montserrat", sans-serif;
+  margin-bottom: 5px;
+}
+
+.labeledField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 12px;
+}
 
 /* ── Shared action buttons ── */
 .submitBtn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background: #7eba56;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 8px;
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   transition: background 0.2s;
 }
 
-.submitBtn:hover { background: #6aa947; }
+.submitBtn:hover    { background: #6aa947; }
+.submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .closeBtn {
   width: 100%;
-  padding: 10px;
-  background: #333;
-  color: white;
-  border: none;
+  padding: 11px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-family: "Montserrat", sans-serif;
   font-weight: 700;
@@ -416,371 +583,508 @@
   transition: background 0.2s;
 }
 
-.closeBtn:hover { background: #555; }
+.closeBtn:hover    { background: #f5f5f5; }
+.closeBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ── Profile modal ── */
-.profileModal {
-  background: linear-gradient(180deg, #eef7e9 0%, #e1efd8 100%);
-  border: 1px solid #c7dfb8;
-  border-radius: 20px;
-  padding: 22px;
-  width: min(92vw, 560px);
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 48px rgba(34, 51, 34, 0.24);
+.paymentExportModal {
+  width: min(468px, calc(100vw - 32px));
+  padding: 34px 36px 32px;
+  border-radius: 26px;
+  background: #eaf6e4;
+}
+
+.paymentExportModal .modalTitle {
   text-align: center;
+  font-size: 18px;
+  margin-bottom: 24px;
+}
+
+.paymentExportModal .sectionLabel,
+.paymentExportModal .exportSectionLabel {
+  font-size: 15px;
+  margin: 16px 0 8px;
+}
+
+.paymentExportModal .radioRow,
+.paymentExportModal .exportRadioRow,
+.paymentExportModal .checkRow,
+.paymentExportModal .exportCheckRow {
+  color: #6f6f6f;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.paymentExportModal .dateRow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+}
+
+.paymentExportModal .dateInput {
+  width: 100%;
+  min-width: 0;
+  min-height: 39px;
+  background: #fff;
+  border-color: #e5e5e5;
+  border-radius: 8px;
+}
+
+.paymentExportModal .modalSearch,
+.paymentExportModal .exportSearch {
+  background: #d1d1d1;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.paymentExportModal .modalSearchInput,
+.paymentExportModal .exportSearchInput {
+  background: transparent;
+  font-size: 15px;
+}
+
+.paymentExportModal .checkList,
+.paymentExportModal .exportCheckList {
+  gap: 0;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+}
+
+.paymentExportModal .checkRow,
+.paymentExportModal .exportCheckRow {
+  border: none;
+  border-radius: 0;
+  padding: 4px 0;
+}
+
+.paymentExportModal .submitBtn,
+.paymentExportModal .exportSubmitBtn,
+.paymentExportModal .closeBtn,
+.paymentExportModal .exportCloseBtn {
+  min-height: 40px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.paymentExportModal .closeBtn,
+.paymentExportModal .exportCloseBtn {
+  background: #333;
+  color: #fff;
+  border-color: #333;
+}
+
+.paymentExportModal .closeBtn:hover,
+.paymentExportModal .exportCloseBtn:hover {
+  background: #262626;
+}
+
+/* ── Walk-in Modal ── */
+.walkInModal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.walkInModal .modalTitle {
+  margin-bottom: 8px;
+}
+
+.walkInModal .labeledField {
+  gap: 4px;
+}
+
+.walkInModal .modernLabel {
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+.walkInModal .fieldRow {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.walkInActions {
+  margin-top: 10px;
+}
+
+.deletConfirmBtn {
+  width: 100%;
+  padding: 12px;
+  background: #e05555;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: background 0.2s;
+}
+
+.deletConfirmBtn:hover    { background: #c94444; }
+.deletConfirmBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+
+/* ============================================================
+   7. PROFILE MODAL
+   ============================================================ */
+
+.profileModal {
+  background: #fff;
+  border-radius: 14px;
+  width: min(680px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.15);
+  font-family: "Montserrat", sans-serif;
 }
 
 .profileHero {
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid #d8e8cc;
-  border-radius: 16px;
-  padding: 14px;
-  margin-bottom: 14px;
-}
-
-.profileAvatar {
-  font-size: 56px;
-  background: #c8cfbe;
-  border: 3px solid #ffffff;
-  border-radius: 100%;
-  width: 96px;
-  height: 96px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 0;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.14);
-}
-
-.profileAvatar img {
-  width: 100%;
-  height: 100%;
-  border-radius: 100%;
-  object-fit: cover;
+  gap: 16px;
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid #eee;
 }
 
 .profileTopRow {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-bottom: 10px;
+  gap: 20px;
+  padding: 0;
 }
 
-.profileQrBlock {
+.profileAvatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #d0e8c0;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #eef6e8;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
-  border: 1px solid #d8e8cc;
-  border-radius: 12px;
-  padding: 8px;
 }
 
-.profileQrCanvas {
-  width: 150px;
-  height: 150px;
-}
-
-.profileQrLabel {
-  font-size: 10px;
-  color: #4f7a37;
-  font-weight: 700;
-  font-family: "Montserrat", sans-serif;
-  margin: 8px 0 0 0;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
+.profileAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .profileIdentity {
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  min-width: 0;
 }
 
 .profileName {
+  color: #222;
   font-size: 20px;
   font-weight: 800;
-  color: #23331f;
-  margin: 0;
-  font-family: "Montserrat", sans-serif;
+  margin: 0 0 4px;
 }
 
 .profileIdText {
-  margin: 5px 0 8px 0;
-  font-size: 12px;
-  color: #56734a;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 600;
+  color: #555;
+  font-size: 13px;
+  margin: 0 0 6px;
 }
 
 .profileBadge {
-  background: #f2f9ec;
-  color: #4f7a37;
-  border: 1px solid #6ea94a;
-  border-radius: 20px;
-  padding: 3px 14px;
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e8f5d8;
+  color: #3a7a1e;
+  font-size: 11px;
   font-weight: 700;
-  display: inline-block;
-  margin-bottom: 0;
-  font-family: "Montserrat", sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
 }
 
 .profileGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  text-align: left;
-  margin-bottom: 16px;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 20px 28px;
 }
 
 .profileItem {
-  background: #ffffff;
-  border: 1px solid #d8e8cc;
-  border-radius: 12px;
-  padding: 10px 12px;
-  min-height: 56px;
-}
-
-@media (max-width: 560px) {
-  .profileModal {
-    padding: 16px;
-  }
-
-  .profileTopRow {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .profileAvatar {
-    width: 88px;
-    height: 88px;
-  }
-
-  .profileQrCanvas {
-    width: 130px;
-    height: 130px;
-  }
-
-  .profileGrid {
-    grid-template-columns: 1fr;
-  }
+  min-width: 0;
 }
 
 .profileLabel {
-  font-size: 10px;
+  color: #555;
+  font-size: 13px;
   font-weight: 700;
-  color: #6a8360;
-  margin: 0 0 4px 0;
-  font-family: "Montserrat", sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.35px;
+  margin: 0 0 3px;
 }
 
 .profileValue {
+  color: #222;
   font-size: 13px;
-  font-weight: 700;
-  color: #24371f;
   margin: 0;
-  font-family: "Montserrat", sans-serif;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.profileQrBlock {
+  padding: 0 28px 18px;
+  border-top: 1px solid #f0f0f0;
+}
+
+
+.profileQrLabel {
+  color: #555;
+  font-size: 12px;
+  margin: 0;
 }
 
 .profileActions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.profileEmailBtn,
-.profileCloseBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 10px;
-  font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 11px;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.profileDeleteBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 10px;
-  font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 11px;
-  text-decoration: none;
-  cursor: pointer;
-  background: #e05555;
-  color: #ffffff;
-}
-
-.profileDeleteBtn:hover {
-  background: #c43e3e;
-}
-
-.profileEmailBtn {
-  background: #7eba56;
-  color: #ffffff;
-}
-
-.profileEmailBtn:hover {
-  background: #6aa947;
-}
-
-.profileCloseBtn {
-  background: #2f3f2c;
-  color: #ffffff;
-}
-
-.profileCloseBtn:hover {
-  background: #41553d;
-}
-
-/* ── Table action buttons ── */
-.actionBtns {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 28px;
+  border-top: 1px solid #eee;
+  flex-wrap: wrap;
 }
 
+.profileEmailBtn{
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.profileCloseBtn {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #333;
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.profileEmailBtn:hover,
+.profileCloseBtn:hover {
+  background: #f5f5f5;
+}
+
+/* Profile action buttons */
+.profileDeleteBtn {
+  padding: 9px 14px;
+  background: #e05555;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profileDeleteBtn:hover { background: #c94444; }
+
+/* Modal footer with side-by-side buttons */
+.modalFooter {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-top: 1px solid #eee;
+  flex-wrap: wrap;
+}
+
+.modalFooter .submitBtn,
+.modalFooter .profileDeleteBtn {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.modalFooter .closeBtn {
+  width: 120px;
+}
+
+/* Table action buttons (edit / delete inside tables) */
 .editBtn {
-  background-color: #7eba56;
-  color: white;
+  background: #7eba56;
+  color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 5px 14px;
   font-size: 11px;
   font-family: "Montserrat", sans-serif;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   transition: background 0.2s;
 }
 
-.editBtn:hover { background-color: #6aa947; }
-
-.changePassBtn {
-  background-color: #f0a500;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  cursor: pointer;
-  margin-left: 6px;
-  transition: background 0.2s;
-}
-.changePassBtn:hover { background-color: #d4900a; }
-
+.editBtn:hover { background: #6aa947; }
 
 .deleteBtn {
-  background-color: #e05555;
-  color: white;
+  background: #e05555;
+  color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 5px 14px;
   font-size: 11px;
   font-family: "Montserrat", sans-serif;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   transition: background 0.2s;
 }
 
-.deleteBtn:hover { background-color: #c43e3e; }
+.deleteBtn:hover { background: #c94444; }
 
-/* ── Delete confirmation modal ── */
+.changePassBtn {
+  background: #f0a500;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.2s;
+}
+
+.changePassBtn:hover { background: #d4900a; }
+
+
+/* ============================================================
+   8. DELETE CONFIRMATION MODAL
+   ============================================================ */
+
 .deleteModal {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 36px 32px;
-  width: 380px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 28px;
+  width: min(400px, calc(100vw - 32px));
   text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
 }
 
 .deleteIcon {
-  font-size: 48px;
+  font-size: 40px;
   margin-bottom: 12px;
 }
 
 .deleteMessage {
   font-size: 13px;
   color: #555;
-  font-family: "Montserrat", sans-serif;
+  margin: 0 0 20px;
   line-height: 1.6;
-  margin: 0 0 24px 0;
 }
 
-.deleteMessage strong {
-  color: #222;
-  font-weight: 700;
+
+/* ============================================================
+   9. ADD MEMBER MODAL
+   ============================================================ */
+   .addMemberHeader {
+  background: linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+  padding: 22px 28px;
+  flex-shrink: 0;
 }
 
-.deletConfirmBtn {
+.cameraPreviewWrap {
   width: 100%;
-  padding: 10px;
-  background: #e05555;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  margin-bottom: 8px;
-  transition: background 0.2s;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #dfe8d6;
+  background: #f8fbf5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cameraVideo {
+  width: 100%;
+  border-radius: 7px;
+  background: #111;
+  display: block;
+}
+.cameraBtnRow {
+  display: flex;
+  gap: 6px;
 }
 
-.deletConfirmBtn:hover { background: #c43e3e; }
-
-/* ── Add Member Modal ── */
 .addMemberModal {
-  background: #ffffff;
+  background: #fff;
   border-radius: 16px;
-  padding: 32px 36px;
-  width: 680px;
+  width: min(720px, calc(100vw - 32px));
   max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.16);
+  font-family: "Montserrat", sans-serif;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Green header band */
 .addMemberTitle {
+  background:transparent;
+  padding: 12px 28px 2px;
+  flex-shrink: 0;
   font-size: 20px;
-  font-weight: 700;
-  color: #222;
-  margin: 0 0 24px 0;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
   font-family: "Montserrat", sans-serif;
 }
 
+.addMemberSubtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
+  margin: 4px 0 0;
+  font-family: "Montserrat", sans-serif;
+  padding: 0 28px;
+  margin-top:0px;
+}
+
+/* Body: photo left + fields right */
 .addMemberBody {
   display: flex;
-  gap: 28px;
-  align-items: flex-start;
-  margin-bottom: 24px;
+  flex: 1;
+  overflow: hidden;
 }
 
-/* Photo upload */
+/* ── Photo sidebar ── */
 .photoSection {
+  width: 180px;
+  flex-shrink: 0;
+  background: #f4f9f1;
+  border-right: 1px solid #ddebd4;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  padding: 28px 16px;
+  gap: 12px;
 }
 
 .photoBox {
@@ -793,7 +1097,7 @@
   justify-content: center;
   cursor: pointer;
   overflow: hidden;
-  border: 2px dashed #ccc;
+  border: 2px dashed #b8d4a8;
   transition: border-color 0.2s;
 }
 
@@ -806,7 +1110,7 @@
   gap: 4px;
 }
 
-.photoIcon { font-size: 32px; }
+.photoIcon    { font-size: 32px; }
 
 .photoPreview {
   width: 100%;
@@ -815,112 +1119,283 @@
 }
 
 .uploadLabel {
-  font-size: 11px;
-  font-weight: 700;
-  color: #555;
-  font-family: "Montserrat", sans-serif;
-  margin: 0;
-}
-
-/* Fields */
-.addMemberFields {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.fieldRow {
-  display: flex;
-  gap: 12px;
-}
-
-.fieldRow .formInput {
-  flex: 1;
-}
-
-.labeledField {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.modernLabel {
-  margin: 0;
   font-size: 10px;
   font-weight: 700;
-  color: #5d6f53;
-  letter-spacing: 0.28px;
-  text-transform: uppercase;
+  color: #4a7a38;
   font-family: "Montserrat", sans-serif;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
 }
 
+/* Camera / Choose File buttons */
+.photoActionBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #c8ddb8;
+  background: #fff;
+  font-family: "Montserrat", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #3a5a28;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.photoActionBtn:hover { background: #eaf4e0; border-color: #7eba56; }
+
+/* ── Fields area ── */
+.addMemberFields {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Membership settings box ── */
 .membershipSettings {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1.5px solid #c8e0b0;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #f8fcf4 0%, #eef7e6 100%);
+}
+
+.msHeader {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  margin-top: 4px;
-  padding: 10px 12px;
-  border: 1px solid #d7e4cd;
+}
+
+.msIcon {
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(244, 249, 239, 0.9) 100%);
+  background: linear-gradient(180deg, #7eba56 0%, #6aa947 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
 }
 
 .membershipSettingsTitle {
   margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: #44563a;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2d4a1e;
   font-family: "Montserrat", sans-serif;
 }
 
 .membershipSettingsHint {
-  margin: -2px 0 2px 0;
-  font-size: 10px;
-  font-weight: 600;
-  color: #6f7869;
-  font-family: "Montserrat", sans-serif;
-}
-
-.autoDateHint {
-  margin: -2px 0 2px 0;
+  margin: 2px 0 0;
   font-size: 11px;
-  color: #6a7761;
+  font-weight: 600;
+  color: #6a8a58;
   font-family: "Montserrat", sans-serif;
 }
 
+.msDivider {
+  height: 1px;
+  background: #d4eac0;
+}
+
+/* Plan section label */
+.planSectionLabel {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #5a7a48;
+  font-family: "Montserrat", sans-serif;
+  margin: 0 0 8px;
+}
+
+/* Plan cards grid */
+.planGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.planCard {
+  border: 1.5px solid #d0e8b8;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.planCardActive {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.12);
+  background: linear-gradient(160deg, #f5fbee 0%, #eef7e4 100%);
+}
+
+.planCardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.planCardDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #b8d898;
+  background: #fff;
+  flex-shrink: 0;
+  margin-top: 3px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.planCardDotActive {
+  background: #7eba56;
+  border-color: #7eba56;
+}
+
+.planCardName {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #2d4a1e;
+  font-family: "Montserrat", sans-serif;
+}
+
+.planCardDesc {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #7a9a65;
+  font-family: "Montserrat", sans-serif;
+}
+
+.planCardInputWrap { position: relative; }
+
+.planCardInput {
+  width: 100%;
+  border: 1.5px solid #c8ddb8;
+  border-radius: 9px;
+  padding: 9px 46px 9px 12px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f311b;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.planCardInput::-webkit-outer-spin-button,
+.planCardInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.planCardInput:focus {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.13);
+}
+
+.planCardInput::placeholder {
+  color: #b8ceac;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.planCardUnit {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #5a8a3c;
+  background: #dff0cc;
+  border-radius: 5px;
+  padding: 2px 7px;
+  pointer-events: none;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Reset button */
+.msResetRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.planResetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid #c4d8b0;
+  background: #f5f9f1;
+  color: #4a6e38;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.planResetBtn:hover    { background: #e8f2de; }
+.planResetBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Legacy unit-suffix inputs (kept for backward compat) */
 .unitInputWrap {
   flex: 1;
   position: relative;
 }
 
 .unitInputWrap .formInput {
-  width: 100%;
-  padding-right: 72px;
+  padding-right: 68px;
+  box-sizing: border-box;
 }
 
 .unitInputWrap .formInput:disabled {
   background: #eef1ed;
   color: #8b9484;
   border-color: #d2d8cc;
-  cursor: not-allowed;
 }
 
 .unitSuffix {
   position: absolute;
-  right: 12px;
+  right: 10px;
   top: 50%;
-  transform: translateY(-50%);
-  font-size: 11px;
-  font-weight: 700;
-  color: #666;
+  transform: translateY(-100%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #5a8a3c;
+  background: #dff0cc;
+  border-radius: 5px;
+  padding: 2px 8px;
   font-family: "Montserrat", sans-serif;
   pointer-events: none;
+  white-space: nowrap;
+  line-height: 1.6;
 }
 
 .inputContextLabel {
-  margin: 6px 0 0 0;
+  margin: 6px 0 0;
   font-size: 10px;
   font-weight: 600;
   color: #6f7869;
@@ -928,52 +1403,7 @@
   line-height: 1.2;
 }
 
-.planResetBtn {
-  border: 1px solid #c4d1bb;
-  background: #f5f8f2;
-  color: #3f5234;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: "Montserrat", sans-serif;
-  cursor: pointer;
-  transition: background 0.18s ease;
-}
-
-.planResetBtn:hover {
-  background: #ebf1e5;
-}
-
-/* Modal footer layout for action buttons */
-.modalFooter {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-}
-
-.modalFooter .submitBtn,
-.modalFooter .profileDeleteBtn {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.modalFooter .closeBtn { width: 120px; }
-
-@media (max-width: 560px) {
-  .modalFooter { flex-direction: column; gap: 8px; }
-  .modalFooter .profileDeleteBtn, .modalFooter .closeBtn { width: 100%; }
-  .modalFooter .submitBtn { width: 100%; flex: none; }
-}
-
-.planResetBtn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-/* Gender */
+/* ── Gender row ── */
 .genderRow {
   display: flex;
   gap: 24px;
@@ -991,18 +1421,30 @@
   cursor: pointer;
 }
 
-/* Add member action buttons */
+/* ── Error ── */
+.formError {
+  color: #d32f2f;
+  font-size: 12px;
+  padding: 8px 12px;
+  background: #ffebee;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+}
+
+/* ── Add member footer buttons ── */
 .addMemberBtns {
   display: flex;
   gap: 12px;
-  justify-content: stretch;
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  flex-shrink: 0;
 }
 
 .addMemberCancelBtn {
   flex: 1;
   padding: 11px;
   background: #333;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 8px;
   font-family: "Montserrat", sans-serif;
@@ -1012,13 +1454,14 @@
   transition: background 0.2s;
 }
 
-.addMemberCancelBtn:hover { background: #555; }
+.addMemberCancelBtn:hover    { background: #555; }
+.addMemberCancelBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .addMemberSubmitBtn {
   flex: 1;
   padding: 11px;
   background: #7eba56;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 8px;
   font-family: "Montserrat", sans-serif;
@@ -1028,1329 +1471,1153 @@
   transition: background 0.2s;
 }
 
-.addMemberSubmitBtn:hover { background: #6aa947; }
+.addMemberSubmitBtn:hover    { background: #6aa947; }
+.addMemberSubmitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ── Attendance Modal upgrades ── */
-.attendanceFilters {
+/* Phone prefix input */
+.phoneInputWrap {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 
-.attendanceSearch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f0f4ef;
-  border: 1px solid #d8e4d6;
-  border-radius: 10px;
-  padding: 8px 14px;
-  min-width: 220px;
-}
-
-.attendanceSearchInput {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  color: #333;
-  flex: 1;
-}
-
-.filterSelect {
-  border: 1px solid #d8e4d6;
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  color: #333;
-  background: #f0f4ef;
-  outline: none;
-  cursor: pointer;
-}
-
-.attendanceLegend {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #444;
-  font-family: "Montserrat", sans-serif;
-}
-
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legendSep {
-  color: #ccc;
-}
-
-.yearDropdown {
+.phonePrefix {
   position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  overflow: hidden;
-  z-index: 10;
-  min-width: 100px;
-}
-
-.yearOption {
-  display: block;
-  width: 100%;
-  padding: 10px 16px;
-  background: none;
-  border: none;
-  font-family: "Montserrat", sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  cursor: pointer;
-  text-align: left;
-}
-
-.yearOption:hover {
-  background: #f0f4ef;
-  color: #7eba56;
-}
-
-/* Name + status cells */
-.statusSummaryCell {
-  text-align: center;
-  padding: 10px 12px;
-  white-space: nowrap;
-  font-size: 12px;
-  color: #555;
-  min-width: 120px;
-}
-
-.statusSummaryBadge {
-  background: #f0f4ef;
-  border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 11px;
+  left: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #444;
   font-family: "Montserrat", sans-serif;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
 }
 
-.dayCell {
-  text-align: center;
-  padding: 8px 4px;
-  font-size: 11px;
-  font-weight: 700;
-  min-width: 38px;
-  width: 38px;
+.phoneInputWrap .formInput {
+  padding-left: 44px;
 }
 
-.dayTd {
-  text-align: center;
-  padding: 8px 4px;
-}
-
-/* Dot icons (checkmark / X) */
-.attDot {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.18s ease;
-  cursor: pointer;
-  position: relative;
-}
-
-.dotIcon {
-  font-size: 13px;
-  font-weight: 700;
-  color: white;
-  line-height: 1;
-}
-
-/* Avatar circle */
-.memberAvatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #b8d498;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: #2a4a18;
-  font-family: "Montserrat", sans-serif;
-}
-
-/* Totals row */
-.totalsRow td {
-  background: #f5f9f3;
-  border-top: 2px solid #c8dac6;
-  font-weight: 700;
-}
-
-.totalCell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  font-weight: 700;
-  font-family: "Montserrat", sans-serif;
-  line-height: 1.2;
-}
-
-/* Footer */
-.attendanceFooter {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 4px;
-}
-
-.exportAttendanceBtn {
-  background: #333;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 24px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.exportAttendanceBtn:hover {
-  background: #555;
-}/* ── Attendance Modal — full rewrite ── */
+/* ============================================================
+   10. ATTENDANCE MODAL
+   ============================================================ */
+/* ── Outer modal shell ── */
 .attendanceModal {
-  background: white;
-  border-radius: 20px;
-  padding: 0;
-  width: min(96vw, 1280px);
-  max-height: 90vh;
+  background: #fff;
+  border-radius: 16px;
+  width: min(1060px, calc(100vw - 24px));
+  max-height: 92vh;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   display: flex;
   flex-direction: column;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.22);
   font-family: "Montserrat", sans-serif;
+}
+
+/* ══ GREEN HEADER BANNER ══ */
+.attBanner {
   position: relative;
-  z-index: 10000;
-}
-
-/* Top bar */
-.attendanceHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 20px;
-  background: white;
-  border-bottom: 1px solid #e8ebe8;
+  background: #2e7d32;
+  padding: 28px 24px 22px;
+  text-align: center;
   flex-shrink: 0;
-  flex-wrap: wrap;
 }
-
-.attendanceControls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.monthLabel {
-  font-size: 18px;
-  font-weight: 800;
-  color: #1a1a1a;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-
-.navButton {
-  background: #f0f4ef;
-  border: 1px solid #d0dace;
-  color: #333;
-  padding: 7px 14px;
+.attBannerClose {
+  position: absolute;
+  top: 16px; right: 16px;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent;
+  border: 1px solid #ffffffa9;
   border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 13px;
+  padding: 7px 14px;
   font-family: "Montserrat", sans-serif;
-  transition: background 0.15s;
-  white-space: nowrap;
+  font-size: 12px; font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
-
-.navButton:hover {
-  background: #dff0d4;
-  border-color: #7eba56;
+.attBannerClose:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.attBannerTitle {
+  font-size: 24px; font-weight: 800; color: #fff;
+  margin: 0 0 4px;
+  font-family: "Montserrat", sans-serif;
+  letter-spacing: 0.01em;
+}
+.attBannerSub {
+  font-size: 12px; color: rgba(255,255,255,0.75);
+  font-weight: 500; margin-bottom: 18px;
+  font-family: "Montserrat", sans-serif;
 }
 
 /* Legend */
-.attendanceLegend {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #555;
-  flex-wrap: wrap;
+.attBannerLegend {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(0,0,0,0.18);
+  border-radius: 999px;
+  padding: 6px 16px;
+}
+.attLegendPill {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 16px;
+  font-size: 12px; font-weight: 700; color: #fff;
+  font-family: "Montserrat", sans-serif;
+}
+.attLegendPill + .attLegendPill { border-left: 1px solid rgba(255,255,255,0.25); }
+
+/* Small dots for legend only */
+.attDotLegend {
+  width: 18px !important; height: 18px !important;
+  font-size: 9px !important; flex-shrink: 0;
 }
 
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
+/* ══ WHITE BODY ══ */
+.attBody {
+  flex: 1; display: flex; flex-direction: column;
+  min-height: 0; background: #fff;
+  border-radius: 0 0 16px 16px;
 }
 
-.legendSep { color: #ccc; }
-
-/* Filter bar */
-.attendanceFilters {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  background: #fafafa;
+/* ── Toolbar ── */
+.attendanceToolbar {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  gap: 12px; padding: 14px 20px;
   border-bottom: 1px solid #eee;
   flex-shrink: 0;
-  flex-wrap: wrap;
 }
-
-.attendanceSearch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #ffffff;
-  border: 1.5px solid #d4e8c0;
-  border-radius: 10px;
-  padding: 8px 14px;
-  min-width: 200px;
-}
-
+.attendanceSearch { position: relative; width: 240px; flex-shrink: 0; }
 .attendanceSearchInput {
-  border: none;
-  outline: none;
-  background: transparent;
+  width: 100%; border: 1.5px solid #ddd; border-radius: 10px;
+  padding: 9px 12px 9px 36px;
+  font-family: "Montserrat", sans-serif; font-size: 13px;
+  outline: none; box-sizing: border-box; color: #333;
+}
+.attendanceSearchInput:focus { border-color: #7eba56; }
+.attendanceSearchIcon {
+  position: absolute; left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: #aaa; font-size: 15px; pointer-events: none;
+}
+.attendanceNavGroup { display: flex; align-items: center; gap: 6px; }
+.attendanceNavBtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; border: 1.5px solid #ddd; color: #555;
+  width: 32px; height: 32px; border-radius: 8px;
+  cursor: pointer; font-size: 14px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.attendanceNavBtn:hover { border-color: #7eba56; color: #3a7a1e; }
+.attendanceMonthBtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fff; border: 1.5px solid #ddd; border-radius: 8px;
   font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  color: #333;
-  flex: 1;
-  min-width: 0;
+  font-size: 13px; font-weight: 800; color: #1a1a1a;
+  cursor: pointer; padding: 0 12px; height: 32px;
+  letter-spacing: 0.03em; transition: border-color 0.15s; white-space: nowrap;
 }
+.attendanceMonthBtn:hover { border-color: #7eba56; }
 
-.filterSelect {
-  border: 1px solid #d0dace;
-  border-radius: 10px;
-  padding: 8px 14px;
+/* Dropdown */
+.attendanceMonthDrop {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: #fff; border: 1px solid #ddd; border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.13);
+  z-index: 50; padding: 12px; min-width: 210px;
+}
+.attendanceMonthDropYear { margin-bottom: 10px; }
+.attendanceMonthDropYear:last-child { margin-bottom: 0; }
+.attendanceMonthDropYearLabel {
+  font-size: 10px; font-weight: 800; color: #888;
+  letter-spacing: 0.06em; text-transform: uppercase;
   font-family: "Montserrat", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: #333;
-  background: #f0f4ef;
-  outline: none;
-  cursor: pointer;
+  margin-bottom: 6px; padding-left: 2px;
 }
-
-/* Year dropdown */
-.yearDropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
-  overflow: hidden;
-  z-index: 20;
-  min-width: 120px;
-}
-
-.yearOption {
-  display: block;
-  width: 100%;
-  padding: 10px 16px;
-  background: none;
-  border: none;
+.attendanceMonthDropGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.attendanceMonthOption {
+  border: none; border-radius: 6px; padding: 5px 4px;
+  font-size: 10px; font-weight: 700; cursor: pointer;
+  background: #f0f0f0; color: #333;
   font-family: "Montserrat", sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  cursor: pointer;
-  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+.attendanceMonthOption:hover { background: #e8f5e0; color: #3a7a1e; }
+.attendanceMonthOptionActive { background: #2e7d32 !important; color: #fff !important; }
+
+/* Error */
+.attendanceError {
+  display: flex; align-items: center; gap: 7px;
+  background: #fff0f0; color: #c62828;
+  padding: 9px 20px; font-size: 12px; font-weight: 600; flex-shrink: 0;
 }
 
-.yearOption:hover { background: #f0f4ef; color: #7eba56; }
-
-/* Table scroll container */
-.attendanceBody {
-  overflow: auto;
+/* ── Table wrapper ── */
+.attendanceTableWrap {
   flex: 1 1 auto;
+  overflow: auto;
+  max-height: calc(92vh - 220px);
+  scrollbar-width: thin;
+  scrollbar-color: #bbb transparent;
 }
+.attendanceTableWrap::-webkit-scrollbar { width: 6px; height: 6px; }
+.attendanceTableWrap::-webkit-scrollbar-track { background: transparent; }
+.attendanceTableWrap::-webkit-scrollbar-thumb { background: #bbb; border-radius: 999px; }
+.attendanceTableWrap::-webkit-scrollbar-thumb:hover { background: #999; }
+.attendanceTableWrap::-webkit-scrollbar-corner { background: transparent; }
 
-/* Table */
 .attendanceTable {
   border-collapse: collapse;
   font-size: 12px;
   font-family: "Montserrat", sans-serif;
-  table-layout: fixed;
-  min-width: max-content;
+  width:100%;
 }
 
-/* Sticky header */
 .attendanceTable thead th {
-  position: sticky;
-  top: 0;
-  background: #7eba56;
-  color: white;
+  position: sticky; top: 0;
+  background: #eef7e8; color: #3a6b1a;
   z-index: 3;
-  padding: 10px 6px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 700;
+  padding: 10px 8px;
+  font-size: 10px; font-weight: 800;
   white-space: nowrap;
-  border-right: 1px solid rgba(255,255,255,0.15);
+  border: none;
+  border-bottom: 2px solid #d0e8bc;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
 }
 
-/* Sticky name col header */
-.attendanceTable thead th.attendanceAvatarTh {
-  position: sticky;
-  left: 0;
-  z-index: 5;
-  width: 44px;
-  min-width: 44px;
-  background: #7eba56;
+.attThAvatar {
+  position: sticky !important; left: 0; z-index: 5 !important;
+  width: 52px; min-width: 52px;
+  background: #eef7e8 !important;
+  padding: 0 !important;
+  border: none !important;
 }
 
-.attendanceTable thead th.attendanceNameTh {
-  position: sticky;
-  left: 44px;
-  z-index: 5;
-  min-width: 160px;
-  text-align: left;
-  padding-left: 14px;
-  background: #7eba56;
+.attThName {
+  position: sticky !important; left: 52px; z-index: 5 !important;
+  width: 190px; min-width: 190px;
+  text-align: left !important;
+  padding-left: 0 !important;
+  background: #eef7e8 !important;
+  border: none !important;
 }
 
-.attendanceTable thead th.attendanceStatusTh {
-  position: sticky;
-  left: 204px;
-  z-index: 5;
-  min-width: 130px;
-  background: #7eba56;
+.attThSummary {
+  position: sticky !important; left: 242px; z-index: 5 !important;
+  width: 170px; min-width: 170px;
+  text-align: left !important;
+  padding-left: 10px !important;
+  background: #eef7e8 !important;
+  border: none !important;
 }
 
-/* Body rows */
-.attendanceTable tbody tr {
-  border-bottom: 1px solid #eef1ee;
+/* Day columns */
+.attThDay {
+  width: 50px; min-width: 50px;
+  text-align: center !important;
 }
+.attThDay > div:last-child { font-size: 11px; font-weight: 800; }
+.attDayAbbr { font-size: 8px; margin-bottom: 2px; }
 
-.attendanceTable tbody tr:hover {
-  background: #f5f9f3;
+.attThDayWeekend {
+  background: #7aba52 !important; color: #fff !important;
 }
+.attTdDayWeekend { background: #f4fbed; }
 
-/* Sticky body cells */
-.attendanceAvatarTd {
-  position: sticky;
-  left: 0;
-  background: white;
-  z-index: 2;
+/* ── Body rows ── */
+.attRow { border-bottom: 1px solid #f0f0f0; transition: background 0.12s; }
+.attRow:hover { background: #f8fcf5; }
+.attRow:hover .attTdAvatar,
+.attRow:hover .attTdName,
+.attRow:hover .attTdSummary { background: #f8fcf5 !important; }
+
+.attTdAvatar {
+  position: sticky; left: 0; background: #fff; z-index: 2;
   text-align: center;
   padding: 8px 4px;
-  width: 44px;
-  min-width: 44px;
+  width: 52px; min-width: 52px;
 }
 
-.attendanceTable tbody tr:hover .attendanceAvatarTd,
-.attendanceTable tbody tr:hover .attendanceNameTd,
-.attendanceTable tbody tr:hover .attendanceStatusTd {
-  background: #f5f9f3;
+.attTdName {
+  position: sticky; left: 52px; background: #fff; z-index: 2;
+  padding: 10px 8px 10px 0;
+  font-weight: 600; color: #1a1a1a;
+  width: 190px; min-width: 190px;
+  white-space: nowrap; font-size: 13px;
 }
 
-.attendanceNameTd {
-  position: sticky;
-  left: 44px;
-  background: white;
-  z-index: 2;
-  padding: 10px 14px;
-  font-weight: 600;
-  color: #1a1a1a;
-  min-width: 160px;
-  white-space: nowrap;
-}
-
-.attendanceStatusTd {
-  position: sticky;
-  left: 204px;
-  background: white;
-  z-index: 2;
-  text-align: center;
+.attTdSummary {
+  position: sticky; left: 242px; background: #fff; z-index: 2;
   padding: 8px 10px;
-  min-width: 130px;
-  border-right: 2px solid #e0e8dc;
+  width: 170px; min-width: 170px;
+  display: flex; align-items: center; gap: 8px;
 }
 
-/* Day cells */
-.dayCell {
-  text-align: center;
-  padding: 8px 4px;
-  font-size: 10px;
-  font-weight: 700;
-  width: 38px;
-  min-width: 38px;
+.attTdDay {
+  text-align: center; padding: 8px 4px;
+  width: 50px; min-width: 50px;
 }
 
-.dayTd {
-  text-align: center;
-  padding: 8px 4px;
-  width: 38px;
-  min-width: 38px;
+/* ── Avatar circle ── */
+.attAvatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #4a9e2e; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; margin: 0 auto;
 }
 
-/* Dots */
-.attDot {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease;
-  cursor: pointer;
-  position: relative;
+/* ── Summary text ── */
+.attSummaryPresent { font-size: 11px; font-weight: 700; color: #2e7d32; white-space: nowrap; }
+.attSummaryAbsent  { font-size: 11px; font-weight: 700; color: #e53935; white-space: nowrap; }
+
+/* ── Dots ── */
+.attDotPresent, .attDotAbsent, .attDotFuture {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; transition: transform 0.13s;
 }
+.attDotPresent:hover, .attDotAbsent:hover { transform: scale(1.12); }
+.attDotPresent { background: #e8f5e0; border: 2px solid #66bb6a; color: #2e7d32; }
+.attDotAbsent  { background: #fce4ec; border: 2px solid #ef5350; color: #c62828; }
+.attDotFuture  { background: #f5f5f5; border: 2px solid #ccc; cursor: default; width: 20px; height: 20px; }
 
-.attDot:hover { transform: scale(1.15); }
-
-.dotIcon {
-  font-size: 13px;
-  font-weight: 800;
-  color: white;
-  line-height: 1;
-}
-
-.present {
-  background: linear-gradient(135deg, #7eba56, #5fa83a);
-  box-shadow: 0 2px 6px rgba(126,186,86,0.3);
-}
-
-.absent {
-  background: linear-gradient(135deg, #f08080, #e05050);
-  box-shadow: 0 2px 6px rgba(220,80,80,0.25);
-}
-
-.future {
-  background: #d4d8d2;
-  cursor: default;
-}
-
-/* Tooltip */
-.attDot[data-time]::after {
-  content: attr(data-time);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1a1a1a;
-  color: white;
-  padding: 5px 9px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-  z-index: 100;
-}
-
-.attDot[data-time]:hover::after { opacity: 1; }
-
-/* Status summary badge */
-.statusSummaryBadge {
-  background: #eef3ec;
-  border-radius: 6px;
-  padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #444;
-  white-space: nowrap;
-}
-
-/* Avatar */
-.memberAvatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #b8d498;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #2a4a18;
-}
-
-/* Totals row */
-.totalsRow td {
+/* ── Totals row ── */
+.attTotalsRow td {
   background: #f0f6ec !important;
   border-top: 2px solid #c8dac6;
   font-weight: 700;
-  position: sticky;
-  bottom: 0;
 }
-
-.totalsRow .attendanceAvatarTd,
-.totalsRow .attendanceNameTd,
-.totalsRow .attendanceStatusTd {
-  background: #e8f2e0 !important;
-  z-index: 3;
+.attTotalsRow .attTdAvatar,
+.attTotalsRow .attTdName,
+.attTotalsRow .attTdSummary {
+  background: #e4f0d8 !important;
+  z-index: 2;
+  display: table-cell;
+  vertical-align: middle;
 }
+.attTotalCell  { display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.4; }
+.attTotalP     { font-size: 9px; font-weight: 800; color: #2e7d32; }
+.attTotalA     { font-size: 9px; font-weight: 800; color: #e53935; }
+.attFutureDash { color: #ccc; font-size: 14px; }
 
-.totalCell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.3;
-}
-
-/* Footer */
-.attendanceFooter {
-  display: flex;
-  justify-content: flex-end;
-  padding: 12px 20px;
-  background: white;
+/* ── Pagination ── */
+.attendancePagination {
+  display: flex; align-items: center; justify-content: center;
+  gap: 5px; padding: 12px 20px;
   border-top: 1px solid #eee;
-  flex-shrink: 0;
+  flex-shrink: 0; flex-wrap: wrap;
 }
-
-.exportAttendanceBtn {
-  background: #333;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 24px;
+.attPageBtn {
+  min-width: 34px; height: 34px; border-radius: 8px;
+  border: 1.5px solid #ddd;
+  background: #fff; cursor: pointer; font-size: 13px; font-weight: 700; color: #444;
   font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 8px; transition: all 0.15s;
+}
+.attPageBtn:hover:not(:disabled) { background: #e8f5e0; border-color: #7eba56; color: #2e7d32; }
+.attPageBtn:disabled { opacity: 0.35; cursor: default; }
+.attPageBtnActive {
+  background: #2e7d32 !important; color: #fff !important;
+  border-color: #2e7d32 !important; font-weight: 800 !important;
+}
+.attPageInfo {
+  font-size: 11px; font-weight: 700;
+  font-family: "Montserrat", sans-serif;
+  white-space: nowrap;
+  background: #2e7d32; color: #fff;
+  padding: 6px 14px; border-radius: 999px;
+  margin-left: 4px;
 }
 
-.exportAttendanceBtn:hover { background: #555; }
+/* ============================================================
+   11. MEMBER REGISTERED MODAL
+   ============================================================ */
 
-/* ── Member Registered Modal ── */
-.registeredModal {
-  background: white;
-  border-radius: 16px;
-  padding: 0 0 28px 0;
-  width: 380px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+.memberRegisteredModal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 28px;
+  width: min(440px, calc(100vw - 32px));
   text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
 }
 
+.memberRegisteredIcon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.memberRegisteredTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 8px;
+}
+
+.memberRegisteredDesc {
+  font-size: 13px;
+  color: #555;
+  margin: 0 0 20px;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   MEMBER REGISTERED MODAL  (MemberRegisteredModal.jsx)
+   ============================================================ */
+ 
+.registeredModal {
+  background: #fff;
+  border-radius: 16px;
+  width: min(420px, calc(100vw - 32px));
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.16);
+  font-family: "Montserrat", sans-serif;
+}
+ 
+/* Green header band */
 .registeredHeader {
-  background: #BEE3A7;
-  padding: 20px 24px 16px 24px;
+  background: linear-gradient(160deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
+ 
 .registeredCheck {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 2px solid #7eba56;
-  color: #7eba56;
-  font-size: 18px;
-  font-weight: 700;
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
   flex-shrink: 0;
 }
-
+ 
 .registeredTitle {
-  font-size: 18px;
-  font-weight: 700;
-  color: #000;
   margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
   font-family: "Montserrat", sans-serif;
 }
-
+ 
+/* Info block */
 .registeredInfo {
-  background: #f0f8e8;
-  margin: 20px 24px 0 24px;
-  border-radius: 8px;
-  padding: 12px 16px;
-  text-align: left;
-}
-
-.registeredInfoRow {
-  font-size: 13px;
-  color: #000;
-  font-family: "Montserrat", sans-serif;
-  margin: 0 0 6px 0;
-}
-
-.registeredInfoRow:last-child { margin: 0; }
-
-.registeredInfoRow strong {
-  font-weight: 700;
-  color: #222;
-}
-
-.qrWrapper {
+  padding: 20px 24px 12px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin: 20px 0 8px 0;
+  gap: 8px;
 }
-
-.qrCanvas {
-  width: 180px;
-  height: 180px;
-}
-
-.qrLabel {
-  font-size: 11px;
-  color: #7eba56;
-  font-weight: 700;
+ 
+.registeredInfoRow {
+  margin: 0;
+  font-size: 13px;
+  color: #444;
   font-family: "Montserrat", sans-serif;
-  margin: 12px 0 0 0;
+  line-height: 1.5;
 }
-
+ 
+.registeredInfoRow strong {
+  color: #2d4a1e;
+  font-weight: 700;
+}
+ 
+/* Footer buttons */
 .registeredBtns {
   display: flex;
   gap: 12px;
-  padding: 0 24px;
-  margin-top: 16px;
+  padding: 16px 24px 20px;
 }
 
-/* ── View All Payments Modal ── */
-.viewAllPaymentsModal {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 28px 32px;
-  width: 92vw;
-  max-width: 1000px;
-  max-height: 88vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+/* ============================================================
+   12. PAYMENTS — VIEW ALL & RECEIPT
+   ============================================================ */
+
+/* Shared payment modal header */
+.viewAllPaymentsModal,
+.viewAllMembersModal {
+  background: #fff;
+  border-radius: 14px;
+  width: min(1080px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
 }
 
-/* ── Receipt Modal ── */
-.receiptModal {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 28px 32px;
-  width: 88vw;
-  max-width: 900px;
-  max-height: 88vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* ── Shared payment modal header ── */
 .paymentModalHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
 }
 
 .paymentModalTitle {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #222;
   margin: 0;
-  font-family: "Montserrat", sans-serif;
 }
 
-.modalCloseX {
-  background: #222;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Search bar */
+.paymentSearch {
+  padding: 12px 24px;
+  border-bottom: 1px solid #eee;
   flex-shrink: 0;
-  transition: background 0.2s;
 }
 
-.modalCloseX:hover { background: #555; }
+.paymentSearchInput {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
 
-/* ── Payment modal search bar ── */
+.paymentSearchInput:focus { border-color: #7eba56; }
+
 .paymentModalSearch {
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border: 1.5px solid #d4e8c0;
-  border-radius: 12px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
   gap: 10px;
-  width: 520px;
+  padding: 12px 24px;
+  flex-shrink: 0;
+  width: min(600px, calc(100% - 48px));
 }
 
-/* ── Payment name clickable link ── */
-.paymentNameLink {
-  color: #5a9ed6;
-  cursor: pointer;
-  text-decoration: underline;
-  font-size: 12px;
-}
-
-/* ── Receipt action links ── */
-.receiptActions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.receiptLinkBtn {
-  background: none;
-  border: none;
-  color: #5a9ed6;
-  font-size: 12px;
-  font-family: "Montserrat", sans-serif;
-  cursor: pointer;
+.viewAllPaymentsModal .modalTable,
+.viewAllMembersModal .modalTable {
+  display: block;
+  overflow: auto;
+  margin: 8px 24px 18px;
   padding: 0;
-  text-decoration: underline;
+  width: auto;
+  font-size: 11px;
 }
 
-.receiptDivider {
-  color: #aaa;
+.viewAllPaymentsModal .modalTable thead,
+.viewAllPaymentsModal .modalTable tbody,
+.viewAllPaymentsModal .modalTable tr,
+.viewAllMembersModal .modalTable thead,
+.viewAllMembersModal .modalTable tbody,
+.viewAllMembersModal .modalTable tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  font-size: 16px;
+}
+
+.viewAllPaymentsModal .modalTable thead,
+.viewAllMembersModal .modalTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.viewAllPaymentsModal .modalTable th,
+.viewAllMembersModal .modalTable th {
+  color: #5f9f36;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.viewAllPaymentsModal .modalTable th,
+.viewAllPaymentsModal .modalTable td,
+.viewAllMembersModal .modalTable th,
+.viewAllMembersModal .modalTable td {
+  padding: 7px 9px;
+}
+
+.viewAllMembersModal .modalTable td {
   font-size: 12px;
 }
 
-/* ── Badge variants ── */
-.badge {
-  padding: 3px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  color: white;
-  font-family: "Montserrat", sans-serif;
+.viewAllMembersModal .membershipPlanCol {
+  min-width: 0;
 }
 
-.badgePaid    { background-color: #7eba56; }
-.badgePending { background-color: #f0a500; }
-.badgeUnpaid  { background-color: #e05555; }
+.viewAllMembersModal .actionBtns {
+  gap: 10px;
+}
 
-/* ── Payment modal footer ── */
+.viewAllMembersModal .editBtn,
+.viewAllMembersModal .deleteBtn {
+  min-width: 48px;
+  justify-content: center;
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+
+/* Clickable name link */
+.paymentNameLink {
+  color: #2a6e10;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.paymentNameLink:hover { color: #7eba56; }
+
+/* Payment modal footer */
 .paymentModalFooter {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-top: 1px solid #eee;
+  flex-shrink: 0;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .paymentModalFooterLeft {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
+}
+
+.exportSheetsBtn,
+.addRecordBtn,
+.receiptLinkBtn {
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.exportSheetsBtn,
+.addRecordBtn {
+  padding: 10px 16px;
+  border: 1px solid #7eba56;
 }
 
 .exportSheetsBtn {
-  padding: 8px 16px;
-  background: #7eba56;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.2s;
+  background: #fff;
+  color: #2f6f19;
 }
 
-.exportSheetsBtn:hover { background: #6aa947; }
-
-.printBtn {
-  padding: 8px 20px;
-  background: #7eba56;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.2s;
+.exportSheetsBtn:hover {
+  background: #f0f9e8;
 }
 
-.printBtn:hover { background: #6aa947; }
+.exportSheetsBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .addRecordBtn {
-  padding: 8px 20px;
-  background: white;
-  color: #333;
+  background: #7eba56;
+  color: #fff;
+}
+
+.addRecordBtn:hover {
+  background: #6aa947;
+}
+
+.receiptLinkBtn {
+  padding: 7px 12px;
   border: 1px solid #ddd;
-  border-radius: 20px;
-  font-family: "Montserrat", sans-serif;
+  background: #fff;
+  color: #333;
+}
+
+.receiptLinkBtn:hover {
+  background: #f5f5f5;
+}
+
+/* Badge variants */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.2s;
 }
 
-.addRecordBtn:hover { background: #f0f0f0; }
-
-/* ── Receipt member info card ── */
-.receiptMemberCard {
-  background: #d4e8b8;
-  border-radius: 12px;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.receiptAvatar {
-  font-size: 52px;
-  background: #b8d498;
-  border-radius: 50%;
-  width: 72px;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.receiptMemberInfo {
-  display: flex;
-  gap: 32px;
-  flex: 1;
-}
-
-.receiptInfoCol {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.receiptInfoLabel {
-  font-size: 10px;
+.badgePaid {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e8f5d8;
+  color: #3a7a1e;
+  font-size: 11px;
   font-weight: 700;
-  color: #5a7a3a;
-  margin: 0;
-  font-family: "Montserrat", sans-serif;
 }
 
-.receiptInfoValue {
-  font-size: 13px;
-  font-weight: 600;
-  color: #222;
-  margin: 0 0 8px 0;
-  font-family: "Montserrat", sans-serif;
+.badgeUnpaid {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fde8e6;
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badgePending {
+  background: #fff4d6;
+  color: #9a6200;
 }
 
 .noResults {
   text-align: center;
-  color: #aaa;
   padding: 24px;
+  color: #999;
+}
+
+.modalCloseX {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #222;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modalCloseX:hover {
+  background: #111;
+}
+
+/* Receipt */
+.receiptModal {
+  background: #fff;
+  border-radius: 14px;
+  width: min(480px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
   font-family: "Montserrat", sans-serif;
 }
 
-/* ── View Log Modal (notifications) ── */
-.viewLogModal {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 32px 36px 32px 36px;
-  width: 380px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+.receiptHeader {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.receiptBody {
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.receiptRow {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  position: relative;
+  font-size: 13px;
+  color: #444;
 }
 
-.viewLogModal .modalCloseX {
-  position: absolute;
-  top: -12px;
-  right: -12px;
-  background: #333;
-  width: 30px;
-  height: 30px;
-  font-size: 14px;
+.receiptKey   { font-weight: 600; color: #555; }
+.receiptValue { color: #222; }
+
+.receiptTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a3d0a;
+  padding-top: 12px;
+  border-top: 2px solid #e0e0e0;
 }
 
-.logAvatar {
-  width: 160px;
-  height: 160px;
-  border-radius: 14px;
-  background: #b8d4a0;
+/* Receipt member info card */
+.receiptMemberCard {
+  background: #f5f9f2;
+  border: 1px solid #d4e8c0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.receiptMemberAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #d0e8c0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 80px;
-  margin-bottom: 14px;
-  overflow: hidden;
-}
-
-.logStatusBadge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #444;
-  font-family: "Montserrat", sans-serif;
-  margin-top: 4px;
-}
-
-.logDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #7eba56;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
-.logDetails {
-  width: 100%;
+.receiptMemberName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a3d0a;
+  margin: 0 0 3px;
+}
+
+.receiptMemberId {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+/* Receipt action links */
+.receiptActions {
+  display: flex;
+  gap: 10px;
+  padding: 14px 24px;
+  border-top: 1px solid #eee;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.receiptActionBtn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  transition: background 0.18s;
+}
+
+.receiptActionBtn:hover { background: #f5f5f5; }
+
+.receiptActionBtnPrimary {
+  background: #7eba56;
+  color: #fff;
+  border-color: #7eba56;
+}
+
+.receiptActionBtnPrimary:hover { background: #6aa947; }
+
+
+/* ============================================================
+   13. VIEW LOG MODAL (NOTIFICATIONS)
+   ============================================================ */
+
+.viewLogModal {
+  background: #fff;
+  border-radius: 14px;
+  width: min(640px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.logDetailLabel {
-  font-size: 11px;
-  font-weight: 600;
-  color: #666;
-  margin: 10px 0 0 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
   font-family: "Montserrat", sans-serif;
 }
 
-.logDetailValue {
-  font-size: 15px;
+.viewLogHeader {
+  padding: 18px 24px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.viewLogTitle {
+  font-size: 16px;
   font-weight: 700;
   color: #222;
+  margin: 0 0 4px;
+}
+
+.viewLogDesc {
+  font-size: 12px;
+  color: #888;
   margin: 0;
-  font-family: "Montserrat", sans-serif;
 }
 
-.printLogBtn {
-  width: 100%;
-  padding: 11px;
+.viewLogBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.viewLogItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.viewLogItem:hover { background: #fafafa; }
+
+.viewLogDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background: #7eba56;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  margin-bottom: 8px;
-  letter-spacing: 0.5px;
-  transition: background 0.2s;
+  flex-shrink: 0;
+  margin-top: 5px;
 }
 
-.printLogBtn:hover { background: #6aa947; }
-
-.markLogoutBtn {
-  width: 100%;
-  padding: 11px;
-  background: #2d4a1e;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  transition: background 0.2s;
+.viewLogText {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  flex: 1;
 }
 
-.markLogoutBtn:hover { background: #1e3214; }
+.viewLogTime {
+  font-size: 11px;
+  color: #aaa;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
-/* ── Create / Edit Account Modal ── */
+.viewLogFooter {
+  padding: 12px 24px;
+  border-top: 1px solid #eee;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+/* ============================================================
+   14. CREATE / EDIT ACCOUNT MODAL
+   ============================================================ */
+
+.accountModal,
 .createAccountModal {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 32px 36px;
-  width: 680px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 32px;
+  width: min(480px, calc(100vw - 32px));
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  font-family: "Montserrat", sans-serif;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 
+.accountModalTitle,
 .createAccountTitle {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: #222;
-  margin: 0;
-  font-family: "Montserrat", sans-serif;
+  margin: 0 0 20px;
+}
+
+.accountTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.accountStaffIdRow,
+.staffIdRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.accountPasswordRow,
+.passwordWrapper {
+  position: relative;
+}
+
+.accountPasswordRow .formInput,
+.passwordWrapper .accountInput {
+  padding-right: 42px;
+}
+
+.accountEyeBtn,
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.accountFooter,
+.createAccountFooter {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
 }
 
 .accountFieldGroup {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: 14px;
 }
 
 .accountLabel {
   font-size: 12px;
   font-weight: 700;
   color: #444;
-  font-family: "Montserrat", sans-serif;
-}
-
-/* Staff ID row */
-.staffIdRow {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  overflow: hidden;
-  background: white;
 }
 
 .staffIdBadge {
-  background: #e0e0e0;
-  padding: 10px 16px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #e8f5d8;
+  color: #2f6f19;
   font-size: 13px;
-  font-weight: 700;
-  color: #333;
-  font-family: "Montserrat", sans-serif;
-  flex-shrink: 0;
-  border-right: 1px solid #ddd;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
-.staffIdInput {
-  flex: 1;
-  border: none;
-  outline: none;
-  padding: 10px 14px;
-  font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  color: #999;
-  background: white;
-}
-
-/* Name row */
-.nameRow {
-  display: flex;
-  gap: 12px;
-}
-
-.nameRow .accountInput {
-  flex: 1;
-}
-
-.initialInput {
-  max-width: 100px !important;
-  flex: 0 0 100px !important;
-}
-
-/* Two column layout */
-.accountTwoCol {
-  display: flex;
-  gap: 20px;
-}
-
-.accountTwoCol .accountFieldGroup {
-  flex: 1;
-}
-
-/* Input + select */
-.accountInput {
+.staffIdInput,
+.accountInput,
+.accountSelect {
   width: 100%;
+  min-height: 40px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 9px 12px;
   font-family: "Montserrat", sans-serif;
   font-size: 13px;
   color: #333;
+  background: #fff;
   outline: none;
-  background: white;
   box-sizing: border-box;
 }
 
-.accountInput:focus { border-color: #7eba56; }
+.staffIdInput:disabled {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.accountInput:focus,
+.accountSelect:focus {
+  border-color: #7eba56;
+  box-shadow: 0 0 0 3px rgba(126, 186, 86, 0.12);
+}
+
+.nameRow,
+.passwordRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.nameRow {
+  grid-template-columns: 1fr 1fr 90px;
+}
+
+.initialInput {
+  min-width: 0;
+}
 
 .selectWrapper {
   position: relative;
 }
 
-.accountSelect {
-  width: 100%;
-  border: 1px solid #ddd;
+.accountCancelBtn,
+.accountCreateBtn {
+  min-width: 110px;
+  padding: 10px 16px;
   border-radius: 8px;
-  padding: 10px 14px;
   font-family: "Montserrat", sans-serif;
   font-size: 13px;
-  color: #333;
-  outline: none;
-  background: white;
-  appearance: none;
+  font-weight: 700;
   cursor: pointer;
-}
-
-.selectWrapper::after {
-  content: "▾";
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: #555;
-  font-size: 13px;
-}
-
-/* Password row */
-.passwordRow {
-  display: flex;
-  gap: 12px;
-}
-
-.passwordWrapper {
-  flex: 1;
-  position: relative;
-}
-
-.passwordWrapper .accountInput {
-  padding-right: 40px;
-}
-
-.eyeBtn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0;
-  color: #888;
-  z-index: 10;
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-}
-
-/* Footer */
-.createAccountFooter {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 4px;
 }
 
 .accountCancelBtn {
-  padding: 10px 28px;
-  background: white;
+  background: #fff;
   color: #333;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
 }
 
-.accountCancelBtn:hover { background: #f0f0f0; }
+.accountCancelBtn:hover {
+  background: #f5f5f5;
+}
 
 .accountCreateBtn {
-  padding: 10px 28px;
   background: #7eba56;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
+  color: #fff;
+  border: 1px solid #7eba56;
 }
 
-.accountCreateBtn:hover { background: #6aa947; }
+.accountCreateBtn:hover {
+  background: #6aa947;
+}
 
-/* ── Modal responsive ── */
+.accountCancelBtn:disabled,
+.accountCreateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .overlay { align-items: flex-end; }
-  .modal {
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 20px 20px 0 0;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 24px 20px;
-  }
+
+  .attendanceModal,
   .viewAllModal {
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 20px 20px 0 0;
-    max-height: 90vh;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 14px 14px 0 0;
   }
-  .attendanceModal {
-    width: 100% !important;
-    max-width: 100% !important;
-    border-radius: 20px 20px 0 0;
-    max-height: 90vh;
+
+  .profileGrid,
+  .accountTwoCol,
+  .formGrid,
+  .planGrid,
+  .fieldRow { grid-template-columns: 1fr; flex-direction: column; }
+
+  .addMemberBody { flex-direction: column; }
+
+  .photoSection {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddebd4;
+    padding: 20px 16px;
   }
-  .deleteModal {
-    width: 90% !important;
-    max-width: 360px;
-    border-radius: 16px;
-  }
-  .profileModal {
-    width: 95% !important;
-    border-radius: 20px 20px 0 0;
-  }
-  .createAccountModal {
-    width: 95% !important;
-    border-radius: 20px 20px 0 0;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  .formGrid { grid-template-columns: 1fr; }
-  .profileGrid { grid-template-columns: 1fr; }
-  .nameRow { flex-direction: column; }
-  .accountTwoCol { flex-direction: column; }
-  .passwordRow { flex-direction: column; }
-  .dateRow { flex-direction: column; gap: 8px; }
-  .dateSep { display: none; }
-  .attendanceHeader { flex-wrap: wrap; gap: 8px; }
-  .attendanceLegend { font-size: 11px; gap: 6px; }
+
+  .modalFooter .closeBtn { width: 100%; }
 }
 
-@media (max-width: 480px) {
-  .modal { padding: 20px 14px; }
-  .modalTitle { font-size: 14px; }
-  .submitBtn, .closeBtn { font-size: 12px; padding: 10px; }
+@media (max-width: 560px) {
+  .modalFooter { flex-direction: column; gap: 8px; }
+  .modalFooter .submitBtn,
+  .modalFooter .profileDeleteBtn,
+  .modalFooter .closeBtn { width: 100%; flex: none; }
+
+  .addMemberBtns { flex-direction: column; }
+  .paymentModalFooter { flex-direction: column; }
+  .receiptActions { flex-direction: column; }
+  .attendanceTopBar { flex-direction: column; align-items: flex-start; }
 }

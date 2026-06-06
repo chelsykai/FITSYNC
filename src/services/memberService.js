@@ -1,6 +1,8 @@
 import { supabase } from "../lib/supabaseClient";
 import { getAuditActorRole } from "./auditService";
 import { requireAdminRole } from "../utils/permissions";
+import { compressImageFile } from "../utils/imageCompression";
+import { computeMembershipExpiryDate } from "../utils/membershipUtils";
 
 const MEMBER_PHOTO_BUCKET = "member_photo";
 const MEMBER_PHOTO_PREFIX = "member_photos";
@@ -47,34 +49,9 @@ const logAuditTrail = async (action, memberId, memberName, changes = {}) => {
 
 const sanitizeFileName = (name) => name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-const parseValidityAmount = (value) => {
-  const raw = String(value || "").trim();
-  if (!raw) return null;
-  const match = raw.match(/(\d+)/);
-  if (!match) return null;
-  const amount = Number.parseInt(match[1], 10);
-  return Number.isInteger(amount) && amount > 0 ? amount : null;
-};
-
 const computeExpirationDate = (joinDate, membershipValidity, monthlyValidity) => {
-  const baseDate = new Date(joinDate);
-  if (Number.isNaN(baseDate.getTime())) return null;
-
-  const years = parseValidityAmount(membershipValidity);
-  if (years) {
-    const expiryDate = new Date(baseDate);
-    expiryDate.setFullYear(expiryDate.getFullYear() + years);
-    return expiryDate.toISOString().split("T")[0];
-  }
-
-  const months = parseValidityAmount(monthlyValidity);
-  if (months) {
-    const expiryDate = new Date(baseDate);
-    expiryDate.setMonth(expiryDate.getMonth() + months);
-    return expiryDate.toISOString().split("T")[0];
-  }
-
-  return null;
+  const expiryDate = computeMembershipExpiryDate(joinDate, membershipValidity, monthlyValidity);
+  return expiryDate ? expiryDate.toISOString().split("T")[0] : null;
 };
 
 const getStoragePathFromUrl = (value) => {
@@ -120,14 +97,16 @@ const getPhotoAccessUrl = async (photoRef) => {
 export const uploadMemberPhoto = async (file, memberId) => {
   if (!file) return null;
 
-  const safeName = sanitizeFileName(file.name || "photo");
+  const compressedFile = await compressImageFile(file);
+
+  const safeName = sanitizeFileName(compressedFile.name || file.name || "photo");
   const filePath = `${MEMBER_PHOTO_PREFIX}/${memberId}/${Date.now()}-${safeName}`;
 
   const { error: uploadError } = await supabase.storage
     .from(MEMBER_PHOTO_BUCKET)
-    .upload(filePath, file, {
+    .upload(filePath, compressedFile, {
       upsert: false,
-      contentType: file.type || "application/octet-stream",
+      contentType: compressedFile.type || file.type || "application/octet-stream",
       cacheControl: "3600",
     });
 
@@ -257,14 +236,12 @@ export const fetchMembers = async () => {
         } catch (err) {
           // If photo retrieval fails for a single member, log and return the raw member so UI can still render.
           // This prevents one broken storage entry from causing the entire fetch to fail.
-          // eslint-disable-next-line no-console
           console.warn('Failed to get photo URL for member', member?.member_id, err);
           return member;
         }
       })
     );
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error("Error fetching members:", err);
     throw err;
   }
@@ -356,7 +333,6 @@ export const updateMember = async (memberId, updates) => {
       newRecord.photo_url = accessUrl || newRecord.photo_url;
     } catch (err) {
       // If conversion fails, leave the stored value so caller can handle it
-      // eslint-disable-next-line no-console
       console.warn('Failed to convert photo_url to access URL', err);
     }
   }

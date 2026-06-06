@@ -50,16 +50,6 @@
   box-shadow: 0 8px 26px rgba(0,0,0,0.11);
 }
 
-.exportCard {
-  border: 4px solid #E5F0DE;
-  background: white;
-  cursor: pointer;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
 .statIcon { font-size: 26px; }
 
 .statLabel {
@@ -127,11 +117,78 @@
   margin-bottom: 24px;
 }
 
+/* TAB card */
+.tabSwitcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 16px;
+  background: #f3f8ef;
+  border: 1px solid #dceccc;
+  border-radius: 10px;
+}
+
+.tabButton {
+  border: none;
+  background: transparent;
+  color: #5d724f;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+
+.tabButton:hover {
+  color: #2f5c1d;
+  background: rgba(255,255,255,0.65);
+}
+
+.tabButtonActive {
+  background: #ffffff;
+  color: #1a3d0a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.tableScroll {
+  max-height: 460px;
+  overflow-y: auto;
+  border: 1px solid #edf5e8;
+  border-radius: 12px;
+}
+
+.tableScroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+  background: #f3f8ef;
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+  background: #b9d3a8;
+  border-radius: 999px;
+  border: 2px solid #f3f8ef;
+}
+
+.tableScroll::-webkit-scrollbar-thumb:hover {
+  background: #9fc182;
+}
+
 .tableHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+}
+
+.tableActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .tableTitle {
@@ -155,6 +212,23 @@
 }
 
 .addBtn:hover { background: #f0f0f0; }
+
+.exportBtn {
+  background-color: #7eba56;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exportBtn:hover {
+  background-color: #6aa947;
+}
 
 .table {
   width: 100%;
@@ -183,6 +257,34 @@
 
 .table tr:last-child td { border-bottom: none; }
 .table tbody tr:hover td { background-color: rgba(255,255,255,0.4); }
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:focus-within td,
+.clickableRow:hover td {
+  background-color: #f7fcf3;
+}
+
+.paymentNameBtn {
+  border: none;
+  background: transparent;
+  color: #2f6f19;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.paymentNameBtn:hover,
+.paymentNameBtn:focus-visible {
+  color: #5f9f36;
+  outline: none;
+}
 
 /* STATUS BADGES */
 .badge {
@@ -281,6 +383,8 @@
   .tableCard { padding: 14px 12px; overflow-x: auto; }
   .table { min-width: 500px; }
   .tableHeader { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .tabSwitcher { width: 100%; box-sizing: border-box; }
+  .tabButton { flex: 1; padding: 8px 10px; }
   .title { font-size: 22px; }
 }
 
