@@ -4,13 +4,11 @@ import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 import PaymentReceiptModal from "../../components/modals/payments/PaymentReceiptModal";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
-import AddWalkInModal from "../../components/modals/payments/AddWalkInModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
-import { fetchWalkIns as fetchWalkInsService } from "../../services/walkInService";
 import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
-import WalkInTable from "./WalkInTable";
 import { isMembershipActive } from "../../utils/membershipUtils";
+import { fetchWalkIns as fetchWalkInsService } from "../../services/walkInService";
 
 /**
  * Fetch total count of members from the database
@@ -185,7 +183,6 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
   const [search, setSearch] = useState("");
   const [showViewAll, setShowViewAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
-  const [showAddWalkIn, setShowAddWalkIn] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [members, setMembers] = useState([]);
 
@@ -397,11 +394,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
                   <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
                     Add / Record Payment
                   </button>
-                ) : (
-                  <button className={styles.addBtn} onClick={() => setShowAddWalkIn(true)}>
-                    Add Walk-in
-                  </button>
-                )}
+                ) : null}
               </div>
             </div>
 
@@ -462,7 +455,46 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
                 </table>
               </div>
             ) : (
-              <WalkInTable walkIns={walkIns} search={search} loading={loadingWalkIns} />
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Plan Type</th>
+                      <th>Date</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {walkIns.length === 0 ? (
+                      <tr key="no-walkins"><td colSpan={4} className={styles.noResults}>
+                        No walk-in records yet.
+                      </td></tr>
+                    ) : walkIns.filter((w) =>
+                      w.name.toLowerCase().includes(search.toLowerCase()) ||
+                      w.planType.toLowerCase().includes(search.toLowerCase()) ||
+                      w.date.toLowerCase().includes(search.toLowerCase())
+                    ).length === 0 ? (
+                      <tr key="no-match"><td colSpan={4} className={styles.noResults}>
+                        No records match your search.
+                      </td></tr>
+                    ) : (
+                      walkIns.filter((w) =>
+                        w.name.toLowerCase().includes(search.toLowerCase()) ||
+                        w.planType.toLowerCase().includes(search.toLowerCase()) ||
+                        w.date.toLowerCase().includes(search.toLowerCase())
+                      ).map((w, index) => (
+                        <tr key={`${w.id}-${index}`}>
+                          <td>{w.name}</td>
+                          <td>{w.planType}</td>
+                          <td>{w.date}</td>
+                          <td>{w.total.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
 
             {activeTab === "payments" && (
@@ -502,12 +534,6 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
           members={members}
           onClose={() => setShowExport(false)}
           isAdmin={isAdmin}
-        />
-      )}
-      {showAddWalkIn && (
-        <AddWalkInModal
-          onClose={() => setShowAddWalkIn(false)}
-          onSaved={() => loadWalkIns()}
         />
       )}
     </>
