@@ -108,7 +108,6 @@ export default function ViewAllPaymentsModal({ payments, onClose, onAddPayment }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <span>🔍</span>
           </div>
 
           {/* Table */}

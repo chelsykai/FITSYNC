@@ -4,6 +4,7 @@ import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 import PaymentReceiptModal from "../../components/modals/payments/PaymentReceiptModal";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
+import AddWalkInModal from "../../components/modals/payments/AddWalkInModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
@@ -183,6 +184,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
   const [search, setSearch] = useState("");
   const [showViewAll, setShowViewAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showAddWalkIn, setShowAddWalkIn] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [members, setMembers] = useState([]);
 
@@ -394,7 +396,11 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
                   <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
                     Add / Record Payment
                   </button>
-                ) : null}
+                ) : (
+                  <button className={styles.addBtn} onClick={() => setShowAddWalkIn(true)}>
+                    Add Walk-in
+                  </button>
+                )}
               </div>
             </div>
 
@@ -534,6 +540,12 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
           members={members}
           onClose={() => setShowExport(false)}
           isAdmin={isAdmin}
+        />
+      )}
+      {showAddWalkIn && (
+        <AddWalkInModal
+          onClose={() => setShowAddWalkIn(false)}
+          onSaved={() => loadWalkIns()}
         />
       )}
     </>
