@@ -8,6 +8,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
 import { formatMMDDYYYY, parseLocalISODate } from "../../utils/dateFormat";
 import { isMembershipActive } from "../../utils/membershipUtils";
+import { fetchWalkIns as fetchWalkInsService } from "../../services/walkInService";
 
 /**
  * Fetch total count of members from the database
@@ -106,6 +107,24 @@ const fetchPayments = async () => {
   }
 };
 
+const fetchWalkIns = async () => {
+  try {
+    const data = await fetchWalkInsService();
+    console.log("Fetched walk-ins:", data);
+    return (data || []).map((record) => ({
+      id: record.id,
+      name: record.name,
+      date: formatMMDDYYYY(record.paymentDate),
+      rawDate: parseLocalISODate(record.paymentDate),
+      planType: record.planType,
+      total: record.total,
+    }));
+  } catch (err) {
+    console.error("Error in fetchWalkIns:", err);
+    return [];
+  }
+};
+
 /**
  * Calculate revenue stats
  */
@@ -150,13 +169,16 @@ const calculateStats = (payments, activeMemberships = 0) => {
 };
 
 export default function PaymentsPage({ onNavigate, activePage = "payments", isAdmin = false }) {
+  const [activeTab, setActiveTab] = useState("payments");
   const [payments, setPayments] = useState([]);
+  const [walkIns, setWalkIns] = useState([]);
   const [error, setError] = useState("");
   const [stats, setStats] = useState({
     totalTransactions: 0,
     activeMemberships: 0,
   });
   const [loadingPayments, setLoadingPayments] = useState(true);
+  const [loadingWalkIns, setLoadingWalkIns] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [search, setSearch] = useState("");
   const [showViewAll, setShowViewAll] = useState(false);
@@ -204,14 +226,35 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
     }
   }, []);
 
+  const loadWalkIns = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setLoadingWalkIns(true);
+      console.log("[loadWalkIns] Starting to fetch walk-in records...");
+      const walkInData = await fetchWalkIns();
+      console.log("[loadWalkIns] Fetched walk-in data:", walkInData);
+      console.log("[loadWalkIns] Total records:", walkInData.length);
+      console.log("[loadWalkIns] Setting walkIns state to:", walkInData);
+      setWalkIns(walkInData);
+    } catch (err) {
+      console.error("[loadWalkIns] Error loading walk-in records:", err);
+      setWalkIns([]);
+    } finally {
+      if (showLoader) setLoadingWalkIns(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadMembers(true);
     loadPayments(true);
+    loadWalkIns(true);
 
     const paymentsChannel = supabase
       .channel("payments-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "record_payment" }, () => {
         loadPayments();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "walkin_records" }, () => {
+        loadWalkIns();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "member" }, () => {
         loadMembers();
@@ -222,13 +265,14 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
     return () => {
       supabase.removeChannel(paymentsChannel);
     };
-  }, [loadMembers, loadPayments]);
+  }, [loadMembers, loadPayments, loadWalkIns]);
 
   // Fallback auto-refresh when user returns to the page
   useEffect(() => {
     const handleFocus = () => {
       loadMembers();
       loadPayments();
+      loadWalkIns();
     };
 
     window.addEventListener("focus", handleFocus);
@@ -236,7 +280,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
     return () => {
       window.removeEventListener("focus", handleFocus);
     };
-  }, [loadMembers, loadPayments]);
+  }, [loadMembers, loadPayments, loadWalkIns]);
 
   const filtered = payments.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -315,81 +359,151 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
 
           {/* Table Card */}
           <div className={styles.tableCard}>
+            <div className={styles.tabSwitcher} role="tablist" aria-label="Payment record type">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "payments"}
+                className={`${styles.tabButton} ${activeTab === "payments" ? styles.tabButtonActive : ""}`}
+                onClick={() => setActiveTab("payments")}
+              >
+                Payment Records
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "walkIns"}
+                className={`${styles.tabButton} ${activeTab === "walkIns" ? styles.tabButtonActive : ""}`}
+                onClick={() => setActiveTab("walkIns")}
+              >
+                Walk-in Records
+              </button>
+            </div>
+
             <div className={styles.tableHeader}>
-              <h2 className={styles.tableTitle}>Payment Records Table</h2>
+              <h2 className={styles.tableTitle}>
+                {activeTab === "payments" ? "Payment Records Table" : "Walk-in Records Table"}
+              </h2>
               <div className={styles.tableActions}>
-                {isAdmin && (
+                {activeTab === "payments" && isAdmin && (
                   <button className={styles.exportBtn} onClick={() => setShowExport(true)}>
                     Export
                   </button>
                 )}
-                <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
-                  Add / Record Payment
-                </button>
+                {activeTab === "payments" ? (
+                  <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
+                    Add / Record Payment
+                  </button>
+                ) : null}
               </div>
             </div>
 
-            <div className={styles.tableScroll}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Member ID</th>
-                    <th>Name</th>
-                    <th>Payment Date</th>
-                    <th>Membership Type</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.length === 0 ? (
-                    <tr key="no-payments"><td colSpan={6} className={styles.noResults}>
-                      No payment records yet. Click "Add / Record Payment" to create one.
-                    </td></tr>
-                  ) : filtered.length === 0 ? (
-                    <tr key="no-match"><td colSpan={6} className={styles.noResults}>
-                      No records match your search.
-                    </td></tr>
-                  ) : (
-                    filtered.map((p, index) => (
-                      <tr
-                        key={`${p.id || p.memberId}-${p.date}-${index}`}
-                        className={styles.clickableRow}
-                        onClick={() => setSelectedPayment(p)}
-                      >
-                        <td>{p.memberId}</td>
-                        <td>
-                          <button
-                            type="button"
-                            className={styles.paymentNameBtn}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedPayment(p);
-                            }}
-                          >
-                            {p.name}
-                          </button>
-                        </td>
-                        <td>{p.date}</td>
-                        <td>{p.type}</td>
-                        <td>{p.total.toLocaleString()}</td>
-                        <td>
-                          <span className={`${styles.badge} ${p.status === "Paid" ? styles.paid : styles.pending}`}>
-                            {p.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            {activeTab === "payments" ? (
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Member ID</th>
+                      <th>Name</th>
+                      <th>Payment Date</th>
+                      <th>Membership Type</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.length === 0 ? (
+                      <tr key="no-payments"><td colSpan={6} className={styles.noResults}>
+                        No payment records yet. Click "Add / Record Payment" to create one.
+                      </td></tr>
+                    ) : filtered.length === 0 ? (
+                      <tr key="no-match"><td colSpan={6} className={styles.noResults}>
+                        No records match your search.
+                      </td></tr>
+                    ) : (
+                      filtered.map((p, index) => (
+                        <tr
+                          key={`${p.id || p.memberId}-${p.date}-${index}`}
+                          className={styles.clickableRow}
+                          onClick={() => setSelectedPayment(p)}
+                        >
+                          <td>{p.memberId}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className={styles.paymentNameBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPayment(p);
+                              }}
+                            >
+                              {p.name}
+                            </button>
+                          </td>
+                          <td>{p.date}</td>
+                          <td>{p.type}</td>
+                          <td>{p.total.toLocaleString()}</td>
+                          <td>
+                            <span className={`${styles.badge} ${p.status === "Paid" ? styles.paid : styles.pending}`}>
+                              {p.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className={styles.tableScroll}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Plan Type</th>
+                      <th>Date</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {walkIns.length === 0 ? (
+                      <tr key="no-walkins"><td colSpan={4} className={styles.noResults}>
+                        No walk-in records yet.
+                      </td></tr>
+                    ) : walkIns.filter((w) =>
+                      w.name.toLowerCase().includes(search.toLowerCase()) ||
+                      w.planType.toLowerCase().includes(search.toLowerCase()) ||
+                      w.date.toLowerCase().includes(search.toLowerCase())
+                    ).length === 0 ? (
+                      <tr key="no-match"><td colSpan={4} className={styles.noResults}>
+                        No records match your search.
+                      </td></tr>
+                    ) : (
+                      walkIns.filter((w) =>
+                        w.name.toLowerCase().includes(search.toLowerCase()) ||
+                        w.planType.toLowerCase().includes(search.toLowerCase()) ||
+                        w.date.toLowerCase().includes(search.toLowerCase())
+                      ).map((w, index) => (
+                        <tr key={`${w.id}-${index}`}>
+                          <td>{w.name}</td>
+                          <td>{w.planType}</td>
+                          <td>{w.date}</td>
+                          <td>{w.total.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-            <div className={styles.viewAllWrapper}>
-              <button className={styles.viewAllBtn} onClick={() => setShowViewAll(true)}>
-                View All
-              </button>
-            </div>
+            {activeTab === "payments" && (
+              <div className={styles.viewAllWrapper}>
+                <button className={styles.viewAllBtn} onClick={() => setShowViewAll(true)}>
+                  View All
+                </button>
+              </div>
+            )}
           </div>
 
 
