@@ -108,6 +108,31 @@
   padding: 0;
 }
 
+/* FILTER BUTTONS */
+.filterBtn {
+  background: #ffffff;
+  border: 1.5px solid #d4e8c0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  color: #5d724f;
+  transition: all 0.2s ease;
+}
+
+.filterBtn:hover {
+  border-color: #7eba56;
+  color: #3d6b27;
+}
+
+.filterBtnActive {
+  background: #7eba56;
+  border-color: #7eba56;
+  color: #ffffff;
+}
+
 /* TABLE CARD */
 .tableCard {
   background: #ffffff;

@@ -362,10 +362,15 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                         className={styles.renewalInput}
                         type="number"
                         min="1"
+                        max="12"
                         step="1"
                         placeholder="0"
                         value={renewalForm.months}
-                        onChange={(event) => setRenewalForm((prev) => ({ ...prev, months: event.target.value.replace(/[^\d]/g, "") }))}
+                        onChange={(event) => {
+                          let val = event.target.value.replace(/[^\d]/g, "");
+                          if (val && parseInt(val, 10) > 12) val = "12";
+                          setRenewalForm((prev) => ({ ...prev, months: val }));
+                        }}
                       />
                       <span className={styles.renewalUnit}>mo</span>
                     </div>
@@ -377,10 +382,15 @@ export default function RecordPaymentPage({ onNavigate, activePage = "payments" 
                         className={styles.renewalInput}
                         type="number"
                         min="1"
+                        max="6"
                         step="1"
                         placeholder="0"
                         value={renewalForm.years}
-                        onChange={(event) => setRenewalForm((prev) => ({ ...prev, years: event.target.value.replace(/[^\d]/g, "") }))}
+                        onChange={(event) => {
+                          let val = event.target.value.replace(/[^\d]/g, "");
+                          if (val && parseInt(val, 10) > 6) val = "6";
+                          setRenewalForm((prev) => ({ ...prev, years: val }));
+                        }}
                       />
                       <span className={styles.renewalUnit}>yr</span>
                     </div>

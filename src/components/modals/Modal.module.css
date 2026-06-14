@@ -1612,6 +1612,53 @@
   transition: border-color 0.15s, color 0.15s;
 }
 .attendanceNavBtn:hover { border-color: #7eba56; color: #3a7a1e; }
+
+/* Filter buttons */
+.attFilterBtn {
+  background: #ffffff;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.2s ease;
+}
+
+.attFilterBtn:hover {
+  border-color: #2e7d32;
+  color: #3a7a1e;
+}
+
+.attFilterBtnActive {
+  background: #2e7d32;
+  border-color: #2e7d32;
+  color: #ffffff;
+}
+
+/* Export button */
+.attExportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2e7d32;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  color: #ffffff;
+  transition: background 0.2s ease;
+}
+
+.attExportBtn:hover {
+  background: #1b5e20;
+}
+
 .attendanceMonthBtn {
   display: inline-flex; align-items: center; gap: 6px;
   background: #fff; border: 1.5px solid #ddd; border-radius: 8px;
