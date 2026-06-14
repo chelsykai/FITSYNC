@@ -8,7 +8,9 @@ const defaultForm = {
   fullName:             "",
   email:                "",
   phone:                "",
-  address:              "",
+  street:               "",
+  barangay:             "",
+  city:                 "",
   birthday:             "",
   membershipType:       "Student",
   monthlyValidity:      "",
@@ -309,7 +311,7 @@ export default function AddMemberModal({ onClose, onSuccess }) {
               </div>
             </div>
 
-            {/* Row 2: Phone + Address */}
+            {/* Row 2: Phone */}
             <div className={styles.fieldRow}>
               <div className={styles.labeledField}>
                 <label className={styles.modernLabel}>Phone Number</label>
@@ -328,13 +330,38 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Row 2b: Address Fields - Street, Barangay, City */}
+            <div className={styles.fieldRow}>
               <div className={styles.labeledField}>
-                <label className={styles.modernLabel}>Address</label>
+                <label className={styles.modernLabel}>Street Address</label>
                 <input
                   className={styles.formInput}
-                  placeholder="Street, City"
-                  value={form.address}
-                  onChange={set("address")}
+                  placeholder="House number, street name"
+                  value={form.street}
+                  onChange={set("street")}
+                />
+              </div>
+            </div>
+
+            <div className={styles.fieldRow}>
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>Barangay</label>
+                <input
+                  className={styles.formInput}
+                  placeholder="Barangay name"
+                  value={form.barangay}
+                  onChange={set("barangay")}
+                />
+              </div>
+              <div className={styles.labeledField}>
+                <label className={styles.modernLabel}>City/Municipality</label>
+                <input
+                  className={styles.formInput}
+                  placeholder="City or municipality"
+                  value={form.city}
+                  onChange={set("city")}
                 />
               </div>
             </div>
@@ -416,11 +443,16 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                       className={styles.planCardInput}
                       type="number"
                       min="1"
+                      max="12"
                       step="1"
                       inputMode="numeric"
                       placeholder="0"
                       value={form.monthlyValidity}
-                      onChange={setNumber("monthlyValidity")}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^\d]/g, "");
+                        if (val && parseInt(val, 10) > 12) val = "12";
+                        setForm({ ...form, monthlyValidity: val });
+                      }}
                     />
                     <span className={styles.planCardUnit}>Months</span>
                   </div>
@@ -439,11 +471,16 @@ export default function AddMemberModal({ onClose, onSuccess }) {
                       className={styles.planCardInput}
                       type="number"
                       min="0"
+                      max="6"
                       step="1"
                       inputMode="numeric"
                       placeholder="0"
                       value={form.membershipValidity}
-                      onChange={setNumber("membershipValidity")}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^\d]/g, "");
+                        if (val && parseInt(val, 10) > 6) val = "6";
+                        setForm({ ...form, membershipValidity: val });
+                      }}
                     />
                     <span className={styles.planCardUnit}>Years</span>
                   </div>

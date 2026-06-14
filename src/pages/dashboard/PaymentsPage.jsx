@@ -187,6 +187,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
   const [showAddWalkIn, setShowAddWalkIn] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [members, setMembers] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all"); // "all", "paid", "unpaid"
 
   const loadMembers = useCallback(async (showLoader = false) => {
     try {
@@ -284,12 +285,20 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
     };
   }, [loadMembers, loadPayments, loadWalkIns]);
 
-  const filtered = payments.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.memberId.toString().includes(search) ||
-    p.type.toLowerCase().includes(search.toLowerCase()) ||
-    p.status.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = payments.filter((p) => {
+    const matchesSearch = 
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.memberId.toString().includes(search) ||
+      p.type.toLowerCase().includes(search.toLowerCase()) ||
+      p.status.toLowerCase().includes(search.toLowerCase());
+    
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "paid" && p.status.toLowerCase() === "paid") ||
+      (statusFilter === "unpaid" && p.status.toLowerCase() === "pending");
+    
+    return matchesSearch && matchesStatus;
+  });
 
   if (loadingPayments) {
     return (
@@ -330,18 +339,42 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
             </div>
           </div>
 
-          {/* Search */}
-          <div className={styles.searchWrapper}>
-            <input
-              type="text"
-              placeholder="Search"
-              className={styles.searchInput}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button className={styles.clearBtn} onClick={() => setSearch("")}>✕</button>
-            )}
+          {/* Search and Filter Controls */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "16px" }}>
+            <div className={styles.searchWrapper}>
+              <input
+                type="text"
+                placeholder="Search"
+                className={styles.searchInput}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button className={styles.clearBtn} onClick={() => setSearch("")}>✕</button>
+              )}
+            </div>
+
+            {/* Status Filter Buttons */}
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                className={`${styles.filterBtn} ${statusFilter === "all" ? styles.filterBtnActive : ""}`}
+                onClick={() => setStatusFilter("all")}
+              >
+                All
+              </button>
+              <button
+                className={`${styles.filterBtn} ${statusFilter === "paid" ? styles.filterBtnActive : ""}`}
+                onClick={() => setStatusFilter("paid")}
+              >
+                Paid
+              </button>
+              <button
+                className={`${styles.filterBtn} ${statusFilter === "unpaid" ? styles.filterBtnActive : ""}`}
+                onClick={() => setStatusFilter("unpaid")}
+              >
+                Unpaid
+              </button>
+            </div>
           </div>
 
           {/* Error Message */}

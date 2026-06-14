@@ -28,6 +28,7 @@ export default function AttendanceModal({ members = [], onClose }) {
   const [search,        setSearch]        = useState("");
   const [showMonthDrop, setShowMonthDrop] = useState(false);
   const [page,          setPage]          = useState(0);
+  const [attFilter,     setAttFilter]     = useState("all"); 
 
   useEffect(() => {
     let mounted = true;
@@ -82,10 +83,67 @@ export default function AttendanceModal({ members = [], onClose }) {
   }, [members, attendanceMap, pageDays, year, month]);
 
   const filteredMembers = useMemo(() => {
-    if (!search.trim()) return members;
-    const q = search.toLowerCase();
-    return members.filter((m) => getMemberName(m).toLowerCase().includes(q));
-  }, [members, search]);
+    let result = members;
+    
+    // Filter by search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((m) => getMemberName(m).toLowerCase().includes(q));
+    }
+    
+    // Filter by attendance type - only today
+    if (attFilter !== "all") {
+      // Check if we're viewing the current month
+      const today = new Date();
+      const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
+      
+      if (isCurrentMonth) {
+        const todayDate = today.getDate();
+        result = result.filter((m) => {
+          const id = getMemberId(m);
+          const attended = attendanceMap[id] || new Set();
+          const isPresentToday = attended.has(todayDate);
+          
+          if (attFilter === "present") return isPresentToday;
+          if (attFilter === "absent") return !isPresentToday;
+          return true;
+        });
+      }
+    }
+    
+    return result;
+  }, [members, search, attFilter, attendanceMap, year, month]);
+
+  const exportAttendance = () => {
+    const headers = ["Member Name", "Member ID", "Present", "Absent"];
+    const rows = filteredMembers.map((m) => {
+      const id = getMemberId(m);
+      const stat = memberStats.find((s) => s.id === id) || { presentCt: 0, absentCt: 0 };
+      return [
+        getMemberName(m),
+        id,
+        stat.presentCt,
+        stat.absentCt,
+      ];
+    });
+
+    const csv = [
+      `Attendance Report - ${MONTH_NAMES[month - 1]} ${year}`,
+      "",
+      headers.join(","),
+      ...rows.map((r) => r.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `attendance_${MONTH_NAMES[month - 1].toLowerCase()}_${year}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const prevMonth = () => {
     if (month === 1) { setMonth(12); setYear((y) => y - 1); }
@@ -133,7 +191,7 @@ export default function AttendanceModal({ members = [], onClose }) {
         {/* ══ WHITE BODY ══ */}
         <div className={styles.attBody}>
 
-          {/* Toolbar: search left | month nav right */}
+          {/* Toolbar: search left | filter + export center | month nav right */}
           <div className={styles.attendanceToolbar}>
             <div className={styles.attendanceSearch}>
               <i className={`ti ti-search ${styles.attendanceSearchIcon}`} />
@@ -144,6 +202,35 @@ export default function AttendanceModal({ members = [], onClose }) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+            </div>
+
+            {/* Filter Tabs */}
+            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <button
+                className={`${styles.attFilterBtn} ${attFilter === "all" ? styles.attFilterBtnActive : ""}`}
+                onClick={() => setAttFilter("all")}
+              >
+                All
+              </button>
+              <button
+                className={`${styles.attFilterBtn} ${attFilter === "present" ? styles.attFilterBtnActive : ""}`}
+                onClick={() => setAttFilter("present")}
+              >
+                Present
+              </button>
+              <button
+                className={`${styles.attFilterBtn} ${attFilter === "absent" ? styles.attFilterBtnActive : ""}`}
+                onClick={() => setAttFilter("absent")}
+              >
+                Absent
+              </button>
+              <button
+                className={styles.attExportBtn}
+                onClick={exportAttendance}
+                title="Export to CSV"
+              >
+                <i className="ti ti-download" /> Export
+              </button>
             </div>
 
             <div className={styles.attendanceNavGroup}>
