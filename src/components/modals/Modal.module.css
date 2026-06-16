@@ -2721,6 +2721,145 @@
   cursor: not-allowed;
 }
 
+/* ============================================================
+   16. TERMS & CONDITIONS MODAL
+   ============================================================ */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  overflow-y: auto;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 600px;
+  max-width: calc(100vw - 32px);
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  font-family: "Montserrat", sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #2d5a1b 0%, #345228 100%);
+  border-bottom: none;
+  flex-shrink: 0;
+}
+
+.modalHeader h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.modal .closeBtn {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 14px;
+  width: auto;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-family: "Montserrat", sans-serif;
+}
+
+.modal .closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #fff;
+}
+
+.modalContent {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  color: #444;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.modalContent h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2d5a1b;
+  margin: 18px 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.modalContent p {
+  margin: 0 0 12px 0;
+  color: #555;
+  line-height: 1.65;
+}
+
+
+.modalContent p {
+  margin: 0 0 12px 0;
+  color: #555;
+  line-height: 1.65;
+}
+
+.modalFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 24px;
+  border-top: 1px solid #e8e8e8;
+  flex-shrink: 0;
+  background: #f9faf8;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  accent-color: #7eba56;
+  border-radius: 4px;
+}
+
+.modal .closeBtn:last-child {
+  width: 100%;
+  margin-top: 4px;
+  border-color: #2d5a1b;
+  background: rgba(45, 90, 27, 0.08);
+  color: #2d5a1b;
+}
+
+.modal .closeBtn:last-child:hover {
+  background: rgba(45, 90, 27, 0.15);
+  border-color: #2d5a1b;
+}
+
 @media (max-width: 768px) {
   .overlay { align-items: flex-end; }
 
@@ -2782,5 +2921,20 @@
   .receiptMemberInfo {
     grid-template-columns: 1fr;
     width: 100%;
+  }
+
+  .modal {
+    width: calc(100vw - 16px);
+    max-height: 90vh;
+  }
+
+  .modalHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .modal .closeBtn {
+    margin-left: auto;
   }
 }
