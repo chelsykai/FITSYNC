@@ -3,15 +3,18 @@ import styles from "./LogInPage.module.css";
 import logo from "../../assets/logo.png";
 import { supabase } from "../../lib/supabaseClient";
 import { getWorkingDaysLeft } from "../../utils/dateUtils";
+import TermsAndConditionsModal from "../../components/modals/TermsAndConditionsModal";
 
 const POST_LOGIN_REDIRECT_KEY = "postLoginRedirect";
 
 export default function LogInPage({ onNavigate }) {
-  const [username,     setUsername]     = useState("");
-  const [password,     setPassword]     = useState("");
-  const [error,        setError]        = useState("");
-  const [loading,      setLoading]      = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [username,           setUsername]           = useState("");
+  const [password,           setPassword]           = useState("");
+  const [error,              setError]              = useState("");
+  const [loading,            setLoading]            = useState(false);
+  const [showPassword,       setShowPassword]       = useState(false);
+  const [termsModalOpen,     setTermsModalOpen]     = useState(false);
+  const [termsAccepted,      setTermsAccepted]      = useState(false);
 
   const handleLogin = async () => {
     setError("");
@@ -122,16 +125,43 @@ export default function LogInPage({ onNavigate }) {
 
           {error && <p className={styles.errorText}>{error}</p>}
 
-          <button className={styles.loginBtn} onClick={handleLogin} disabled={loading}>
+          <button className={styles.loginBtn} onClick={handleLogin} disabled={loading || !termsAccepted}>
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
             {loading ? "Logging in..." : "Login"}
           </button>
-          
+
+          <div className={styles.termsCheckbox}>
+            <input 
+              type="checkbox" 
+              id="termsCheckbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+            />
+            <label htmlFor="termsCheckbox">
+              I read and agree to{" "}
+              <button 
+                className={styles.termsTextLink}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setTermsModalOpen(true);
+                }}
+                type="button"
+              >
+                terms and conditions
+              </button>
+            </label>
+          </div>
         </div>
       </div>
+
+      <TermsAndConditionsModal 
+        isOpen={termsModalOpen} 
+        onClose={() => setTermsModalOpen(false)}
+        onAccept={(accepted) => setTermsAccepted(accepted)}
+      />
     </div>
   );
 }
