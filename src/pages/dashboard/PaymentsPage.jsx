@@ -4,6 +4,7 @@ import Sidebar from "../../components/sidebar/sidebar";
 import ViewAllPaymentsModal from "../../components/modals/payments/ViewAllPaymentsModal";
 import PaymentReceiptModal from "../../components/modals/payments/PaymentReceiptModal";
 import PaymentsExportModal from "../../components/modals/payments/PaymentsExportModal";
+import WalkInsExportModal from "../../components/modals/payments/WalkInsExportModal";
 import AddWalkInModal from "../../components/modals/payments/AddWalkInModal";
 import { supabase } from "../../lib/supabaseClient";
 import { fetchMembers } from "../../services/memberService";
@@ -112,14 +113,17 @@ const fetchWalkIns = async () => {
   try {
     const data = await fetchWalkInsService();
     console.log("Fetched walk-ins:", data);
-    return (data || []).map((record) => ({
-      id: record.id,
-      name: record.name,
-      date: formatMMDDYYYY(record.paymentDate),
-      rawDate: parseLocalISODate(record.paymentDate),
-      planType: record.planType,
-      total: record.total,
-    }));
+    return (data || []).map((record) => {
+      const rawDateObj = parseLocalISODate(record.paymentDate);
+      return {
+        id: record.id,
+        name: record.name,
+        date: formatMMDDYYYY(record.paymentDate),
+        rawDate: rawDateObj,
+        planType: record.planType,
+        total: record.total,
+      };
+    });
   } catch (err) {
     console.error("Error in fetchWalkIns:", err);
     return [];
@@ -184,6 +188,7 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
   const [search, setSearch] = useState("");
   const [showViewAll, setShowViewAll] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showWalkInExport, setShowWalkInExport] = useState(false);
   const [showAddWalkIn, setShowAddWalkIn] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [members, setMembers] = useState([]);
@@ -425,6 +430,11 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
                     Export
                   </button>
                 )}
+                {activeTab === "walkIns" && isAdmin && (
+                  <button className={styles.exportBtn} onClick={() => setShowWalkInExport(true)}>
+                    Export
+                  </button>
+                )}
                 {activeTab === "payments" ? (
                   <button className={styles.addBtn} onClick={() => onNavigate("recordPayment")}>
                     Add / Record Payment
@@ -572,6 +582,13 @@ export default function PaymentsPage({ onNavigate, activePage = "payments", isAd
           payments={payments}
           members={members}
           onClose={() => setShowExport(false)}
+          isAdmin={isAdmin}
+        />
+      )}
+      {showWalkInExport && isAdmin && (
+        <WalkInsExportModal
+          walkIns={walkIns}
+          onClose={() => setShowWalkInExport(false)}
           isAdmin={isAdmin}
         />
       )}
