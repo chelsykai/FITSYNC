@@ -367,6 +367,35 @@
   padding: 2px 0 12px;
 }
 
+.checkList::-webkit-scrollbar,
+.exportCheckList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.checkList::-webkit-scrollbar-track,
+.exportCheckList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.checkList::-webkit-scrollbar-thumb,
+.exportCheckList::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.checkList::-webkit-scrollbar-thumb:hover,
+.exportCheckList::-webkit-scrollbar-thumb:hover {
+  background: #999;
+  background-clip: padding-box;
+}
+
+.checkList::-webkit-scrollbar-corner,
+.exportCheckList::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .checkRow,
 .exportCheckRow {
   padding: 10px 12px;
@@ -425,6 +454,51 @@
 
 .exportCloseBtn:hover {
   background: #f5f5f5;
+}
+
+/* Pagination Controls */
+.paginationControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+  padding: 10px 8px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.pagBtn {
+  padding: 8px 14px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagBtn:hover:not(:disabled) {
+  background: #7eba56;
+  color: #fff;
+  border-color: #7eba56;
+}
+
+.pagBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  min-width: 100px;
+  text-align: center;
 }
 
 
@@ -2725,7 +2799,7 @@
    16. TERMS & CONDITIONS MODAL
    ============================================================ */
 
-.modalOverlay {
+.termsAndConditionsModalOverlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -2736,7 +2810,7 @@
   overflow-y: auto;
 }
 
-.modal {
+.termsAndConditionsModal {
   background: #fff;
   border-radius: 12px;
   width: 600px;
@@ -2749,7 +2823,7 @@
   flex-direction: column;
 }
 
-.modalHeader {
+.termsAndConditionsModalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2759,7 +2833,7 @@
   flex-shrink: 0;
 }
 
-.modalHeader h2 {
+.termsAndConditionsModalHeader h2 {
   font-size: 18px;
   font-weight: 700;
   color: #fff;
@@ -2767,7 +2841,7 @@
   letter-spacing: 0.5px;
 }
 
-.modal .closeBtn {
+.termsAndConditionsModal .termsAndConditionsCloseBtn {
   background: transparent;
   border: 2px solid rgba(255, 255, 255, 0.7);
   color: #fff;
@@ -2781,12 +2855,12 @@
   font-family: "Montserrat", sans-serif;
 }
 
-.modal .closeBtn:hover {
+.termsAndConditionsModal .termsAndConditionsCloseBtn:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: #fff;
 }
 
-.modalContent {
+.termsAndConditionsModalContent {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
@@ -2795,7 +2869,7 @@
   line-height: 1.65;
 }
 
-.modalContent h3 {
+.termsAndConditionsModalContent h3 {
   font-size: 13px;
   font-weight: 700;
   color: #2d5a1b;
@@ -2804,20 +2878,13 @@
   letter-spacing: 0.3px;
 }
 
-.modalContent p {
+.termsAndConditionsModalContent p {
   margin: 0 0 12px 0;
   color: #555;
   line-height: 1.65;
 }
 
-
-.modalContent p {
-  margin: 0 0 12px 0;
-  color: #555;
-  line-height: 1.65;
-}
-
-.modalFooter {
+.termsAndConditionsModalFooter {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -2827,7 +2894,7 @@
   background: #f9faf8;
 }
 
-.checkboxLabel {
+.termsAndConditionsCheckboxLabel {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2838,7 +2905,7 @@
   user-select: none;
 }
 
-.checkboxLabel input[type="checkbox"] {
+.termsAndConditionsCheckboxLabel input[type="checkbox"] {
   cursor: pointer;
   width: 18px;
   height: 18px;
@@ -2847,7 +2914,7 @@
   border-radius: 4px;
 }
 
-.modal .closeBtn:last-child {
+.termsAndConditionsModal .termsAndConditionsCloseBtn:last-child {
   width: 100%;
   margin-top: 4px;
   border-color: #2d5a1b;
@@ -2855,7 +2922,7 @@
   color: #2d5a1b;
 }
 
-.modal .closeBtn:last-child:hover {
+.termsAndConditionsModal .termsAndConditionsCloseBtn:last-child:hover {
   background: rgba(45, 90, 27, 0.15);
   border-color: #2d5a1b;
 }
@@ -2923,18 +2990,18 @@
     width: 100%;
   }
 
-  .modal {
+  .termsAndConditionsModal {
     width: calc(100vw - 16px);
     max-height: 90vh;
   }
 
-  .modalHeader {
+  .termsAndConditionsModalHeader {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
 
-  .modal .closeBtn {
+  .termsAndConditionsModal .termsAndConditionsCloseBtn {
     margin-left: auto;
   }
 }

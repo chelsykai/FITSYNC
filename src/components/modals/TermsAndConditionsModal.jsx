@@ -4,13 +4,13 @@ export default function TermsAndConditionsModal({ isOpen, onClose, onAccept }) {
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modal}>
-        <div className={styles.modalHeader}>
+    <div className={styles.termsAndConditionsModalOverlay}>
+      <div className={styles.termsAndConditionsModal}>
+        <div className={styles.termsAndConditionsModalHeader}>
           <h2>Terms & Conditions</h2>
         </div>
 
-        <div className={styles.modalContent}>
+        <div className={styles.termsAndConditionsModalContent}>
           <h3>1. Acceptance of terms</h3>
           <p>By accessing and using the FitSync Gym Management System, you confirm that you are an authorized personnel and agree to comply with these terms. Unauthorized access is strictly prohibited.</p>
 
@@ -36,12 +36,12 @@ export default function TermsAndConditionsModal({ isOpen, onClose, onAccept }) {
           <p>Access to this system may be revoked at any time by an administrator. Upon termination, users must immediately cease all use of the system and return any confidential information.</p>
         </div>
 
-        <div className={styles.modalFooter}>
-          <label className={styles.checkboxLabel}>
+        <div className={styles.termsAndConditionsModalFooter}>
+          <label className={styles.termsAndConditionsCheckboxLabel}>
             <input type="checkbox" onChange={(e) => onAccept(e.target.checked)} />
             I agree to the Terms & Conditions
           </label>
-          <button className={styles.closeBtn} onClick={onClose}>Close</button>
+          <button className={styles.termsAndConditionsCloseBtn} onClick={onClose}>Close</button>
         </div>
       </div>
     </div>

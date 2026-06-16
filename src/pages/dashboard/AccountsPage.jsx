@@ -11,6 +11,7 @@ import ReAuthModal from "../../components/ReAuthModal";
 import { fetchAuditLogs, getAuditUsers } from "../../services/auditService";
 
 const ITEMS_PER_PAGE = 5;
+const AUDIT_ITEMS_PER_PAGE = 10;
 
 // ── Dropdown ──────────────────────────────────────────────────────────────────
 function ManageDropdown({ account, onEdit, onDelete, onReqChange }) {
@@ -105,6 +106,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
   const [deleteTarget,    setDeleteTarget]    = useState(null);
   const [showReAuth,      setShowReAuth]      = useState(false);
   const [pendingAction,   setPendingAction]   = useState(null);
+  const [auditPage,       setAuditPage]       = useState(1);
 
   const loadAccounts = useCallback(async (showLoader = false) => {
     try {
@@ -160,6 +162,11 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
     return () => supabase.removeChannel(ch);
   }, [showAudit, loadAuditData]);
 
+  // Reset audit page when filters change
+  useEffect(() => {
+    setAuditPage(1);
+  }, [filterAdmin, startDate, endDate]);
+
   const totalPages = Math.ceil(accounts.length / ITEMS_PER_PAGE);
   const paginated  = accounts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
@@ -178,6 +185,9 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
     if (endDate   && t > new Date(endDate   + "T23:59:59.999")) return false;
     return true;
   });
+
+  const auditTotalPages = Math.ceil(filteredLogsByDate.length / AUDIT_ITEMS_PER_PAGE);
+  const paginatedAuditLogs = filteredLogsByDate.slice((auditPage - 1) * AUDIT_ITEMS_PER_PAGE, auditPage * AUDIT_ITEMS_PER_PAGE);
 
   const handleCreate = async (newAccount) => {
     try {
@@ -395,7 +405,7 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredLogsByDate.map((log, i) => (
+                      {paginatedAuditLogs.map((log, i) => (
                         <tr key={i}>
                           <td className={styles.timeCell}>{log.time}</td>
                           <td><strong>{log.user}</strong></td>
@@ -434,8 +444,16 @@ export default function AccountsPage({ onNavigate, activePage = "accounts", isAd
                       ))}
                     </tbody>
                   </table>
-                )}
-              </div>
+                )}                {!auditLoading && filteredLogsByDate.length > AUDIT_ITEMS_PER_PAGE && (
+                  <div className={styles.pagination}>
+                    <button className={styles.pageBtn} onClick={() => setAuditPage((p) => Math.max(1, p - 1))} disabled={auditPage === 1}>‹</button>
+                    {Array.from({ length: auditTotalPages }, (_, i) => (
+                      <button key={i + 1} className={`${styles.pageBtn} ${auditPage === i + 1 ? styles.activePage : ""}`} onClick={() => setAuditPage(i + 1)}>{i + 1}</button>
+                    ))}
+                    <button className={styles.pageBtn} onClick={() => setAuditPage((p) => Math.min(auditTotalPages, p + 1))} disabled={auditPage === auditTotalPages}>›</button>
+                    <span className={styles.pageInfo}>{(auditPage - 1) * AUDIT_ITEMS_PER_PAGE + 1} out of {filteredLogsByDate.length} entries</span>
+                  </div>
+                )}              </div>
             </>
           )}
 

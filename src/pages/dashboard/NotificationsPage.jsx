@@ -106,6 +106,7 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
   const [sendingMap, setSendingMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const filtersDDRef   = useRef();
 
   useEffect(() => {
@@ -219,6 +220,10 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
     return matchSearch && matchFilter && matchStatus;
   });
 
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const toggleSelect = (notificationKey) => {
     setSelected((prev) =>
       prev.includes(notificationKey)
@@ -237,6 +242,11 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
       await handleNotify(notification);
     }
   };
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, activeFilter, filterStatus]);
 
   const getActionClass = (action, status) => {
     if (status === "Sent") return styles.sentBtn;
@@ -323,7 +333,7 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
 
           {/* Notification Grid */}
           <div className={styles.grid}>
-            {filtered.map((n) => {
+            {paginatedItems.map((n) => {
               const currentStatus = statusMap[n.key] || "Pending";
               const isSent = currentStatus === "Sent";
               const isFailed = currentStatus === "Failed";
@@ -387,6 +397,29 @@ export default function NotificationsPage({ onNavigate, activePage = "notificati
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {!loading && filtered.length > itemsPerPage && (
+            <div className={styles.paginationControls}>
+              <button
+                className={styles.pagBtn}
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                ← Prev
+              </button>
+              <span className={styles.pageInfo}>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                className={styles.pagBtn}
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Next →
+              </button>
+            </div>
+          )}
 
           {/* Bulk action bar */}
           {selectMode && selected.length > 0 && (

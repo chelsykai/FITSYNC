@@ -111,6 +111,8 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
     if (quickFilter === "all") return true;
     if (quickFilter === "students") return (m.membership_type || "").toLowerCase() === "student";
     if (quickFilter === "seniors") return (m.membership_type || "").toLowerCase() === "senior";
+    if (quickFilter === "pwd") return (m.membership_type || "").toLowerCase() === "pwd" || (m.membership_type || "").toLowerCase() === "p.w.d";
+    if (quickFilter === "regular") return (m.membership_type || "").toLowerCase() === "regular" || (m.membership_type || "").toLowerCase() === "member";
     if (quickFilter === "expired") {
       const expiryDate = getMembershipExpiryDate(m);
       if (!expiryDate) return false;
@@ -230,6 +232,12 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
             >
               All Members
             </button>
+           <button
+              className={`${styles.quickFilterBtn} ${quickFilter === "regular" ? styles.quickFilterBtnActive : ""}`}
+              onClick={() => setQuickFilter("regular")}
+            >
+              Regular
+            </button>
             <button
               className={`${styles.quickFilterBtn} ${quickFilter === "students" ? styles.quickFilterBtnActive : ""}`}
               onClick={() => setQuickFilter("students")}
@@ -241,6 +249,12 @@ export default function MembersPage({ onNavigate, activePage = "members", isAdmi
               onClick={() => setQuickFilter("seniors")}
             >
               Seniors
+            </button>
+            <button
+              className={`${styles.quickFilterBtn} ${quickFilter === "pwd" ? styles.quickFilterBtnActive : ""}`}
+              onClick={() => setQuickFilter("pwd")}
+            >
+              PWD
             </button>
             <button
               className={`${styles.quickFilterBtn} ${quickFilter === "expired" ? styles.quickFilterBtnActive : ""}`}
